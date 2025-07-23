@@ -1,7 +1,15 @@
-# A fast, small, safe, gradually typed embeddable scripting language derived from Lua
-#
-# https://github.com/luau-lang/luau
-# https://luau.org/
+# VSCode Extension files
+out/
+node_modules/
+.vscode-test/
+*.vsix
+
+# Foreman
+.foreman/
+
+# Test files (temporary)
+test_*.luau
+simulate_*.luau
 
 # Code coverage
 coverage.out

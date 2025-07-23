@@ -1,0 +1,19 @@
+# Development files
+.vscode/**
+.vscode-test/**
+src/**
+**/*.ts
+tsconfig.json
+.gitignore
+README.md
+
+# Dependencies and build artifacts  
+node_modules/**
+*.vsix
+test-samples/**
+
+# Keep these important files:
+# - out/** (compiled JS)
+# - lute_std/** (parser library)
+# - package.json
+# - LICENSE 

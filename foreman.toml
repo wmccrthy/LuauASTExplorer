@@ -1,0 +1,3 @@
+[tools]
+lute = { source = "luau-lang/lute", version = "0.1.0-nightly.20250722" }
+stylua = { source = "JohnnyMorganz/StyLua", version = "2.0.2" }
