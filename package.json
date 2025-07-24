@@ -46,15 +46,19 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "compile": "npm run build:frontend && tsc -p ./",
+    "build:frontend": "cd frontend && npm run build",
+    "watch": "tsc -watch -p ./",
+    "dev": "npm run build:frontend && npm run watch"
   },
   "devDependencies": {
-    "@types/vscode": "^1.74.0",
     "@types/node": "16.x",
+    "@types/react": "^19.1.8",
+    "@types/vscode": "^1.74.0",
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "child_process": "^1.0.2"
+    "child_process": "^1.0.2",
+    "react": "^19.1.0"
   }
-} 
+}

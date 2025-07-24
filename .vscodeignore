@@ -1,19 +1,34 @@
-# Development files
 .vscode/**
 .vscode-test/**
 src/**
-**/*.ts
-tsconfig.json
 .gitignore
-README.md
-
-# Dependencies and build artifacts  
-node_modules/**
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/tslint.json
+**/.eslintrc.json
+**/.prettierrc
+tslint.json
+out/test/**
+src/test/**
+**/*.map
+.nyc_output
+coverage/
+node_modules
+npm-debug.log
 *.vsix
-test-samples/**
 
-# Keep these important files:
-# - out/** (compiled JS)
-# - lute_std/** (parser library)
-# - package.json
-# - LICENSE 
+# Include lute_std for the extension
+!lute_std/
+
+# Frontend source files (exclude)
+frontend/src/**
+frontend/public/**
+frontend/node_modules/**
+frontend/package*.json
+frontend/tsconfig.json
+frontend/README.md
+frontend/.gitignore
+
+# Frontend build (include for extension)
+!frontend/build/** 

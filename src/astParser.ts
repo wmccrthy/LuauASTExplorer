@@ -177,27 +177,4 @@ export class ASTParser {
             timestamp: new Date().toISOString()
         }, null, 2);
     }
-
-    // Alternative method for parsing without external dependency (fallback)
-    private createFallbackAST(code: string): string {
-        // This is a simple fallback that creates a basic representation
-        // In a real implementation, you might want to use a JavaScript-based Lua parser
-        const lines = code.split('\n');
-        const ast = {
-            type: "Program",
-            body: lines.map((line, index) => ({
-                type: "Statement",
-                line: index + 1,
-                content: line.trim(),
-                tokens: line.trim().split(/\s+/).filter(token => token.length > 0)
-            })),
-            metadata: {
-                totalLines: lines.length,
-                parser: "Fallback AST Generator",
-                note: "This is a simplified AST. Install Lute for full AST parsing capabilities."
-            }
-        };
-
-        return JSON.stringify(ast, null, 2);
-    }
 } 
