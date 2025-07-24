@@ -63,17 +63,9 @@ export class ASTParser {
         }
 
         try {
-            // Create a temporary file with the code
-            const tempFilePath = await this.createTempFile(code);
-            
-            try {
-                // Run Lute to parse the AST
-                const astResult = await this.runLuteParser(tempFilePath);
-                return astResult;
-            } finally {
-                // Clean up the temporary file
-                await this.deleteTempFile(tempFilePath);
-            }
+            // Run Lute to parse the AST
+            const astResult = await this.runLuteParser(code);
+            return astResult;
         } catch (error) {
             throw new Error(`Failed to parse AST: ${error}`);
         }
@@ -86,7 +78,7 @@ export class ASTParser {
 
     private async createTempFile(code: string): Promise<string> {
         const tempDir = os.tmpdir();
-        const tempFileName = `ast_temp_${Date.now()}.luau`;
+        const tempFileName = `to_parse_${Date.now()}.luau`;
         const tempFilePath = path.join(tempDir, tempFileName);
         
         await fs.promises.writeFile(tempFilePath, code, 'utf8');
@@ -102,17 +94,21 @@ export class ASTParser {
         }
     }
 
-    private async runLuteParser(filePath: string): Promise<string> {
+    private async runLuteParser(srcCode: string): Promise<string> {
         try {
             // First, check if Lute is available
             await this.checkLuteAvailability();
 
-            // Create a Luau script that uses Lute's syntax parser to parse the AST
-            const { scriptPath: parserScriptPath, parserPath: tempParserPath } = await this.createParserScript(filePath);
+            // Create a temporary file with the source code (to avoid command line escaping issues)
+            const tempFilePath = await this.createTempFile(srcCode);
             
             try {
-                // Run the parser script with Lute
-                const command = `${this.luteExecutable} run ${parserScriptPath}`;
+                // Use the permanent AST parser script from extension directory
+                console.log("ASTParser: parsing selected code:", srcCode)
+                const astParserPath = path.join(this.extensionPath, 'lute_std', 'ast_parser.luau');
+                
+                // Run the parser script with temp file path as argument
+                const command = `${this.luteExecutable} run ${astParserPath} ${tempFilePath}`;
                 console.log(`ASTParser: Running command: ${command}`);
                 
                 // Get the workspace root directory for foreman.toml
@@ -131,9 +127,8 @@ export class ASTParser {
 
                 return stdout || this.createErrorAST('No output from Lute');
             } finally {
-                // Clean up both temp files
-                await this.deleteTempFile(parserScriptPath);
-                await this.deleteTempFile(tempParserPath);
+                // Clean up the temporary source file
+                await this.deleteTempFile(tempFilePath);
             }
 
         } catch (error) {
@@ -164,118 +159,6 @@ export class ASTParser {
             console.error(`ASTParser: Lute check failed:`, error);
             throw new Error(`Lute is not available at: ${this.luteExecutable}. Please install it using foreman or ensure it's in your PATH.`);
         }
-    }
-
-    private async createParserScript(sourceFilePath: string): Promise<{ scriptPath: string; parserPath: string }> {
-        const tempDir = os.tmpdir();
-        const timestamp = Date.now();
-        const scriptFileName = `ast_parser_${timestamp}.luau`;
-        const parserFileName = `parser_${timestamp}.luau`;
-        const scriptFilePath = path.join(tempDir, scriptFileName);
-        const tempParserPath = path.join(tempDir, parserFileName);
-        
-        // Copy the parser library from the extension directory to the temp directory
-        const sourceParserPath = path.join(this.extensionPath, 'lute_std', 'parser.luau');
-        
-        try {
-            // Copy parser file to temp directory
-            const parserContent = await fs.promises.readFile(sourceParserPath, 'utf8');
-            await fs.promises.writeFile(tempParserPath, parserContent, 'utf8');
-            console.log(`ASTParser: Copied parser to temp: ${tempParserPath}`);
-        } catch (error) {
-            throw new Error(`Failed to copy parser library: ${error}`);
-        }
-        
-        // Create a Luau script that uses our custom parser library (now using relative path)
-        const luauScript = `
--- AST Parser Script using our custom parser library
-local fs = require("@lute/fs")
-local parser = require("./${parserFileName.replace('.luau', '')}")
-
--- Read the source file
-local sourceCode = fs.readfiletostring("${sourceFilePath.replace(/\\/g, '\\\\')}")
-
--- Parse the AST using our custom parser
-local success, ast = pcall(function()
-    return parser.parse(sourceCode)
-end)
-
-local result
-if success then
-    result = ast
-else
-    result = {
-        type = "Error",
-        parser = "Lute-Official-AST",
-        timestamp = os.date("%Y-%m-%d %H:%M:%S"),
-        error = "Parse Error",
-        message = tostring(ast)
-    }
-end
-
--- Serialize to JSON-like format with circular reference protection and prioritized fields
-local function serialize(obj, indent, seen)
-    indent = indent or 0
-    seen = seen or {}
-    local indentStr = string.rep("  ", indent)
-    
-    if seen[obj] then
-        return '"<circular reference>"'
-    end
-    
-    if type(obj) == "table" then
-        seen[obj] = true
-        local result = "{\\n"
-        
-        -- Priority fields to show first (most important AST identifiers)
-        local priorityFields = {"tag", } -- maybe others later...?
-        
-        -- First, output priority fields
-        for _, priorityField in ipairs(priorityFields) do
-            if obj[priorityField] ~= nil then
-                result = result .. indentStr .. "  " .. priorityField .. ": " .. serialize(obj[priorityField], indent + 1, seen) .. ",\\n"
-            end
-        end
-        
-        -- Then output remaining fields
-        for key, value in pairs(obj) do
-            if type(key) == "string" or type(key) == "number" then
-                local keyStr = type(key) == "string" and key or tostring(key)
-                local isPriority = false
-                for _, priorityField in ipairs(priorityFields) do
-                    if keyStr == priorityField then
-                        isPriority = true
-                        break
-                    end
-                end
-                if not isPriority then
-                    result = result .. indentStr .. "  " .. keyStr .. ": " .. serialize(value, indent + 1, seen) .. ",\\n"
-                end
-            end
-        end
-        
-        seen[obj] = nil
-        result = result .. indentStr .. "}"
-        return result
-    elseif type(obj) == "string" then
-        return '"' .. obj:gsub('"', '\\"') .. '"'
-    elseif type(obj) == "number" or type(obj) == "boolean" then
-        return tostring(obj)
-    elseif obj == nil then
-        return "null"
-    else
-        return '"' .. tostring(obj) .. '"'
-    end
-end
-
-print(serialize(result))
-`;
-
-        await fs.promises.writeFile(scriptFilePath, luauScript, 'utf8');
-        return {
-            scriptPath: scriptFilePath,
-            parserPath: tempParserPath
-        };
     }
 
     private createUnsupportedLanguageAST(languageId: string): string {
