@@ -25,47 +25,38 @@ if success then
 else
     result = {
         type = "Error",
-        parser = "Lute-Official-AST",
         timestamp = os.date("%Y-%m-%d %H:%M:%S"),
         error = "Parse Error",
         message = tostring(ast)
     }
 end
 
--- Serialize to clean JSON format with prioritized fields
-local function serialize(obj, indent)
+-- Print AST in a clean, readable format
+local function printAST(obj, indent)
     indent = indent or 0
     local indentStr = string.rep("  ", indent)
     
     if type(obj) == "table" then
-        local result = "\n"
-        
-        -- First, output tag field if it exists
+        -- First, output tag field if it exists (priority field)
         if obj.tag ~= nil then
-            result = result .. indentStr .. "  tag: " .. serialize(obj.tag, indent + 1) .. "\n"
+            print(indentStr .. "tag: " .. tostring(obj.tag))
         end
         
         -- Then output remaining fields
         for key, value in pairs(obj) do
-            if type(key) == "string" or type(key) == "number" then
-                local keyStr = type(key) == "string" and key or tostring(key)
-                if keyStr ~= "tag" then
-                    result = result .. indentStr .. "  " .. keyStr .. ": " .. serialize(value, indent + 1) .. "\n"
+            local keyStr = tostring(key)
+            if keyStr ~= "tag" then -- Skip tag since we already printed it
+                if type(value) == "table" then
+                    print(indentStr .. keyStr .. ":")
+                    printAST(value, indent + 1)
+                else
+                    print(indentStr .. keyStr .. ": " .. tostring(value))
                 end
             end
         end
-        
-        result = result .. indentStr
-        return result
-    elseif type(obj) == "string" then
-        return '"' .. obj:gsub('"', '\\"') .. '"'
-    elseif type(obj) == "number" or type(obj) == "boolean" then
-        return tostring(obj)
-    elseif obj == nil then
-        return "null"
     else
-        return '"' .. tostring(obj) .. '"'
+        print(indentStr .. tostring(obj))
     end
 end
 
-print(serialize(result)) 
+printAST(result) 
