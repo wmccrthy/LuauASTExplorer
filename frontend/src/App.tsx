@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isSearchable } from './helpers';
 import './App.css';
 
 // Global window interface for VSCode webview API and AST data
@@ -50,7 +51,7 @@ const App: React.FC = () => {
 
   // Search functionality
   const performSearch = (term: string) => {
-    if (!term) {
+    if (!term || !isSearchable(term)) {
       setAstContent(originalContent);
       setTotalMatches(0);
       setCurrentMatchIndex(0);
@@ -76,18 +77,24 @@ const App: React.FC = () => {
 
   // Navigation
   const scrollToMatch = (index: number) => {
-    const match = document.getElementById(`match-${index + 1}`);
-    if (match) {
-      match.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'nearest'
-      });
-      
-      // Highlight current match
-      document.querySelectorAll('.search-match').forEach(m => m.classList.remove('current-match'));
-      match.classList.add('current-match');
-    }
+    // Small delay to ensure DOM is updated
+    setTimeout(() => {
+      const match = document.getElementById(`match-${index + 1}`);
+      if (match) {
+        // Remove current-match from all
+        document.querySelectorAll('.search-match').forEach(m => m.classList.remove('current-match'));
+        
+        // Add current-match to the target
+        match.classList.add('current-match');
+        
+        // Scroll to the match
+        match.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }, 50);
   };
 
   const nextMatch = () => {

@@ -117,36 +117,11 @@ function findBuildFiles(context: vscode.ExtensionContext): { jsFile: string | nu
 function getWebviewContent(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, astResult: string): string {
     const { jsFile, cssFile } = findBuildFiles(context);
     
-    // Fallback HTML if build files aren't found
     if (!jsFile || !cssFile) {
-        return `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>AST Explorer</title>
-            <style>
-                body { 
-                    font-family: monospace; 
-                    padding: 20px; 
-                    background: var(--vscode-editor-background); 
-                    color: var(--vscode-editor-foreground); 
-                }
-                .error { color: var(--vscode-errorForeground); }
-                pre { 
-                    background: var(--vscode-textCodeBlock-background); 
-                    padding: 16px; 
-                    border-radius: 4px; 
-                    white-space: pre-wrap; 
-                }
-            </style>
-        </head>
-        <body>
-            <div class="error">⚠️ React build files not found. Please run: <code>cd frontend && npm run build</code></div>
-            <h3>AST Content (Fallback):</h3>
-            <pre>${astResult}</pre>
-        </body>
-        </html>`;
+        return `<html><body style="font-family:monospace;padding:20px;background:var(--vscode-editor-background);color:var(--vscode-editor-foreground)">
+        <div style="color:var(--vscode-errorForeground)">Build files not found. Run: npm run compile</div>
+        <pre style="background:var(--vscode-textCodeBlock-background);padding:16px;margin-top:16px">${astResult}</pre>
+        </body></html>`;
     }
     
     const scriptSrc = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, "frontend", "build", "static", "js", jsFile));
@@ -165,7 +140,6 @@ function getWebviewContent(panel: vscode.WebviewPanel, context: vscode.Extension
         </script>
       </head>
       <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
         <script src="${scriptSrc}"></script>
       </body>
