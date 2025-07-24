@@ -143,10 +143,26 @@ function getWebviewContent(astResult: string): string {
                 line-height: 1.5;
             }
             /* Search highlighting */
-            mark {
+            mark.search-match {
                 background-color: var(--vscode-editor-findMatchHighlightBackground);
                 color: var(--vscode-editor-findMatchHighlightForeground);
-                padding: 0;
+                padding: 1px 2px;
+                border-radius: 2px;
+                transition: background-color 0.2s ease;
+            }
+            
+            mark.search-match.current-match {
+                background-color: var(--vscode-editor-findMatchBackground, #ea5c00);
+                color: var(--vscode-editor-findMatchForeground, #ffffff);
+                border: 2px solid var(--vscode-editor-findMatchBorder, #f38518);
+            }
+            
+            .search-info {
+                font-size: 12px;
+                color: var(--vscode-descriptionForeground);
+                margin: 0 8px;
+                min-width: 60px;
+                text-align: center;
             }
             .search-box {
                 width: 200px;
@@ -168,7 +184,10 @@ function getWebviewContent(astResult: string): string {
         <div class="header">
             <div class="title">🌳 AST Explorer</div>
             <div class="controls">
-                <input type="text" class="search-box" placeholder="Search nodes..." id="searchBox">
+                <input type="text" class="search-box" placeholder="Search nodes (Enter to cycle)..." id="searchBox">
+                <button class="btn" onclick="previousMatch()" id="prevBtn" disabled>⬆️ Prev</button>
+                <button class="btn" onclick="nextMatch()" id="nextBtn" disabled>⬇️ Next</button>
+                <span class="search-info" id="searchInfo"></span>
                 <button class="btn" onclick="copyToClipboard()">📋 Copy</button>
             </div>
         </div>
@@ -203,9 +222,62 @@ function getWebviewContent(astResult: string): string {
                 });
             }
             
-            // Search functionality - visual highlighting only
+            // Search functionality - visual highlighting with auto-scroll and navigation
             let originalContent = '';
-            document.getElementById('searchBox').addEventListener('input', function(e) {
+            let currentMatchIndex = 0;
+            let totalMatches = 0;
+            
+            function updateSearchInfo() {
+                const info = document.getElementById('searchInfo');
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                if (totalMatches > 0) {
+                    info.textContent = \`\${currentMatchIndex + 1} of \${totalMatches}\`;
+                    prevBtn.disabled = false; // Always enabled for cycling
+                    nextBtn.disabled = false; // Always enabled for cycling
+                } else {
+                    info.textContent = '';
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                }
+            }
+            
+            function scrollToMatch(index) {
+                const match = document.getElementById(\`match-\${index + 1}\`);
+                if (match) {
+                    match.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                    
+                    // Highlight current match
+                    document.querySelectorAll('.search-match').forEach(m => m.classList.remove('current-match'));
+                    match.classList.add('current-match');
+                }
+            }
+            
+            function nextMatch() {
+                if (totalMatches > 0) {
+                    currentMatchIndex = (currentMatchIndex + 1) % totalMatches; // Cycle to first after last
+                    scrollToMatch(currentMatchIndex);
+                    updateSearchInfo();
+                }
+            }
+            
+            function previousMatch() {
+                if (totalMatches > 0) {
+                    currentMatchIndex = (currentMatchIndex - 1 + totalMatches) % totalMatches; // Cycle to last before first
+                    scrollToMatch(currentMatchIndex);
+                    updateSearchInfo();
+                }
+            }
+            
+            const searchBox = document.getElementById('searchBox');
+            
+            // Search input functionality
+            searchBox.addEventListener('input', function(e) {
                 const searchTerm = e.target.value.toLowerCase();
                 const content = document.getElementById('astContent');
                 
@@ -217,13 +289,37 @@ function getWebviewContent(astResult: string): string {
                 if (!searchTerm) {
                     // Restore original content without HTML tags
                     content.textContent = originalContent;
+                    totalMatches = 0;
+                    currentMatchIndex = 0;
+                    updateSearchInfo();
                     return;
                 }
                 
-                // Simple text-based search highlighting
+                // Simple text-based search highlighting with unique IDs for navigation
                 const regex = new RegExp(searchTerm, 'gi');
-                let highlighted = originalContent.replace(regex, '<mark>$&</mark>');
+                let matchCount = 0;
+                let highlighted = originalContent.replace(regex, function(match) {
+                    matchCount++;
+                    return \`<mark id="match-\${matchCount}" class="search-match">\${match}</mark>\`;
+                });
                 content.innerHTML = highlighted;
+                
+                totalMatches = matchCount;
+                currentMatchIndex = 0;
+                updateSearchInfo();
+                
+                // Auto-scroll to first match if any matches found
+                if (totalMatches > 0) {
+                    scrollToMatch(0);
+                }
+            });
+            
+            // Enter key navigation
+            searchBox.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent form submission
+                    nextMatch(); // Cycle to next match
+                }
             });
             
             // Initialize
