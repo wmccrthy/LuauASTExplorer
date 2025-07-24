@@ -105,7 +105,7 @@ export class ASTParser {
             try {
                 // Use the permanent AST parser script from extension directory
                 console.log("ASTParser: parsing selected code:", srcCode)
-                const astParserPath = path.join(this.extensionPath, 'lute_std', 'ast_parser.luau');
+                const astParserPath = path.join(this.extensionPath, 'lua_helpers', 'ast_to_json.luau');
                 
                 // Run the parser script with temp file path as argument
                 const command = `${this.luteExecutable} run ${astParserPath} ${tempFilePath}`;

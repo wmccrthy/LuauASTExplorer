@@ -137,6 +137,7 @@ function getWebviewContent(panel: vscode.WebviewPanel, context: vscode.Extension
         <link rel="stylesheet" href="${cssSrc}" />
         <script>
           window.astData = ${JSON.stringify(astResult)};
+          window.astMode = ${JSON.stringify(astResult.trim().startsWith('{') ? 'json' : 'text')};
         </script>
       </head>
       <body>

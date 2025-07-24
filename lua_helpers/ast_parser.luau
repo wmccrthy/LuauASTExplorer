@@ -70,3 +70,5 @@ local function printAST(obj, indent)
 end
 
 printAST(trimResult(result))
+
+-- temporarily unused since we send a JSON string of the AST to the frontend instead (...)

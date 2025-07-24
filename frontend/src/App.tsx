@@ -7,7 +7,17 @@ declare global {
   interface Window {
     acquireVsCodeApi?: () => any;
     astData?: string;
+    astMode?: 'json' | 'text';
   }
+}
+
+interface ASTNode {
+  tag?: string;
+  location?: {
+    begin: { line: number; column: number };
+    end: { line: number; column: number };
+  };
+  [key: string]: any;
 }
 
 const App: React.FC = () => {
@@ -16,13 +26,36 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(0);
   const [totalMatches, setTotalMatches] = useState<number>(0);
+  const [astMode, setAstMode] = useState<'json' | 'text'>('text');
+  const [astTree, setAstTree] = useState<ASTNode | null>(null);
 
   // Initialize with AST data from window
   useEffect(() => {
+    const mode = window.astMode || 'text';
+    setAstMode(mode);
+    
     if (window.astData) {
       const content = window.astData;
-      setAstContent(content);
-      setOriginalContent(content);
+      
+      if (mode === 'json') {
+        try {
+          const parsedAST = JSON.parse(content);
+          setAstTree(parsedAST);
+          
+          // For now, show formatted JSON until we build tree view
+          const formatted = JSON.stringify(parsedAST, null, 2);
+          setAstContent(formatted);
+          setOriginalContent(formatted);
+        } catch (e) {
+          // Fallback to text mode if JSON parsing fails
+          setAstContent(content);
+          setOriginalContent(content);
+          setAstMode('text');
+        }
+      } else {
+        setAstContent(content);
+        setOriginalContent(content);
+      }
     } else {
       // Fallback if no AST data
       const testContent = 'No AST data received from extension';
@@ -34,8 +67,31 @@ const App: React.FC = () => {
   // Calculate stats
   const getStats = () => {
     const lines = astContent.split('\n').length;
-    const nodes = (astContent.match(/tag:/g) || []).length;
     const characters = astContent.length;
+    
+    let nodes = 0;
+    if (astMode === 'json' && astTree) {
+      // Count nodes in JSON tree
+      const countNodes = (obj: any): number => {
+        let count = 0;
+        if (obj && typeof obj === 'object') {
+          if (obj.tag) count = 1;
+          for (const value of Object.values(obj)) {
+            if (Array.isArray(value)) {
+              count += value.reduce((acc, item) => acc + countNodes(item), 0);
+            } else {
+              count += countNodes(value);
+            }
+          }
+        }
+        return count;
+      };
+      nodes = countNodes(astTree);
+    } else {
+      // Count nodes in text mode (fallback)
+      nodes = (astContent.match(/tag[":]/g) || []).length;
+    }
+    
     return { lines, nodes, characters };
   };
 
@@ -133,7 +189,18 @@ const App: React.FC = () => {
   return (
     <div className="ast-explorer">
       <div className="header">
-        <div className="title">🌳 AST Explorer</div>
+        <div className="title">
+          🌳 AST Explorer 
+          <span style={{ 
+            fontSize: '12px', 
+            marginLeft: '8px', 
+            padding: '2px 6px', 
+            backgroundColor: astMode === 'json' ? 'var(--vscode-statusBarItem-prominentBackground)' : 'var(--vscode-badge-background)',
+            borderRadius: '3px'
+          }}>
+            {astMode.toUpperCase()}
+          </span>
+        </div>
         <div className="controls">
           <input
             type="text"

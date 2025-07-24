@@ -18,8 +18,8 @@ node_modules
 npm-debug.log
 *.vsix
 
-# Include lute_std for the extension
-!lute_std/
+# Include lua_helpers for the extension
+!lua_helpers/
 
 # Frontend source files (exclude)
 frontend/src/**
