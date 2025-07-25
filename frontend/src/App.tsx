@@ -10,7 +10,26 @@ declare global {
     acquireVsCodeApi?: () => any;
     astData?: string;
     astMode?: 'json' | 'text';
+    selectedText?: string;
   }
+}
+
+interface VSCodeAPI {
+  postMessage(message: any): void;
+  setState?(state: any): void;
+  getState?(): any;
+}
+
+interface ParseASTMessage {
+  command: 'parseAST';
+  code: string;
+}
+
+interface ParseResultMessage {
+  command: 'parseResult';
+  status: 'loading' | 'success' | 'error';
+  astResult?: string;
+  error?: string;
 }
 
 interface ASTNode {
@@ -45,6 +64,11 @@ const App: React.FC = () => {
   const [astTree1, setAstTree1] = useState<ASTNode | null>(null);
   const [astTree2, setAstTree2] = useState<ASTNode | null>(null);
 
+  // Live parsing state
+  const [isParsing1, setIsParsing1] = useState<boolean>(false);
+  const [parseError1, setParseError1] = useState<string | null>(null);
+  const [vscodeApi, setVscodeApi] = useState<VSCodeAPI | null>(null);
+
   // Initialize with AST data from window
   useEffect(() => {
     const mode = window.astMode || 'text';
@@ -73,15 +97,36 @@ const App: React.FC = () => {
         setOriginalContent(content);
       }
       
-      // TODO: Initialize codeSnippet1 with the original selected code
-      // For now, we'll use a placeholder since we only have the AST data
-      setCodeSnippet1('-- Original selected code will appear here --');
+      setCodeSnippet1(window.selectedText || '');
       
     } else {
       // Fallback if no AST data
       const testContent = 'No AST data received from extension';
       setAstContent(testContent);
       setOriginalContent(testContent);
+    }
+  }, []);
+
+  // Set up VSCode API and message listener
+  useEffect(() => {
+    if (window.acquireVsCodeApi) {
+      const api = window.acquireVsCodeApi();
+      setVscodeApi(api);
+
+      // Set up message listener for responses from extension
+      const messageListener = (event: MessageEvent) => {
+        const message = event.data as ParseResultMessage;
+        if (message.command === 'parseResult') {
+          handleParseResult(message);
+        }
+      };
+
+      window.addEventListener('message', messageListener);
+
+      // Cleanup listener on unmount
+      return () => {
+        window.removeEventListener('message', messageListener);
+      };
     }
   }, []);
 
@@ -227,6 +272,56 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle parse result messages from extension
+  const handleParseResult = (message: ParseResultMessage) => {
+    switch (message.status) {
+      case 'loading':
+        setIsParsing1(true);
+        setParseError1(null);
+        break;
+      case 'success':
+        setIsParsing1(false);
+        setParseError1(null);
+        if (message.astResult) {
+          try {
+            // Try to parse as JSON for tree view
+            const parsedAST = JSON.parse(message.astResult);
+            setAstTree1(parsedAST);
+          } catch (e) {
+            // If not JSON, handle as text (though we expect JSON from our parser)
+            console.warn('Received non-JSON AST result:', e);
+            setAstTree1(null);
+          }
+        }
+        break;
+      case 'error':
+        setIsParsing1(false);
+        setParseError1(message.error || 'Unknown parsing error');
+        setAstTree1(null);
+        break;
+    }
+  };
+
+  // Send parse request to extension
+  const parseAST = (code: string) => {
+    if (!vscodeApi) {
+      setParseError1('VSCode API not available');
+      return;
+    }
+
+    if (!code.trim()) {
+      setParseError1('Please enter some code to parse');
+      return;
+    }
+
+    const message: ParseASTMessage = {
+      command: 'parseAST',
+      code: code
+    };
+
+    vscodeApi.postMessage(message);
+  };
+
   const stats = getStats();
 
   // Render different window content based on mode
@@ -266,23 +361,39 @@ const App: React.FC = () => {
                  placeholder="Edit your Luau code here..."
                  height="200px"
                />
-               <button className="btn parse-btn">🔄 Parse AST</button>
+               <button 
+                 className="btn parse-btn"
+                 onClick={() => parseAST(codeSnippet1)}
+                 disabled={isParsing1 || !codeSnippet1.trim()}
+               >
+                 {isParsing1 ? '⏳ Parsing...' : '🔄 Parse AST'}
+               </button>
              </div>
-            <div className="ast-view-section">
-              <h3>🌳 Live AST</h3>
-              {astTree1 ? (
-                <div className="ast-content tree-view">
-                  <TreeNodeContainer
-                    nodeKey="root"
-                    value={astTree1}
-                    level={0}
-                    searchTerm={searchTerm}
-                  />
-                </div>
-              ) : (
-                <div className="placeholder">Click "Parse AST" to see the AST structure</div>
-              )}
-            </div>
+                         <div className="ast-view-section">
+               <h3>🌳 Live AST</h3>
+               <div className="ast-view-content">
+                 {parseError1 ? (
+                   <div className="error-message">
+                     ❌ Parse Error: {parseError1}
+                   </div>
+                 ) : isParsing1 ? (
+                   <div className="loading-message">
+                     ⏳ Parsing AST...
+                   </div>
+                 ) : astTree1 ? (
+                   <div className="ast-content tree-view">
+                     <TreeNodeContainer
+                       nodeKey="root"
+                       value={astTree1}
+                       level={0}
+                       searchTerm={searchTerm}
+                     />
+                   </div>
+                 ) : (
+                   <div className="placeholder">Click "Parse AST" to see the AST structure</div>
+                 )}
+               </div>
+             </div>
           </div>
         );
         

@@ -41,11 +41,11 @@ export class ASTParser {
             '/opt/homebrew/bin/lute'
         ];
 
-        for (const luteePath of possiblePaths) {
+        for (const lutePath of possiblePaths) {
             try {
-                if (fs.existsSync(luteePath)) {
-                    console.log(`Found Lute executable at: ${luteePath}`);
-                    return luteePath;
+                if (fs.existsSync(lutePath)) {
+                    console.log(`Found Lute executable at: ${lutePath}`);
+                    return lutePath;
                 }
             } catch (error) {
                 // Continue to next path

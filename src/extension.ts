@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
             });
 
             // Display the AST in a hover-like manner
-            await showASTResult(astResult, editor, selection, context);
+            await showASTResult(astResult, editor, selection, context, selectedText);
 
         } catch (error) {
             vscode.window.showErrorMessage(`Error parsing AST: ${error}`);
@@ -49,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 }
 
-async function showASTResult(astResult: string, editor: vscode.TextEditor, selection: vscode.Selection, context: vscode.ExtensionContext) {
+async function showASTResult(astResult: string, editor: vscode.TextEditor, selection: vscode.Selection, context: vscode.ExtensionContext, selectedText: string) {
     // Create a webview panel to display the AST
     const panel = vscode.window.createWebviewPanel(
         'astDisplay',
@@ -64,7 +64,22 @@ async function showASTResult(astResult: string, editor: vscode.TextEditor, selec
     );
 
     // Set the HTML content for the webview
-            panel.webview.html = getWebviewContent(panel, context, astResult);
+    panel.webview.html = getWebviewContent(panel, context, astResult, selectedText);
+
+    // Handle messages from the webview
+    panel.webview.onDidReceiveMessage(
+        async message => {
+            switch (message.command) {
+                case 'parseAST':
+                    await handleParseAST(panel, message.code, context);
+                    break;
+                default:
+                    console.warn('Unknown message command:', message.command);
+            }
+        },
+        undefined,
+        context.subscriptions
+    );
 
     // Optionally, we could also show it as a hover message for a quick preview
     const hoverMessage = new vscode.MarkdownString();
@@ -114,7 +129,7 @@ function findBuildFiles(context: vscode.ExtensionContext): { jsFile: string | nu
     }
 }
 
-function getWebviewContent(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, astResult: string): string {
+function getWebviewContent(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, astResult: string, selectedText: string): string {
     const { jsFile, cssFile } = findBuildFiles(context);
     
     if (!jsFile || !cssFile) {
@@ -138,6 +153,7 @@ function getWebviewContent(panel: vscode.WebviewPanel, context: vscode.Extension
         <script>
           window.astData = ${JSON.stringify(astResult)};
           window.astMode = ${JSON.stringify(astResult.trim().startsWith('{') ? 'json' : 'text')};
+          window.selectedText = ${JSON.stringify(selectedText)};
         </script>
       </head>
       <body>
@@ -154,6 +170,35 @@ function escapeHtml(unsafe: string): string {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+async function handleParseAST(panel: vscode.WebviewPanel, code: string, context: vscode.ExtensionContext) {
+    try {
+        // Send loading state to webview
+        panel.webview.postMessage({
+            command: 'parseResult',
+            status: 'loading'
+        });
+
+        // Parse the code using existing ASTParser
+        const astParser = new ASTParser(context);
+        const astResult = await astParser.parseCode(code, 'luau');
+
+        // Send success result to webview
+        panel.webview.postMessage({
+            command: 'parseResult',
+            status: 'success',
+            astResult: astResult
+        });
+
+    } catch (error) {
+        // Send error result to webview
+        panel.webview.postMessage({
+            command: 'parseResult',
+            status: 'error',
+            error: error instanceof Error ? error.message : String(error)
+        });
+    }
 }
 
 export function deactivate() {} 
