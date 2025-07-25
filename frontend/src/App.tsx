@@ -3,49 +3,8 @@ import { isSearchable } from './helpers';
 import TreeNodeContainer from './TreeNode';
 import CodeEditor from './CodeEditor';
 import './App.css';
-
-// Global window interface for VSCode webview API and AST data
-declare global {
-  interface Window {
-    acquireVsCodeApi?: () => any;
-    astData?: string;
-    astMode?: 'json' | 'text';
-    selectedText?: string;
-  }
-}
-
-interface VSCodeAPI {
-  postMessage(message: any): void;
-  setState?(state: any): void;
-  getState?(): any;
-}
-
-interface ParseASTMessage {
-  command: 'parseAST';
-  code: string;
-}
-
-interface ParseResultMessage {
-  command: 'parseResult';
-  status: 'loading' | 'success' | 'error';
-  astResult?: string;
-  error?: string;
-}
-
-interface ASTNode {
-  tag?: string;
-  location?: {
-    begin: { line: number; column: number };
-    end: { line: number; column: number };
-  };
-  [key: string]: any;
-}
-
-enum WindowMode {
-  Explorer = 'explorer',      // Current AST viewer (default)
-  LiveEditor = 'live-editor', // Window 1: Live code editor + AST
-  DiffAnalyzer = 'diff-analyzer' // Window 2: Code transformation diff
-}
+import { handleParseResult, parseAST } from './parsingMessageHandlers';
+import { ASTNode, ParseResultMessage, VSCodeAPI, WindowMode } from './typesAndInterfaces';
 
 const App: React.FC = () => {
   // Original AST viewer state
@@ -117,7 +76,7 @@ const App: React.FC = () => {
       const messageListener = (event: MessageEvent) => {
         const message = event.data as ParseResultMessage;
         if (message.command === 'parseResult') {
-          handleParseResult(message);
+          handleParseResult(message, setIsParsing1, setParseError1, setAstTree1);
         }
       };
 
@@ -272,56 +231,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Handle parse result messages from extension
-  const handleParseResult = (message: ParseResultMessage) => {
-    switch (message.status) {
-      case 'loading':
-        setIsParsing1(true);
-        setParseError1(null);
-        break;
-      case 'success':
-        setIsParsing1(false);
-        setParseError1(null);
-        if (message.astResult) {
-          try {
-            // Try to parse as JSON for tree view
-            const parsedAST = JSON.parse(message.astResult);
-            setAstTree1(parsedAST);
-          } catch (e) {
-            // If not JSON, handle as text (though we expect JSON from our parser)
-            console.warn('Received non-JSON AST result:', e);
-            setAstTree1(null);
-          }
-        }
-        break;
-      case 'error':
-        setIsParsing1(false);
-        setParseError1(message.error || 'Unknown parsing error');
-        setAstTree1(null);
-        break;
-    }
-  };
-
-  // Send parse request to extension
-  const parseAST = (code: string) => {
-    if (!vscodeApi) {
-      setParseError1('VSCode API not available');
-      return;
-    }
-
-    if (!code.trim()) {
-      setParseError1('Please enter some code to parse');
-      return;
-    }
-
-    const message: ParseASTMessage = {
-      command: 'parseAST',
-      code: code
-    };
-
-    vscodeApi.postMessage(message);
-  };
-
   const stats = getStats();
 
   // Render different window content based on mode
@@ -363,7 +272,7 @@ const App: React.FC = () => {
                />
                <button 
                  className="btn parse-btn"
-                 onClick={() => parseAST(codeSnippet1)}
+                 onClick={() => parseAST(codeSnippet1, vscodeApi, setParseError1)}
                  disabled={isParsing1 || !codeSnippet1.trim()}
                >
                  {isParsing1 ? '⏳ Parsing...' : '🔄 Parse AST'}
