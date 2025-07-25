@@ -20,7 +20,7 @@ local success, ast = pcall(function()
 	return parser.parse(sourceCode)
 end)
 
-local function trimResult(obj)
+local function _trimResult(obj)
 	if obj.tag == "block" and #obj.statements == 1 then
 		-- if the block has only one statement, return the statement, as user is probably highlighting a single line of text
 		-- and returning the full block is not useful and unecessarily verbose. Single line inspections are probably one of the most common use cases.
@@ -28,7 +28,7 @@ local function trimResult(obj)
 	else
 		return obj
 	end
-end
+end -- not using for now bc can complicate diff comparisons
 
 
 local result
@@ -43,4 +43,4 @@ else
 	}
 end
 
-print(json.encode(trimResult(result)))
+print(json.encode(result))

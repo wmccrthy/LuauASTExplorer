@@ -4,7 +4,9 @@ import TreeNodeContainer from './TreeNode';
 import CodeEditor from './CodeEditor';
 import './App.css';
 import { handleParseResult, parseAST } from './parsingMessageHandlers';
-import { ASTNode, ParseResultMessage, VSCodeAPI, WindowMode } from './typesAndInterfaces';
+import { annotateDiffTree } from './diffUtils';
+import { diff as jsonDiff } from 'json-diff-ts';
+import { ASTNode, ParseResultMessage, ParseDiffResultMessage, VSCodeAPI, WindowMode, DiffASTNode } from './typesAndInterfaces';
 
 const App: React.FC = () => {
   // Original AST viewer state
@@ -27,6 +29,11 @@ const App: React.FC = () => {
   const [isParsing1, setIsParsing1] = useState<boolean>(false);
   const [parseError1, setParseError1] = useState<string | null>(null);
   const [vscodeApi, setVscodeApi] = useState<VSCodeAPI | null>(null);
+
+  // Diff parsing state
+  const [isParsingDiff, setIsParsingDiff] = useState<boolean>(false);
+  const [parseDiffError, setParseDiffError] = useState<string | null>(null);
+  const [diffTree, setDiffTree] = useState<DiffASTNode | null>(null);
 
   // Initialize with AST data from window
   useEffect(() => {
@@ -66,6 +73,51 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Handle diff result messages from extension
+  const handleParseDiffResult = (message: ParseDiffResultMessage) => {
+    switch (message.status) {
+      case 'loading':
+        setIsParsingDiff(true);
+        setParseDiffError(null);
+        break;
+      case 'success':
+        setIsParsingDiff(false);
+        setParseDiffError(null);
+        if (message.beforeAST && message.afterAST) {
+          try {
+            // Parse both AST JSON strings
+            const beforeASTObj = JSON.parse(message.beforeAST) as ASTNode;
+            const afterASTObj = JSON.parse(message.afterAST) as ASTNode;
+            
+            // Generate diff tree using our diffUtils
+            console.log('Before AST:', beforeASTObj);
+            console.log('After AST:', afterASTObj);
+            
+            // Simple test with json-diff-ts directly
+            const rawChanges = jsonDiff(beforeASTObj, afterASTObj);
+            console.log('Raw json-diff-ts changes:', rawChanges);
+            
+            const { diffTree: annotatedTree, changes } = annotateDiffTree(beforeASTObj, afterASTObj);
+            console.log('Processed changes:', changes);
+            console.log('Annotated tree:', annotatedTree);
+            
+            setDiffTree(annotatedTree);
+            
+          } catch (e) {
+            console.error('Failed to process diff ASTs:', e);
+            setParseDiffError('Failed to process AST comparison');
+            setDiffTree(null);
+          }
+        }
+        break;
+      case 'error':
+        setIsParsingDiff(false);
+        setParseDiffError(message.error || 'Unknown diff parsing error');
+        setDiffTree(null);
+        break;
+    }
+  };
+
   // Set up VSCode API and message listener
   useEffect(() => {
     if (window.acquireVsCodeApi) {
@@ -74,9 +126,12 @@ const App: React.FC = () => {
 
       // Set up message listener for responses from extension
       const messageListener = (event: MessageEvent) => {
-        const message = event.data as ParseResultMessage;
+        const message = event.data;
+        
         if (message.command === 'parseResult') {
-          handleParseResult(message, setIsParsing1, setParseError1, setAstTree1);
+          handleParseResult(message as ParseResultMessage, setIsParsing1, setParseError1, setAstTree1);
+        } else if (message.command === 'parseDiffResult') {
+          handleParseDiffResult(message as ParseDiffResultMessage);
         }
       };
 
@@ -231,6 +286,27 @@ const App: React.FC = () => {
     }
   };
 
+  // Send diff parse request to extension
+  const parseDiff = (beforeCode: string, afterCode: string) => {
+    if (!vscodeApi) {
+      setParseDiffError('VSCode API not available');
+      return;
+    }
+
+    if (!beforeCode.trim() || !afterCode.trim()) {
+      setParseDiffError('Please enter code in both fields');
+      return;
+    }
+
+    const message = {
+      command: 'parseDiff',
+      beforeCode: beforeCode,
+      afterCode: afterCode
+    };
+
+    vscodeApi.postMessage(message);
+  };
+
   const stats = getStats();
 
   // Render different window content based on mode
@@ -334,12 +410,38 @@ const App: React.FC = () => {
                  />
                </div>
              </div>
-            <button className="btn parse-btn">🔍 Analyze Transformation</button>
+            <button 
+              className="btn parse-btn"
+              onClick={() => parseDiff(codeSnippet1, codeSnippet2)}
+              disabled={isParsingDiff || !codeSnippet1.trim() || !codeSnippet2.trim()}
+            >
+              {isParsingDiff ? '⏳ Analyzing...' : '🔍 Analyze Transformation'}
+            </button>
             <div className="diff-view-section">
               <h4>🌳 AST Transformation Diff</h4>
-              <div className="placeholder">
-                Enter code in both fields and click "Analyze Transformation" to see the AST diff
-              </div>
+              {parseDiffError ? (
+                <div className="error-message">
+                  ❌ Diff Error: {parseDiffError}
+                </div>
+              ) : isParsingDiff ? (
+                <div className="loading-message">
+                  ⏳ Analyzing transformation...
+                </div>
+              ) : diffTree ? (
+                <div className="ast-content tree-view">
+                  <TreeNodeContainer
+                    nodeKey="root"
+                    value={diffTree}
+                    level={0}
+                    searchTerm={searchTerm}
+                    isDiffMode={true}
+                  />
+                </div>
+              ) : (
+                <div className="placeholder">
+                  Enter code in both fields and click "Analyze Transformation" to see the AST diff
+                </div>
+              )}
             </div>
           </div>
         );

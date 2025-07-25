@@ -26,6 +26,21 @@ export interface ParseResultMessage {
     error?: string;
 }
 
+export interface ParseDiffMessage {
+    command: 'parseDiff';
+    beforeCode: string;
+    afterCode: string;
+}
+
+export interface ParseDiffResultMessage {
+    command: 'parseDiffResult';
+    status: 'loading' | 'success' | 'error';
+    beforeAST?: string;
+    afterAST?: string;
+    changes?: JsonDiffChange[];
+    error?: string;
+}
+
 export interface ASTNode {
     tag?: string;
     location?: {
@@ -33,6 +48,22 @@ export interface ASTNode {
         end: { line: number; column: number };
     };
     [key: string]: any;
+}
+
+export interface DiffASTNode extends ASTNode {
+    diffStatus?: 'added' | 'removed' | 'updated' | 'unchanged' | 'contains-changes';
+    beforeValue?: any;
+    afterValue?: any;
+    diffKey?: string;
+}
+
+export interface JsonDiffChange {
+    type: 'ADD' | 'REMOVE' | 'UPDATE';
+    key: string;
+    value?: any;
+    oldValue?: any;
+    embeddedKey?: string | any;
+    changes?: JsonDiffChange[]; // For nested changes
 }
 
 export enum WindowMode {

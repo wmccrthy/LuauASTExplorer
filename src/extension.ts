@@ -73,6 +73,9 @@ async function showASTResult(astResult: string, editor: vscode.TextEditor, selec
                 case 'parseAST':
                     await handleParseAST(panel, message.code, context);
                     break;
+                case 'parseDiff':
+                    await handleParseDiff(panel, message.beforeCode, message.afterCode, context);
+                    break;
                 default:
                     console.warn('Unknown message command:', message.command);
             }
@@ -195,6 +198,39 @@ async function handleParseAST(panel: vscode.WebviewPanel, code: string, context:
         // Send error result to webview
         panel.webview.postMessage({
             command: 'parseResult',
+            status: 'error',
+            error: error instanceof Error ? error.message : String(error)
+        });
+    }
+}
+
+async function handleParseDiff(panel: vscode.WebviewPanel, beforeCode: string, afterCode: string, context: vscode.ExtensionContext) {
+    try {
+        // Send loading state to webview
+        panel.webview.postMessage({
+            command: 'parseDiffResult',
+            status: 'loading'
+        });
+
+        // Parse both code snippets using existing ASTParser
+        const astParser = new ASTParser(context);
+        
+        // Parse before and after code separately
+        const beforeAST = await astParser.parseCode(beforeCode, 'luau');
+        const afterAST = await astParser.parseCode(afterCode, 'luau');
+
+        // Send success result with both ASTs to webview
+        panel.webview.postMessage({
+            command: 'parseDiffResult',
+            status: 'success',
+            beforeAST: beforeAST,
+            afterAST: afterAST
+        });
+
+    } catch (error) {
+        // Send error result to webview
+        panel.webview.postMessage({
+            command: 'parseDiffResult',
             status: 'error',
             error: error instanceof Error ? error.message : String(error)
         });

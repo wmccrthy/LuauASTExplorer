@@ -164,6 +164,65 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* Diff visualization styles */
+.diff-added {
+  background-color: rgba(46, 160, 67, 0.2);
+  border-left: 3px solid #28a745;
+  padding-left: 4px;
+}
+
+.diff-removed {
+  background-color: rgba(248, 81, 73, 0.2);
+  border-left: 3px solid #dc3545;
+  padding-left: 4px;
+  text-decoration: line-through;
+}
+
+.diff-updated {
+  background-color: rgba(52, 144, 220, 0.2);
+  border-left: 3px solid #3490dc;
+  padding-left: 4px;
+}
+
+.diff-contains-changes {
+  border-left: 2px solid #3490dc;
+  padding-left: 2px;
+  /* Subtle styling for parent nodes that contain changes */
+}
+
+.diff-indicator {
+  font-weight: bold;
+  margin-right: 4px;
+}
+
+.diff-added-indicator {
+  color: #28a745;
+}
+
+.diff-removed-indicator {
+  color: #dc3545;
+}
+
+.diff-updated-indicator {
+  color: #3490dc;
+}
+
+.diff-before {
+  text-decoration: line-through;
+  color: #dc3545;
+}
+
+.diff-arrow {
+  color: var(--vscode-gitDecoration-modifiedResourceForeground);
+  font-weight: bold;
+  margin: 0 4px;
+}
+
+.diff-after {
+  color: var(--vscode-gitDecoration-addedResourceForeground);
+  font-weight: bold;
+}
+
 .stats {
   font-size: 11px;
   color: var(--vscode-descriptionForeground);
