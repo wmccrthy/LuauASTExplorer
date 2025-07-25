@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { isSearchable } from './helpers';
+import TreeNodeContainer from './TreeNode';
+import CodeEditor from './CodeEditor';
 import './App.css';
 
 // Global window interface for VSCode webview API and AST data
@@ -20,7 +22,14 @@ interface ASTNode {
   [key: string]: any;
 }
 
+enum WindowMode {
+  Explorer = 'explorer',      // Current AST viewer (default)
+  LiveEditor = 'live-editor', // Window 1: Live code editor + AST
+  DiffAnalyzer = 'diff-analyzer' // Window 2: Code transformation diff
+}
+
 const App: React.FC = () => {
+  // Original AST viewer state
   const [astContent, setAstContent] = useState<string>('');
   const [originalContent, setOriginalContent] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -28,6 +37,13 @@ const App: React.FC = () => {
   const [totalMatches, setTotalMatches] = useState<number>(0);
   const [astMode, setAstMode] = useState<'json' | 'text'>('text');
   const [astTree, setAstTree] = useState<ASTNode | null>(null);
+
+  // Multi-window state
+  const [windowMode, setWindowMode] = useState<WindowMode>(WindowMode.Explorer);
+  const [codeSnippet1, setCodeSnippet1] = useState<string>(''); // Live editor / Before code
+  const [codeSnippet2, setCodeSnippet2] = useState<string>(''); // After code (diff analyzer only)
+  const [astTree1, setAstTree1] = useState<ASTNode | null>(null);
+  const [astTree2, setAstTree2] = useState<ASTNode | null>(null);
 
   // Initialize with AST data from window
   useEffect(() => {
@@ -56,6 +72,11 @@ const App: React.FC = () => {
         setAstContent(content);
         setOriginalContent(content);
       }
+      
+      // TODO: Initialize codeSnippet1 with the original selected code
+      // For now, we'll use a placeholder since we only have the AST data
+      setCodeSnippet1('-- Original selected code will appear here --');
+      
     } else {
       // Fallback if no AST data
       const testContent = 'No AST data received from extension';
@@ -98,7 +119,14 @@ const App: React.FC = () => {
   // Copy to clipboard
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(originalContent);
+      let textToCopy = originalContent;
+      
+      if (astMode === 'json' && astTree) {
+        // For JSON mode, copy the formatted JSON
+        textToCopy = JSON.stringify(astTree, null, 2);
+      }
+      
+      await navigator.clipboard.writeText(textToCopy);
       // TODO: Add toast notification for user feedback
     } catch (err) {
       console.error('Failed to copy: ', err);
@@ -114,6 +142,15 @@ const App: React.FC = () => {
       return;
     }
 
+    if (astMode === 'json') {
+      // For JSON mode, simple highlighting without navigation
+      setTotalMatches(0);
+      setCurrentMatchIndex(0);
+      // TreeNode handles the actual highlighting
+      return;
+    }
+
+    // Text mode search with HTML marks and navigation
     const regex = new RegExp(term, 'gi');
     let matchCount = 0;
     const highlighted = originalContent.replace(regex, (match) => {
@@ -133,7 +170,13 @@ const App: React.FC = () => {
 
   // Navigation
   const scrollToMatch = (index: number) => {
-    // Small delay to ensure DOM is updated
+    if (astMode === 'json') {
+      // Tree view uses different IDs and the TreeNodeContainer handles scrolling
+      // Just trigger a re-render - TreeNodeContainer will handle the scrolling
+      return;
+    }
+
+    // Text mode navigation with HTML marks
     setTimeout(() => {
       const match = document.getElementById(`match-${index + 1}`);
       if (match) {
@@ -186,6 +229,106 @@ const App: React.FC = () => {
 
   const stats = getStats();
 
+  // Render different window content based on mode
+  const renderWindowContent = () => {
+    switch (windowMode) {
+      case WindowMode.Explorer:
+        // Original AST explorer (current functionality)
+        return (
+          <div className="ast-container">
+            {astMode === 'json' && astTree ? (
+              <div className="ast-content tree-view">
+                <TreeNodeContainer
+                  nodeKey="root"
+                  value={astTree}
+                  level={0}
+                  searchTerm={searchTerm}
+                />
+              </div>
+            ) : (
+              <pre 
+                className="ast-content" 
+                dangerouslySetInnerHTML={{ __html: astContent }}
+              />
+            )}
+          </div>
+        );
+        
+      case WindowMode.LiveEditor:
+        // Window 1: Live code editor + AST view
+        return (
+                     <div className="live-editor-layout">
+             <div className="code-preview-section">
+               <h3>📝 Code Preview</h3>
+               <CodeEditor
+                 value={codeSnippet1}
+                 onChange={setCodeSnippet1}
+                 placeholder="Edit your Luau code here..."
+                 height="200px"
+               />
+               <button className="btn parse-btn">🔄 Parse AST</button>
+             </div>
+            <div className="ast-view-section">
+              <h3>🌳 Live AST</h3>
+              {astTree1 ? (
+                <div className="ast-content tree-view">
+                  <TreeNodeContainer
+                    nodeKey="root"
+                    value={astTree1}
+                    level={0}
+                    searchTerm={searchTerm}
+                  />
+                </div>
+              ) : (
+                <div className="placeholder">Click "Parse AST" to see the AST structure</div>
+              )}
+            </div>
+          </div>
+        );
+        
+      case WindowMode.DiffAnalyzer:
+        // Window 2: Codemod transformation diff
+        return (
+          <div className="diff-analyzer-layout">
+            <div className="diff-header">
+              <h3>🔄 Codemod Transformation Analyzer</h3>
+              <p>Compare two code snippets to see how AST modifications transform code</p>
+            </div>
+                         <div className="code-inputs-section">
+               <div className="code-input">
+                 <h4>📝 Before (Code to Transform)</h4>
+                 <CodeEditor
+                   value={codeSnippet1}
+                   onChange={setCodeSnippet1}
+                   placeholder="Original code..."
+                   height="180px"
+                 />
+               </div>
+               <div className="code-input">
+                 <h4>✨ After (Target Result)</h4>
+                 <CodeEditor
+                   value={codeSnippet2}
+                   onChange={setCodeSnippet2}
+                   placeholder="Transformed code..."
+                   height="180px"
+                 />
+               </div>
+             </div>
+            <button className="btn parse-btn">🔍 Analyze Transformation</button>
+            <div className="diff-view-section">
+              <h4>🌳 AST Transformation Diff</h4>
+              <div className="placeholder">
+                Enter code in both fields and click "Analyze Transformation" to see the AST diff
+              </div>
+            </div>
+          </div>
+        );
+        
+      default:
+        return <div>Unknown window mode</div>;
+    }
+  };
+
   return (
     <div className="ast-explorer">
       <div className="header">
@@ -201,48 +344,72 @@ const App: React.FC = () => {
             {astMode.toUpperCase()}
           </span>
         </div>
-        <div className="controls">
-          <input
-            type="text"
-            className="search-box"
-            placeholder="Search nodes (Enter to cycle)..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onKeyDown={handleSearchKeyDown}
-          />
+        
+        <div className="window-mode-toggle">
           <button 
-            className="btn" 
-            onClick={previousMatch}
-            disabled={totalMatches === 0}
+            className={`btn ${windowMode === WindowMode.Explorer ? 'active' : ''}`}
+            onClick={() => setWindowMode(WindowMode.Explorer)}
           >
-            ⬆️ Prev
+            🔍 Explorer
           </button>
           <button 
-            className="btn" 
-            onClick={nextMatch}
-            disabled={totalMatches === 0}
+            className={`btn ${windowMode === WindowMode.LiveEditor ? 'active' : ''}`}
+            onClick={() => setWindowMode(WindowMode.LiveEditor)}
           >
-            ⬇️ Next
+            ✏️ Live Editor
           </button>
-          <span className="search-info">
-            {totalMatches > 0 ? `${currentMatchIndex + 1} of ${totalMatches}` : ''}
-          </span>
-          <button className="btn" onClick={copyToClipboard}>
-            📋 Copy
+          <button 
+            className={`btn ${windowMode === WindowMode.DiffAnalyzer ? 'active' : ''}`}
+            onClick={() => setWindowMode(WindowMode.DiffAnalyzer)}
+          >
+            🔄 Codemod Diff
           </button>
         </div>
+        {windowMode === WindowMode.Explorer && (
+          <div className="controls">
+            <input
+              type="text"
+              className="search-box"
+              placeholder="Search nodes (Enter to cycle)..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
+            />
+            {astMode === 'text' && (
+              <>
+                <button 
+                  className="btn" 
+                  onClick={previousMatch}
+                  disabled={totalMatches === 0}
+                >
+                  ⬆️ Prev
+                </button>
+                <button 
+                  className="btn" 
+                  onClick={nextMatch}
+                  disabled={totalMatches === 0}
+                >
+                  ⬇️ Next
+                </button>
+                <span className="search-info">
+                  {totalMatches > 0 ? `${currentMatchIndex + 1} of ${totalMatches}` : ''}
+                </span>
+              </>
+            )}
+            <button className="btn" onClick={copyToClipboard}>
+              📋 Copy
+            </button>
+          </div>
+        )}
       </div>
       
-      <div className="ast-container">
-        <pre 
-          className="ast-content" 
-          dangerouslySetInnerHTML={{ __html: astContent }}
-        />
-      </div>
+      {renderWindowContent()}
       
-      <div className="stats">
-        📊 <strong>{stats.lines}</strong> lines | <strong>{stats.nodes}</strong> nodes | <strong>{stats.characters}</strong> characters
-      </div>
+      {windowMode === WindowMode.Explorer && (
+        <div className="stats">
+          📊 <strong>{stats.lines}</strong> lines | <strong>{stats.nodes}</strong> nodes | <strong>{stats.characters}</strong> characters
+        </div>
+      )}
     </div>
   );
 };

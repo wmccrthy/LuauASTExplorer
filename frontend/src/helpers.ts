@@ -1,8 +1,6 @@
-// Helper functions for the AST Explorer
+// Helper functions
 
-// helper function to not search for a term if it contains no non-whitespace chars
-export function isSearchable(term: string): boolean {
-    return term.trim().length > 0;
-}
-
-export {}
+export const isSearchable = (term: string): boolean => {
+  // Basic validation - minimum length or other criteria
+  return term.trim().length >= 1;
+};
