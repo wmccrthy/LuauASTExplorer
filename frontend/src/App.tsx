@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [astTree, setAstTree] = useState<ASTNode | null>(null);
 
   // Multi-window state
-  const [windowMode, setWindowMode] = useState<WindowMode>(WindowMode.Explorer);
+  const [windowMode, setWindowMode] = useState<WindowMode>(WindowMode.LiveEditor);
   const [codeSnippet1, setCodeSnippet1] = useState<string>(''); // Live editor / Before code
   const [codeSnippet2, setCodeSnippet2] = useState<string>(''); // After code (diff analyzer only)
   const [astTree1, setAstTree1] = useState<ASTNode | null>(null);
@@ -388,7 +388,7 @@ const App: React.FC = () => {
           <div className="diff-analyzer-layout">
             <div className="diff-header">
               <h3>🔄 Codemod Transformation Analyzer</h3>
-              <p>Compare two code snippets to see how AST modifications transform code</p>
+              <p>Compare two code snippets to see how the AST needs to be modified to transform the first into the second</p>
             </div>
                          <div className="code-inputs-section">
                <div className="code-input">

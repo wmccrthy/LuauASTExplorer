@@ -56,11 +56,16 @@ function buildChangeMap(changes: JsonDiffChange[], parentPath: string, changeMap
     
     // If this change has nested changes, recurse deeper and don't add this intermediate node
     if (change.changes && change.changes.length > 0) {
+      console.log(`Recursing into nested changes for path: "${currentPath}"`);
       buildChangeMap(change.changes, currentPath, changeMap);
     } else {
       // Only add leaf changes (changes with actual oldValue/value) to the map
       if (change.oldValue !== undefined || change.value !== undefined) {
-        console.log(`Adding leaf change to map: "${currentPath}"`, change);
+        console.log(`Adding leaf change to map: "${currentPath}"`, { 
+          type: change.type, 
+          oldValue: change.oldValue, 
+          value: change.value 
+        });
         changeMap.set(currentPath, change);
       }
     }
@@ -77,48 +82,79 @@ function annotateDiffTreeRecursive(
   currentPath: string
 ): void {
   
-  // Debug: log what we're checking
-  if (currentPath.includes('value') || currentPath.includes('text')) {
-    console.log(`Checking path: "${currentPath}"`);
-  }
+  // Check if this exact path has a direct change
+  const directChange = changeMap.get(currentPath);
   
-  // Check if this exact path has changes
-  const change = changeMap.get(currentPath);
+  // Find immediate child changes (only direct children, not grandchildren)
+  const directChildChanges = Array.from(changeMap.keys()).filter(path => {
+    if (!path.startsWith(currentPath + '.')) return false;
+    const remainingPath = path.substring(currentPath.length + 1);
+    const isDirectChild = !remainingPath.includes('.'); // No further dots = direct child
+    console.log(`Checking child path "${path}" from parent "${currentPath}": remaining="${remainingPath}", isDirect=${isDirectChild}`);
+    return isDirectChild;
+  });
   
-  if (change) {
-    console.log(`Found change for path "${currentPath}":`, change);
-  }
+  console.log(`Direct children for "${currentPath}":`, directChildChanges);
   
-  if (change) {
-    // This is a leaf node with actual changes
-    switch (change.type) {
-      case 'ADD':
-        node.diffStatus = 'added';
-        node.afterValue = change.value;
-        break;
-      case 'REMOVE':
-        node.diffStatus = 'removed';
-        node.beforeValue = change.oldValue;
-        break;
-      case 'UPDATE':
-        node.diffStatus = 'updated';
-        node.beforeValue = change.oldValue;
-        node.afterValue = change.value;
-        break;
-    }
-    node.diffKey = change.key;
-  } else {
-    // Check if any child paths have changes
-    const hasChildChanges = Array.from(changeMap.keys()).some(path => 
-      path.startsWith(currentPath + '.')
-    );
-    
-    if (hasChildChanges) {
-      // Parent node - mark as containing changes but don't set beforeValue/afterValue
-      node.diffStatus = 'contains-changes';
+  if (directChange) {
+    // This node itself has changed - annotate it if possible
+    if (typeof node === 'object' && node !== null) {
+      switch (directChange.type) {
+        case 'ADD':
+          node.diffStatus = 'added';
+          node.beforeValue = undefined;
+          node.afterValue = directChange.value;
+          break;
+        case 'REMOVE':
+          node.diffStatus = 'removed';
+          node.beforeValue = directChange.oldValue;
+          node.afterValue = undefined;
+          break;
+        case 'UPDATE':
+          node.diffStatus = 'updated';
+          node.beforeValue = directChange.oldValue;
+          node.afterValue = directChange.value;
+          break;
+      }
+      node.diffKey = directChange.key;
+      console.log(`Direct change annotated: "${currentPath}"`, { 
+        type: directChange.type, 
+        status: node.diffStatus
+      });
     } else {
-      node.diffStatus = 'unchanged';
+      console.log(`Cannot annotate primitive value: "${currentPath}"`, { 
+        type: directChange.type, 
+        value: node
+      });
     }
+  }
+  
+  if (directChildChanges.length > 0) {
+    // This is a parent with child changes
+    // Highlight the direct parent of changed nodes
+    node.diffStatus = 'contains-changes';
+    
+    // Store change information for child rendering with full path context
+    node.childChanges = directChildChanges.reduce((acc, changePath) => {
+      const change = changeMap.get(changePath);
+      const childKey = changePath.substring(currentPath.length + 1);
+      
+      // Only store if this is actually a direct child (no further nesting)
+      if (!childKey.includes('.')) {
+        // Store with full path to avoid false matches
+        acc[childKey] = {
+          ...change,
+          fullPath: changePath
+        };
+        console.log(`Storing child change: "${childKey}" with full path "${changePath}"`, change);
+      }
+      
+      return acc;
+    }, {} as any);
+    
+    console.log(`Parent with child changes: "${currentPath}" (${directChildChanges.length} children)`, Object.keys(node.childChanges));
+  } else if (!directChange) {
+    node.diffStatus = 'unchanged';
   }
 
   // Recursively process children
@@ -169,6 +205,29 @@ function deepClone(obj: any): any {
   });
   
   return cloned;
+}
+
+/**
+ * Create a clean copy of a node without diff metadata
+ */
+function cleanDiffNode(node: any): any {
+  if (node === null || typeof node !== 'object') {
+    return node;
+  }
+  
+  if (Array.isArray(node)) {
+    return node.map(item => cleanDiffNode(item));
+  }
+  
+  const cleaned: any = {};
+  Object.keys(node).forEach(key => {
+    // Skip ALL diff metadata properties including nodeKey variations
+    if (!['diffStatus', 'beforeValue', 'afterValue', 'diffKey', 'before', 'after', 'childChanges'].includes(key)) {
+      cleaned[key] = cleanDiffNode(node[key]);
+    }
+  });
+  
+  return cleaned;
 }
 
 /**

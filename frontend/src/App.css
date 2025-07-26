@@ -192,7 +192,10 @@
 
 .diff-indicator {
   font-weight: bold;
-  margin-right: 4px;
+  display: inline-block;
+  width: 16px;
+  text-align: left;
+  margin-right: 0;
 }
 
 .diff-added-indicator {
@@ -222,6 +225,15 @@
   color: var(--vscode-gitDecoration-addedResourceForeground);
   font-weight: bold;
 }
+
+/* Styling for parent nodes that contain changes */
+.diff-contains-changes {
+  border-left: 2px solid #3490dc;
+  padding-left: 2px;
+  background-color: rgba(52, 144, 220, 0.05);
+}
+
+ 
 
 .stats {
   font-size: 11px;
