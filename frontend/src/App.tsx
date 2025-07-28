@@ -277,7 +277,7 @@ const App: React.FC = () => {
             <input
               type="text"
               className="search-box"
-              placeholder="Search nodes (Enter to cycle)..."
+              placeholder="Search nodes..."
               value={searchTerm}
               onChange={handleSearchChange}
             />
