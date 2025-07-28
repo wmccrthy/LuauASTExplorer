@@ -22,7 +22,7 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
   - 🔵 **Blue** for modifications (`~`)
   - 🔵 **Circle** for containers with changes (`○`)
 
-![Diff Analyzer Demo](./docs/ASTExplorerTreeDiffGIF.gif)
+![Diff Analyzer Demo](./docs/ASTExplorerDiffGIF.gif)
 
 ### 🎯 **Smart Tree Display**
 - **Auto-collapse irrelevant nodes** (trivia, location, position data, etc)
