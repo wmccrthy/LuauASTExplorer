@@ -1,166 +1,200 @@
 # AST Highlight Helper
 
-A VSCode extension that shows AST (Abstract Syntax Tree) representation of highlighted Luau/Lua code using the Lute parser.
+A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees (AST) of Luau/Lua code with advanced diffing capabilities.
 
-## Features
+## 🚀 Features
 
-- 🌳 **AST Visualization**: View the AST representation of selected Luau/Lua code
-- ⌨️ **Configurable Hotkeys**: Customize the hotkey to trigger AST display (default: `Ctrl+Alt+A` / `Cmd+Alt+A`)
-- 🔧 **Lute Integration**: Uses the official Lute parser from the Luau team
-- 🎨 **Clean UI**: Displays AST in a clean, formatted panel with VSCode theming
-- ⚡ **Real-time Parsing**: Fast AST generation with progress indicators
+### 🔍 **Live AST Editor** 
+- **Interactive code editor** with live AST updates
+- **Instant parsing** as you type or on-demand
+- **Side-by-side view** of code and corresponding AST
+- **Perfect for learning** how code structures translate to AST nodes
 
-## Prerequisites
+![Live Editor Demo](./docs/ASTExplorerLiveEditorGIF.gif)
 
-Before using this extension, you need to install the required tools:
+### ⚡ **AST Diff Analyzer**
+- **Visual comparison** between two code snippets
+- **Intelligent change detection** (additions, modifications, removals)
+- **Parent context highlighting** shows which containers changed
+- **Color-coded indicators**: 
+  - 🟢 **Green** for additions (`+`)
+  - 🔴 **Red** for removals (`-`) 
+  - 🔵 **Blue** for modifications (`~`)
+  - 🔵 **Circle** for containers with changes (`○`)
 
-### 1. Install Foreman
+![Diff Analyzer Demo](./docs/ASTExplorerTreeDiffGIF.gif)
 
-Foreman is a package manager for Luau tools. Install it following the instructions at:
-https://github.com/Roblox/foreman
+### 🎯 **Smart Tree Display**
+- **Auto-collapse irrelevant nodes** (trivia, location, position data, etc)
+- **Expandable/collapsible** tree branches
+- **Clean visual hierarchy** for easy navigation
 
-### 2. Install Lute and Other Tools
+## 📦 Installation
 
-Run the following command in your project directory to install Lute and StyLua:
+### From VSCode Marketplace
+1. Open VSCode
+2. Go to Extensions (`Ctrl+Shift+X` / `Cmd+Shift+X`)
+3. Search for "AST Highlight Helper"
+4. Click **Install**
 
+### From VSIX File
+1. Download the `.vsix` file from [Releases](./releases)
+2. Open VSCode Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+3. Run `Extensions: Install from VSIX...`
+4. Select the downloaded `.vsix` file
+
+### Prerequisites
+- **Lute**: Install via [Foreman](https://github.com/Roblox/foreman)
+  ```bash
+  foreman install
+  ```
+
+## 🎮 Usage
+
+### Quick Start
+1. **Open a Luau/Lua file** in VSCode
+2. **Select some code** you want to analyze
+3. **Press `Cmd+Shift+A`** (macOS) or `Ctrl+Shift+A` (Windows/Linux)
+4. **Choose your mode**:
+   - **Live Editor**: Interactive editing with live AST
+   - **Diff Analyzer**: Compare two code snippets
+
+### Keyboard Shortcuts
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+Shift+A` / `Ctrl+Shift+A` | Open AST Highlight Helper |
+| `Enter` | Navigate to next search result |
+| `Shift+Enter` | Navigate to previous search result |
+| `Cmd+C` / `Ctrl+C` | Copy AST to clipboard |
+
+### Advanced Usage
+
+#### Live Editor Mode
+- **Type or paste code** in the editor pane
+- **Click "Parse AST"** for on-demand parsing
+- **View real-time AST** as your code structure changes
+- **Perfect for experimentation** and learning
+
+#### Diff Analyzer Mode
+- **Input two code snippets** in separate editors
+- **Click "Analyze Transformation"** to see differences
+- **Visual diff highlighting** shows exactly what changed
+- **Understand code transformations** for refactoring and codemod work
+
+## 🛠️ Development
+
+### Setup
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/ASTHighlightHelper.git
+cd ASTHighlightHelper
+
+# Install dependencies
+npm install
+cd frontend && npm install && cd ..
+
+# Install Lute
 foreman install
 ```
 
-This will install the tools specified in `foreman.toml`:
-- **Lute**: The Luau AST parser
-- **StyLua**: Lua/Luau code formatter
-
-## Installation
-
-### From Source
-
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Compile the TypeScript:
-   ```bash
-   npm run compile
-   ```
-4. Press `F5` in VSCode to launch a new Extension Development Host window
-
-### From VSIX (Coming Soon)
-
-Install the `.vsix` package file through VSCode's Extensions view.
-
-## Usage
-
-1. **Open a Luau/Lua file** in VSCode
-2. **Select the code** you want to analyze
-3. **Trigger AST display** using one of these methods:
-   - Press `Ctrl+Alt+A` (Windows/Linux) or `Cmd+Alt+A` (Mac)
-   - Open Command Palette (`Ctrl+Shift+P`) and run "Show AST of Selected Code"
-4. **View the AST** in the panel that opens beside your editor
-
-### Example
-
-Select this Luau code:
-```lua
-local function greet(name)
-    print("Hello, " .. name .. "!")
-end
-
-greet("World")
-```
-
-The extension will display the corresponding AST structure showing the function declaration, variable assignments, and function calls.
-
-## Configuration
-
-The extension can be configured through VSCode settings:
-
-### `astHighlightHelper.hotkey`
-- **Type**: `string`
-- **Default**: `"ctrl+alt+a"`
-- **Description**: Hotkey to trigger AST display
-
-### `astHighlightHelper.luteExecutable`
-- **Type**: `string`
-- **Default**: `"lute"`
-- **Description**: Path to the Lute executable
-
-Example configuration in `settings.json`:
-```json
-{
-    "astHighlightHelper.hotkey": "ctrl+shift+a",
-    "astHighlightHelper.luteExecutable": "/path/to/custom/lute"
-}
-```
-
-## Supported Languages
-
-Currently supports:
-- **Lua** (`.lua` files)
-- **Luau** (`.luau` files)
-
-## Development
-
 ### Building
-
 ```bash
+# Development build with watch mode
+npm run watch
+
+# Production build
 npm run compile
+
+# Package extension
+vsce package
 ```
 
-### Watching for Changes
+### Architecture
 
-```bash
-npm run watch
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    VSCode Extension                         │
+├─────────────────┬─────────────────┬─────────────────────────┤
+│   Backend       │   Frontend      │   External Tools        │
+│   (Node.js)     │   (React)       │                         │
+│                 │                 │                         │
+│ • extension.ts  │ • App.tsx       │ • Lute (Luau parser)    │
+│ • astParser.ts  │ • TreeNode.tsx  │ • json-diff-ts          │
+│ • Luau helpers  │ • diffUtils.ts  │ • Foreman (tool mgmt)   │
+└─────────────────┴─────────────────┴─────────────────────────┘
 ```
 
 ### Project Structure
-
 ```
-├── src/
-│   ├── extension.ts      # Main extension entry point
-│   └── astParser.ts      # AST parsing logic with Lute integration
-├── package.json          # Extension manifest and dependencies
-├── tsconfig.json         # TypeScript configuration
-├── foreman.toml          # Luau tools configuration
-└── README.md            # This file
+ASTHighlightHelper/
+├── src/                     # VSCode extension backend
+│   ├── extension.ts         # Main entry point
+│   └── astParser.ts         # Lute integration
+├── frontend/                # React frontend
+│   ├── src/
+│   │   ├── App.tsx          # Main React component
+│   │   ├── TreeNode.tsx     # AST tree rendering
+│   │   └── diffUtils.ts     # Diff computation engine
+│   └── build/              # Built React app
+├── lua_helpers/            # Luau scripts for parsing
+│   └── ast_parser.luau     # AST serialization script
+├── package.json            # Extension manifest
+└── README.md              # This file
 ```
 
-## Troubleshooting
+## 🤝 Contributing
 
-### "Lute executable not found"
+We welcome contributions! Here's how to get started:
 
-1. Ensure foreman is installed
-2. Run `foreman install` in your project directory
-3. Verify Lute is in your PATH: `lute --version`
-4. Check the `astHighlightHelper.luteExecutable` setting
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** and test thoroughly
+4. **Commit your changes**: `git commit -m 'Add amazing feature'`
+5. **Push to the branch**: `git push origin feature/amazing-feature`
+6. **Open a Pull Request**
 
-### "Please select some code to analyze"
+### Development Guidelines
+- **Follow TypeScript best practices**
+- **Add tests** for new functionality
+- **Update documentation** as needed
+- **Test with various Luau code samples**
 
-Make sure you have:
-1. Selected text in the editor (not just a cursor position)
-2. The file is detected as Lua/Luau (check the language indicator in VSCode status bar)
+## 📋 Requirements
 
-### AST Not Displaying
+- **VSCode** 1.60.0 or higher
+- **Lute** (install via Foreman)
+- **Node.js** 16+ (for development)
 
-1. Check the VSCode Developer Console (`Help > Toggle Developer Tools`) for error messages
-2. Verify the selected code is valid Luau/Lua syntax
-3. Try with a simple code snippet first
+## 🐛 Known Issues
 
-## Contributing
+- Large AST trees (1000+ nodes) may have performance impact
+- Diffing is not perfect, but it's a work in progress (open to suggestions and improvements)
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+## 🗺️ Roadmap
 
-## License
+- [ ] **Better diffing**: Improve diffing algorithm to be more accurate, more usable, and properly display removals
+- [ ] **AST Editing**: Modify AST nodes to generate/modify code in the editor
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- [Luau Team](https://luau-lang.org/) for the Luau language and Lute parser
-- [Roblox](https://github.com/Roblox/foreman) for the Foreman package manager
-- [VSCode Extension API](https://code.visualstudio.com/api) for the extension framework 
+- **luau-lang** for 
+- **rxi** for a lua json library
+- **json-diff-ts** for robust JSON diffing capabilities
+
+## 📞 Support
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/your-username/ASTHighlightHelper/issues)
+- **Discussions**: [Ask questions or share ideas](https://github.com/your-username/ASTHighlightHelper/discussions)
+
+---
+
+**Made with ❤️ for the Luau/Roblox development community**
+
+![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue?style=for-the-badge&logo=visual-studio-code)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Luau](https://img.shields.io/badge/Luau-000000?style=for-the-badge&logo=lua&logoColor=white) 
