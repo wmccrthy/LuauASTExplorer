@@ -1,6 +1,6 @@
 -- we can write a separate script for getting the AST in JSON format for simplicity
 local fs = require("@lute/fs")
-local parser = require("./parser")
+local parser = require("@std/syntax/parser")
 local json = require("./json")
 
 -- Get the source file path from command line argument

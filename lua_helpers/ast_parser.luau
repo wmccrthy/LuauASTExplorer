@@ -1,6 +1,6 @@
 -- AST Parser Script using our custom parser library
 local fs = require("@lute/fs")
-local parser = require("./parser")
+local parser = require("@std/syntax/parser")
 
 -- Get the source file path from command line argument
 local args = { ... }
