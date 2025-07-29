@@ -208,7 +208,7 @@ const App: React.FC = () => {
             >
               {isParsingDiff ? '⏳ Analyzing...' : '🔍 Analyze Transformation'}
             </button>
-            <div className="diff-view-section">
+            <div className="ast-view-section">
               <h4>🌳 AST Transformation Diff</h4>
               {parseDiffError ? (
                 <div className="error-message">

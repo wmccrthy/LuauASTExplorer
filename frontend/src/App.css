@@ -319,20 +319,6 @@
   color: var(--vscode-titleBar-activeForeground);
 }
 
-.diff-view-section {
-  flex: 1;
-  border: 1px solid var(--vscode-panel-border);
-  border-radius: 4px;
-  padding: 16px;
-  background: var(--vscode-textCodeBlock-background);
-}
-
-.diff-view-section h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--vscode-titleBar-activeForeground);
-}
-
 .placeholder {
   color: var(--vscode-descriptionForeground);
   font-style: italic;
