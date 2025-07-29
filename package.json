@@ -1,46 +1,68 @@
 {
-  "name": "ast-highlight-helper",
-  "displayName": "AST Highlight Helper",
-  "description": "Show AST representation of highlighted code using Luau/Lute",
-  "version": "0.0.1",
+  "name": "luau-ast-explorer",
+  "displayName": "Luau AST Explorer",
+  "description": "Explore Luau/Lua AST structures, analyze code transformations, and assist with codemod development",
+  "version": "0.1.0",
+  "publisher": "internal",
+  "license": "MIT",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/your-username/ASTHighlightHelper.git"
+  },
+  "homepage": "https://github.com/your-username/ASTHighlightHelper#readme",
+  "bugs": {
+    "url": "https://github.com/your-username/ASTHighlightHelper/issues"
   },
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other"
+    "Visualization",
+    "Other",
+    "Debuggers"
+  ],
+  "keywords": [
+    "luau",
+    "lua",
+    "ast",
+    "parser",
+    "syntax tree",
+    "code analysis",
+    "diff",
+    "codemod",
+    "transformation",
+    "explorer"
   ],
   "activationEvents": [
-    "onCommand:ast-highlight-helper.showAST"
+    "onCommand:luau-ast-explorer.showAST"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "ast-highlight-helper.showAST",
-        "title": "Show AST of Selected Code"
+        "command": "luau-ast-explorer.showAST",
+        "title": "Luau AST Explorer: Show AST of Selected Code",
+        "category": "Luau AST Explorer"
       }
     ],
     "keybindings": [
       {
-        "command": "ast-highlight-helper.showAST",
+        "command": "luau-ast-explorer.showAST",
         "key": "ctrl+shift+a",
         "mac": "cmd+shift+a",
         "when": "editorTextFocus && editorHasSelection"
       }
     ],
     "configuration": {
-      "title": "AST Highlight Helper",
+      "title": "Luau AST Explorer",
       "properties": {
-        "astHighlightHelper.hotkey": {
+        "luauAstExplorer.hotkey": {
           "type": "string",
           "default": "ctrl+shift+a",
           "description": "Hotkey to trigger AST display"
         },
-        "astHighlightHelper.luteExecutable": {
+        "luauAstExplorer.luteExecutable": {
           "type": "string",
           "default": "",
           "description": "Path to the Lute executable (leave empty for auto-detection)"
@@ -53,7 +75,9 @@
     "compile": "npm run build:frontend && tsc -p ./",
     "build:frontend": "cd frontend && npm run build",
     "watch": "tsc -watch -p ./",
-    "dev": "npm run build:frontend && npm run watch"
+    "dev": "npm run build:frontend && npm run watch",
+    "package": "vsce package",
+    "test": "npm run compile && node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/node": "16.x",
@@ -62,7 +86,6 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "child_process": "^1.0.2",
     "react": "^19.1.0"
   }
 }

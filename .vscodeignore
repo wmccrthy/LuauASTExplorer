@@ -1,34 +1,40 @@
-.vscode/**
-.vscode-test/**
-src/**
+# Development files
+.vscode/
+.git/
+.github/
+*.md
+!README.md
 .gitignore
-.yarnrc
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/tslint.json
-**/.eslintrc.json
-**/.prettierrc
-tslint.json
-out/test/**
-src/test/**
-**/*.map
-.nyc_output
-coverage/
-node_modules
-npm-debug.log
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Build artifacts
+src/
+frontend/src/
+*.ts
+!*.d.ts
+*.map
+tsconfig.json
+webpack.config.js
+
+# Test files
+test/
+**/*.test.ts
+**/*.test.js
+
+# Package files
 *.vsix
+.vscode-test/
 
-# Include lua_helpers for the extension
+# Other
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Keep only compiled output and assets
+!out/
+!frontend/build/
 !lua_helpers/
-
-# Frontend source files (exclude)
-frontend/src/**
-frontend/public/**
-frontend/node_modules/**
-frontend/package*.json
-frontend/tsconfig.json
-frontend/README.md
-frontend/.gitignore
-
-# Frontend build (include for extension)
-!frontend/build/** 

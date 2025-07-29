@@ -2,13 +2,13 @@ import * as vscode from 'vscode';
 import { ASTParser } from './astParser';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('AST Highlight Helper is now active!');
+    console.log('Luau AST Explorer is now active!');
 
     // Create AST parser instance with extension context
     const astParser = new ASTParser(context);
 
     // Register the command to show AST
-    let disposable = vscode.commands.registerCommand('ast-highlight-helper.showAST', async () => {
+    let disposable = vscode.commands.registerCommand('luau-ast-explorer.showAST', async () => {
         const editor = vscode.window.activeTextEditor;
         
         if (!editor) {

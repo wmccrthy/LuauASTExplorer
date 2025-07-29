@@ -16,39 +16,32 @@ local sourceFilePath = args[2]
 local sourceCode = fs.readfiletostring(sourceFilePath)
 
 -- Parse the AST using our custom parser
-local success, ast = pcall(function()
-	return parser.parse(sourceCode)
-end)
-
-local function _trimResult(obj)
-	if obj.tag == "block" and #obj.statements == 1 then
-		-- if the block has only one statement, return the statement, as user is probably highlighting a single line of text
-		-- and returning the full block is not useful and unecessarily verbose. Single line inspections are probably one of the most common use cases.
-		return obj.statements[1]
-	else
-		return obj
-	end
-end -- not using for now bc can complicate diff comparisons
-
-local result
-if success then
-	result = ast
-else
-	-- fall back to parse expression (so we can parse smaller snippets of code)
-	success, exprAST = pcall(function()
+local function parseBlock(src)
+	local success, ast = pcall(function()
+		return parser.parse(sourceCode)
+	end)
+	return success, ast
+end
+local function parseExpr(src)
+	local success, exprAST = pcall(function()
 		return parser.parseexpr(sourceCode)
 	end)
-
-	if success then
-		result = exprAST
-	else
-		result = {
+	return success, exprAST
+end
+local function handleCommonErrs(src)
+	local success, ast = parseBlock(src)
+	if not success then
+		success, ast = parseExpr(src)
+	end
+	return if success
+		then ast
+		else {
 			type = "Error",
 			timestamp = os.date("%Y-%m-%d %H:%M:%S"),
 			error = "Parse Error",
 			message = tostring(ast),
 		}
-	end
 end
 
+result = handleCommonErrs(sourceCode)
 print(json.encode(result))
