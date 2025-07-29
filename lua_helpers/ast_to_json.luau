@@ -30,17 +30,25 @@ local function _trimResult(obj)
 	end
 end -- not using for now bc can complicate diff comparisons
 
-
 local result
 if success then
 	result = ast
 else
-	result = {
-		type = "Error",
-		timestamp = os.date("%Y-%m-%d %H:%M:%S"),
-		error = "Parse Error",
-		message = tostring(ast),
-	}
+	-- fall back to parse expression (so we can parse smaller snippets of code)
+	success, exprAST = pcall(function()
+		return parser.parseexpr(sourceCode)
+	end)
+
+	if success then
+		result = exprAST
+	else
+		result = {
+			type = "Error",
+			timestamp = os.date("%Y-%m-%d %H:%M:%S"),
+			error = "Parse Error",
+			message = tostring(ast),
+		}
+	end
 end
 
 print(json.encode(result))
