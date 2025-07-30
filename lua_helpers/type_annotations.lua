@@ -97,6 +97,89 @@ local typeDefinitions = {
 	},
 }
 
+-- Context-aware type resolution for ambiguous tags
+local function resolveAmbiguousType(node)
+    local tag = node.tag
+    if not tag then return nil end
+    
+    -- Handle ambiguous cases based on distinguishing properties
+    if tag == "conditional" then
+        -- AstStatIf has endKeyword, AstExprIfElse doesn't
+        if node.endKeyword then
+            return "AstStatIf"
+        else
+            return "AstExprIfElse"  
+        end
+        
+    elseif tag == "function" then
+        -- AstTypeFunction has returnArrow
+        if node.returnArrow then
+            return "AstTypeFunction"
+        -- AstStatFunction has name, AstExprAnonymousFunction doesn't  
+        elseif node.name then
+            return "AstStatFunction"
+        else
+            return "AstExprAnonymousFunction"
+        end
+        
+    elseif tag == "group" then
+        -- AstExprGroup has expression, AstTypeGroup has type
+        if node.expression then
+            return "AstExprGroup"
+        elseif node.type then
+            return "AstTypeGroup"
+        end
+        
+    elseif tag == "local" then
+        -- AstExprLocal has token/upvalue, AstStatLocal has localKeyword/variables
+        if node.token and node.upvalue ~= nil then
+            return "AstExprLocal"
+        elseif node.localKeyword and node.variables then
+            return "AstStatLocal"
+        end
+        
+    elseif tag == "generic" then
+        -- AstTypePackGeneric has ellipsis, AstGenericType doesn't
+        if node.ellipsis then
+            return "AstTypePackGeneric"
+        else
+            return "AstGenericType"
+        end
+        
+    elseif tag == "table" then
+        -- Both are similar, but we can check entry types or assume context
+        -- For now, try to distinguish by checking if we're in a type context
+        -- This is a heuristic - could be improved with better context analysis
+        if node.entries and #node.entries > 0 then
+            -- Check first entry structure for type-like patterns
+            local firstEntry = node.entries[1]
+            if firstEntry and (firstEntry.colon or firstEntry.key) then
+                return "AstTypeTable"  -- More likely a type table
+            end
+        end
+        return "AstExprTable"  -- Default to expression table
+        
+    elseif tag == "string" then
+        -- AstTypeSingletonString typically has fewer quote styles
+        if node.quoteStyle == "block" or node.quoteStyle == "interp" then
+            return "AstExprConstantString"  -- Only expressions have these
+        elseif node.blockDepth then
+            return "AstExprConstantString"  -- Only expressions have blockDepth
+        else
+            -- Could be either, default to expression for now
+            return "AstExprConstantString"
+        end
+        
+    elseif tag == "boolean" then
+        -- These are nearly identical, default to expression
+        -- Could be improved with context analysis
+        return "AstExprConstantBool"
+    end
+    
+    -- Fallback to original mapping if no disambiguation needed
+    return typeDefinitions.tags[tag]
+end
+
 local function annotateWithType(node, nodeKey)
     if type(node) ~= "table" then
         return node
@@ -104,9 +187,9 @@ local function annotateWithType(node, nodeKey)
     
     local astType = nil
     
-    -- Priority 1: Tag-based type resolution
-    if node.tag and typeDefinitions.tags[node.tag] then
-        astType = typeDefinitions.tags[node.tag]
+    -- Priority 1: Context-aware tag-based type resolution
+    if node.tag then
+        astType = resolveAmbiguousType(node)
     
     -- Priority 2: Key-based type resolution (fallback)
     elseif nodeKey and typeDefinitions.keys[nodeKey] then
