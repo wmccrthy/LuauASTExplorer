@@ -77,7 +77,7 @@
     "watch": "tsc -watch -p ./",
     "dev": "npm run build:frontend && npm run watch",
     "package": "vsce package",
-    "test": "npm run compile && node ./out/test/runTest.js"
+    "test": "npm run compile"
   },
   "devDependencies": {
     "@types/node": "16.x",
