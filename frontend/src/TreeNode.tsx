@@ -38,7 +38,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       return (
         <span className="ast-annotations">
           {" ("}
-          <TypeTooltip key="type" typeName={value._astType}>
+          <TypeTooltip key="type" typeName={value._astType} kind={value.kind}>
             <span className="type-annotation">
               type: {value._astType}
             </span>

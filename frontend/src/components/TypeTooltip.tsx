@@ -5,12 +5,14 @@ import './TypeTooltip.css';
 interface TypeTooltipProps {
   typeName: string;
   children: React.ReactNode;
+  kind?: string;
   delay?: number;
 }
 
-export const TypeTooltip: React.FC<TypeTooltipProps> = ({ 
-  typeName, 
-  children, 
+export const TypeTooltip: React.FC<TypeTooltipProps> = ({
+  typeName,
+  children,
+  kind = "",
   delay = 200
 }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -22,7 +24,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
   const typeDefinition = getTypeDefinition(typeName);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
-    if (!typeDefinition || typeDefinition.properties.length === 0) {
+    if (!typeDefinition || typeDefinition.properties?.length === 0) {
       return;
     }
 
@@ -32,19 +34,19 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
 
     // Capture the target element immediately before the setTimeout
     const target = e.currentTarget as HTMLElement;
-    
+
     if (!target) return;
 
     timeoutRef.current = setTimeout(() => {
       // Use the captured target, not e.currentTarget which may be null
       try {
         const rect = target.getBoundingClientRect();
-        
+
         const newPosition = {
           x: rect.left + rect.width / 2,
           y: rect.top - 10
         };
-        
+
         setPosition(newPosition);
         setIsVisible(true);
       } catch (err) {
@@ -71,11 +73,30 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
     }
   }, [isVisible]);
 
+  const handleTypeProperties = () => {
+    console.log(typeDefinition, kind, typeDefinition?.kinds?.[kind], typeDefinition?.kinds?.[kind]?.properties);
+
+    if (typeDefinition && typeDefinition.properties) {
+      return typeDefinition.properties.map((prop, index) => (
+        <li key={index} className="property-item">
+          <span className="property-name">{prop}</span>
+        </li>
+      ))
+    } else if (typeDefinition && typeDefinition.kinds) {
+      return typeDefinition.kinds[kind].properties?.map((prop, index) => (
+        <li key={index} className="property-item">
+          <span className="property-name">{prop}</span>
+        </li>
+      ))
+    }
+    return null;
+  }
+
   // Adjust tooltip position to stay within viewport
   useEffect(() => {
     if (isVisible && tooltipRef.current) {
       const tooltip = tooltipRef.current;
-      
+
       try {
         const rect = tooltip.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
@@ -121,7 +142,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
         {children}
       </span>
 
-      {isVisible && typeDefinition && typeDefinition.properties.length > 0 && (
+      {isVisible && typeDefinition && (typeDefinition.properties && typeDefinition.properties.length > 0 || typeDefinition.kinds && kind !== "") && (
         <div
           ref={tooltipRef}
           className="type-tooltip"
@@ -134,14 +155,10 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
           <div className="tooltip-header">
             <span className="tooltip-title">{typeName} Properties</span>
           </div>
-          
+
           <div className="tooltip-content">
             <ul className="properties-list">
-              {typeDefinition.properties.map((prop, index) => (
-                <li key={index} className="property-item">
-                  <span className="property-name">{prop}</span>
-                </li>
-              ))}
+              {handleTypeProperties()}
             </ul>
           </div>
 
@@ -149,7 +166,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
           <div className="tooltip-arrow"></div>
         </div>
       )}
-      
+
 
     </>
   );

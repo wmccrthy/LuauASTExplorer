@@ -1,5 +1,8 @@
+// Might be more robust to scrape the Luau type definitions file directly to get the type definitions... (can be a future feature)
+
 export interface ASTTypeDefinition {
-  properties: string[];
+  properties?: string[];
+  kinds?: Record<string, ASTTypeDefinition>;
 }
 
 export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
@@ -54,6 +57,36 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   
   "AstExprTable": {
     properties: ["openBrace", "entries", "closeBrace"]
+  },
+
+  "AstExprTableItem": {
+    // map based specifically on kind
+    kinds: {
+      ["list"]: {
+        properties: ["kind", "value", "separator?"]
+      },
+      ["record"]: {
+        properties: ["kind", "key", "equals", "value", "separator?"]
+      },
+      ["general"]: {
+        properties: ["kind", "indexerOpen", "key", "indexerClose", "equals", "value", "separator?"]
+      }
+    }
+  },
+
+  "AstTypeTableItem": {
+    // map based specifically on kind
+    kinds: {
+      ["property"]: {
+        properties: ["kind", "access", "key", "indexerClose", "colon", "value", "separator?"]
+      },
+      ["indexer"]: {
+        properties: ["kind", "access", "key", "indexerClose", "colon", "value", "separator?"]
+      },
+      ["stringproperty"]: {
+        properties: ["kind", "access", "indexerOpen", "key", "indexerClose", "colon", "value", "separator?"]
+      }
+    }
   },
   
   "AstExprUnary": {
@@ -147,7 +180,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   
   // === TYPES ===
   "AstTypeReference": {
-    properties: ["prefix", "prefixPoint", "name", "openParameters", "parameters", "closeParameters"]
+    properties: ["prefix", "prefixPoint", "name", "openParameters", "parameters?", "closeParameters?"]
   },
 
   "AstTypeSingletonBool": {

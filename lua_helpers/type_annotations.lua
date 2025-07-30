@@ -1,5 +1,7 @@
 --[[
-Module that serves as reference for Luau AST types so we can annotate the AST with type information
+	Module that serves as reference for Luau AST types so we can annotate the AST with type information
+	This is all based directly on Luau AST type definitions
+	Might be more robust to scrape the Luau type definitions file directly to get the type definitions... (can be a future feature)
 ]]
 
 local typeDefinitions = {
@@ -39,6 +41,9 @@ local typeDefinitions = {
 		["typeof"] = "AstTypeTypeof",
 		["union"] = "AstTypeUnion",
 		["intersection"] = "AstTypeIntersection",
+        ["optional"] = "AstTypeOptional",
+        ["typealias"] = "AstStatTypeAlias",
+        ["typefunction"] = "AstStatTypeFunction",
 
 		-- Special cases
 		["whitespace"] = "Whitespace",
@@ -71,6 +76,8 @@ local typeDefinitions = {
 		["returnKeyword"] = 'Token',
 		["breakKeyword"] = 'Token',
 		["continueKeyword"] = 'Token',
+        ["export"] = 'Token',
+        ["typeToken"] = 'Token',
 
 		-- Punctuation tokens
 		["openParens"] = 'Token',
@@ -95,6 +102,15 @@ local typeDefinitions = {
 		["name"] = 'Token',
 		["token"] = "Token",
 	},
+
+    kinds = {
+        ["property"] = "AstTypeTableItem",
+        ["indexr"] = "AstTypeTableItem",
+        ["stringproperty"] = "AstTypeTableItem",
+        ["record"] = "AstExprTableItem",
+        ["general"] = "AstExprTableItem",
+        ["list"] = "AstExprTableItem",
+    }
 }
 
 -- Context-aware type resolution for ambiguous tags
@@ -190,7 +206,10 @@ local function annotateWithType(node, nodeKey)
     -- Priority 1: Context-aware tag-based type resolution
     if node.tag then
         astType = resolveAmbiguousType(node)
-    
+
+    elseif node.kind then
+        astType = typeDefinitions.kinds[node.kind]
+
     -- Priority 2: Key-based type resolution (fallback)
     elseif nodeKey and typeDefinitions.keys[nodeKey] then
         astType = typeDefinitions.keys[nodeKey]
