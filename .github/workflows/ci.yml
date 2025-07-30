@@ -4,6 +4,11 @@ on:
     pull_request:
         branches:
             - main
+        types:
+            - opened
+            - edited
+            - reopened
+            - synchronize
 
 jobs:
     check_pr_type:
