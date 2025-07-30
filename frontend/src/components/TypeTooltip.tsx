@@ -24,7 +24,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
   const typeDefinition = getTypeDefinition(typeName);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
-    if (!typeDefinition || typeDefinition.properties?.length === 0) {
+    if (!typeDefinition || typeDefinition.properties?.length === 0 && !typeDefinition.kinds) {
       return;
     }
 
@@ -74,8 +74,6 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
   }, [isVisible]);
 
   const handleTypeProperties = () => {
-    console.log(typeDefinition, kind, typeDefinition?.kinds?.[kind], typeDefinition?.kinds?.[kind]?.properties);
-
     if (typeDefinition && typeDefinition.properties) {
       return typeDefinition.properties.map((prop, index) => (
         <li key={index} className="property-item">
@@ -153,7 +151,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
           }}
         >
           <div className="tooltip-header">
-            <span className="tooltip-title">{typeName} Properties</span>
+            <span className="tooltip-title">{typeName}{kind ? ` (${kind})` : ""}</span>
           </div>
 
           <div className="tooltip-content">

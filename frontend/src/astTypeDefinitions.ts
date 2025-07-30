@@ -8,232 +8,230 @@ export interface ASTTypeDefinition {
 export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   // === EXPRESSIONS ===
   "AstExprGroup": {
-    properties: ["openParens", "expression", "closeParens"]
+    properties: ["tag", "openParens", "expression", "closeParens"]
   },
   
   "AstExprConstantNil": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag"]
   },
   
   "AstExprConstantBool": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia", "value"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag", "value"]
   },
   
   "AstExprConstantNumber": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia", "value"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag", "value"]
   },
   
   "AstExprConstantString": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia", "quoteStyle", "blockDepth"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag", "quoteStyle", "blockDepth"]
   },
   
   "AstExprLocal": {
-    properties: ["token", "local", "upvalue"]
+    properties: ["tag", "token", "local", "upvalue"]
   },
   
   "AstExprGlobal": {
-    properties: ["name"]
+    properties: ["tag", "name"]
   },
   
   "AstExprVarargs": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag"]
   },
   
   "AstExprCall": {
-    properties: ["func", "openParens", "arguments", "closeParens", "self", "argLocation"]
+    properties: ["tag", "func", "openParens?", "arguments", "closeParens?", "self", "argLocation"]
   },
   
   "AstExprIndexName": {
-    properties: ["expression", "accessor", "index", "indexLocation"]
+    properties: ["tag", "expression", "accessor", "index", "indexLocation"]
   },
   
   "AstExprIndexExpr": {
-    properties: ["expression", "openBrackets", "index", "closeBrackets"]
+    properties: ["tag", "expression", "openBrackets", "index", "closeBrackets"]
   },
   
   "AstExprAnonymousFunction": {
-    properties: ["attributes", "functionKeyword", "body"]
+    properties: ["tag", "attributes", "functionKeyword", "body"]
   },
   
   "AstExprTable": {
-    properties: ["openBrace", "entries", "closeBrace"]
+    properties: ["tag", "openBrace", "entries", "closeBrace"]
   },
 
   "AstExprTableItem": {
-    // map based specifically on kind
     kinds: {
-      ["list"]: {
+      "list": {
         properties: ["kind", "value", "separator?"]
       },
-      ["record"]: {
+      "record": {
         properties: ["kind", "key", "equals", "value", "separator?"]
       },
-      ["general"]: {
+      "general": {
         properties: ["kind", "indexerOpen", "key", "indexerClose", "equals", "value", "separator?"]
       }
     }
   },
 
-  "AstTypeTableItem": {
-    // map based specifically on kind
-    kinds: {
-      ["property"]: {
-        properties: ["kind", "access", "key", "indexerClose", "colon", "value", "separator?"]
-      },
-      ["indexer"]: {
-        properties: ["kind", "access", "key", "indexerClose", "colon", "value", "separator?"]
-      },
-      ["stringproperty"]: {
-        properties: ["kind", "access", "indexerOpen", "key", "indexerClose", "colon", "value", "separator?"]
-      }
-    }
-  },
-  
   "AstExprUnary": {
-    properties: ["operator", "operand"]
+    properties: ["tag", "operator", "operand"]
   },
   
   "AstExprBinary": {
-    properties: ["lhsoperand", "operator", "rhsoperand"]
+    properties: ["tag", "lhsoperand", "operator", "rhsoperand"]
   },
 
   "AstExprInterpString": {
-    properties: ["strings", "expressions"]
+    properties: ["tag", "strings", "expressions"]
   },
 
   "AstExprTypeAssertion": {
-    properties: ["operand", "operator", "annotation"]
+    properties: ["tag", "operand", "operator", "annotation"]
   },
 
   "AstExprIfElse": {
-    properties: ["ifKeyword", "condition", "thenKeyword", "consequent", "elseifs", "elseKeyword", "antecedent"]
+    properties: ["tag", "ifKeyword", "condition", "thenKeyword", "consequent", "elseifs", "elseKeyword", "antecedent"]
   },
   
   // === STATEMENTS ===
   "AstStatBlock": {
-    properties: ["statements", "location"]
+    properties: ["tag", "statements"]
   },
   
   "AstStatIf": {
-    properties: ["ifKeyword", "condition", "thenKeyword", "consequent", "elseifs", "elseKeyword", "antecedent", "endKeyword"]
+    properties: ["tag", "ifKeyword", "condition", "thenKeyword", "consequent", "elseifs", "elseKeyword?", "antecedent?", "endKeyword"]
   },
   
   "AstStatWhile": {
-    properties: ["whileKeyword", "condition", "doKeyword", "body", "endKeyword"]
+    properties: ["tag", "whileKeyword", "condition", "doKeyword", "body", "endKeyword"]
   },
   
   "AstStatRepeat": {
-    properties: ["repeatKeyword", "body", "untilKeyword", "condition"]
+    properties: ["tag", "repeatKeyword", "body", "untilKeyword", "condition"]
   },
   
   "AstStatBreak": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag"]
   },
   
   "AstStatContinue": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag"]
   },
   
   "AstStatReturn": {
-    properties: ["returnKeyword", "expressions"]
+    properties: ["tag", "returnKeyword", "expressions"]
   },
   
   "AstStatExpr": {
-    properties: ["expression"]
+    properties: ["tag", "expression"]
   },
 
   "AstStatLocal": {
-    properties: ["localKeyword", "variables", "equals", "values"]
+    properties: ["tag", "localKeyword", "variables", "equals?", "values"]
   },
   
   "AstStatAssign": {
-    properties: ["variables", "equals", "values"]
+    properties: ["tag", "variables", "equals", "values"]
   },
 
   "AstStatCompoundAssign": {
-    properties: ["variable", "operand", "value"]
+    properties: ["tag", "variable", "operand", "value"]
   },
   
   "AstStatFor": {
-    properties: ["forKeyword", "variable", "equals", "from", "toComma", "to", "stepComma", "step", "doKeyword", "body", "endKeyword"]
+    properties: ["tag", "forKeyword", "variable", "equals", "from", "toComma", "to", "stepComma?", "step?", "doKeyword", "body", "endKeyword"]
   },
   
   "AstStatForIn": {
-    properties: ["forKeyword", "variables", "inKeyword", "values", "doKeyword", "body", "endKeyword"]
+    properties: ["tag", "forKeyword", "variables", "inKeyword", "values", "doKeyword", "body", "endKeyword"]
   },
 
   "AstStatFunction": {
-    properties: ["attributes", "functionKeyword", "name", "body"]
+    properties: ["tag", "attributes", "functionKeyword", "name", "body"]
   },
 
   "AstStatLocalFunction": {
-    properties: ["attributes", "localKeyword", "functionKeyword", "name", "body"]
+    properties: ["tag", "attributes", "localKeyword", "functionKeyword", "name", "body"]
   },
 
   "AstStatTypeAlias": {
-    properties: ["export", "typeToken", "name", "openGenerics", "generics", "genericPacks", "closeGenerics", "equals", "type"]
+    properties: ["tag", "export?", "typeToken", "name", "openGenerics?", "generics?", "genericPacks?", "closeGenerics?", "equals", "type"]
   },
 
   "AstStatTypeFunction": {
-    properties: ["export", "type", "functionKeyword", "name", "body"]
+    properties: ["tag", "export?", "type", "functionKeyword", "name", "body"]
   },
   
   // === TYPES ===
   "AstTypeReference": {
-    properties: ["prefix", "prefixPoint", "name", "openParameters", "parameters?", "closeParameters?"]
+    properties: ["tag", "prefix?", "prefixPoint?", "name", "openParameters?", "parameters?", "closeParameters?"]
   },
 
   "AstTypeSingletonBool": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia", "value"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag", "value"]
   },
 
   "AstTypeSingletonString": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia", "quoteStyle"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag", "quoteStyle"]
   },
   
   "AstTypeTypeof": {
-    properties: ["typeof", "openParens", "expression", "closeParens"]
+    properties: ["tag", "typeof", "openParens", "expression", "closeParens"]
   },
 
   "AstTypeGroup": {
-    properties: ["openParens", "type", "closeParens"]
+    properties: ["tag", "openParens", "type", "closeParens"]
   },
 
   "AstTypeOptional": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag"]
   },
   
   "AstTypeUnion": {
-    properties: ["leading", "types"]
+    properties: ["tag", "leading?", "types"]
   },
   
   "AstTypeIntersection": {
-    properties: ["leading", "types"]
+    properties: ["tag", "leading?", "types"]
   },
 
   "AstTypeArray": {
-    properties: ["openBrace", "access", "type", "closeBrace"]
+    properties: ["tag", "openBrace", "access?", "type", "closeBrace"]
   },
 
   "AstTypeTable": {
-    properties: ["openBrace", "entries", "closeBrace"]
+    properties: ["tag", "openBrace", "entries", "closeBrace"]
+  },
+
+  "AstTypeTableItem": {
+    kinds: {
+      "indexer": {
+        properties: ["kind", "access?", "indexerOpen", "key", "indexerClose", "colon", "value", "separator?"]
+      },
+      "stringproperty": {
+        properties: ["kind", "access?", "indexerOpen", "key", "indexerClose", "colon", "value", "separator?"]
+      },
+      "property": {
+        properties: ["kind", "access?", "key", "indexerClose", "colon", "value", "separator?"]
+      }
+    }
   },
 
   "AstTypeFunction": {
-    properties: ["openGenerics", "generics", "genericPacks", "closeGenerics", "openParens", "parameters", "vararg", "closeParens", "returnArrow", "returnTypes"]
+    properties: ["tag", "openGenerics?", "generics?", "genericPacks?", "closeGenerics?", "openParens", "parameters", "vararg?", "closeParens", "returnArrow", "returnTypes"]
   },
 
   // === TYPE PACKS ===
   "AstTypePackExplicit": {
-    properties: ["openParens", "types", "tailType", "closeParens"]
+    properties: ["tag", "openParens?", "types", "tailType?", "closeParens?"]
   },
 
   "AstTypePackGeneric": {
-    properties: ["name", "ellipsis"]
+    properties: ["tag", "name", "ellipsis"]
   },
 
   "AstTypePackVariadic": {
-    properties: ["ellipsis", "type"]
+    properties: ["tag", "ellipsis?", "type"]
   },
   
   // === UTILITY TYPES ===
@@ -254,35 +252,60 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   },
 
   "Whitespace": {
-    properties: ["location", "text"]
+    properties: ["tag", "location", "text"]
   },
   
   "SingleLineComment": {
-    properties: ["location", "text"]
+    properties: ["tag", "location", "text"]
   },
   
   "MultiLineComment": {
-    properties: ["location", "text"]
+    properties: ["tag", "location", "text"]
   },
 
   "AstLocal": {
-    properties: ["name", "colon", "annotation", "shadows"]
+    properties: ["name", "colon?", "annotation?", "shadows?"]
   },
 
   "AstFunctionBody": {
-    properties: ["openGenerics", "generics", "genericPacks", "closeGenerics", "self", "openParens", "parameters", "vararg", "varargColon", "varargAnnotation", "closeParens", "returnSpecifier", "returnAnnotation", "body", "endKeyword"]
+    properties: ["openGenerics?", "generics?", "genericPacks?", "closeGenerics?", "self?", "openParens", "parameters", "vararg?", "varargColon?", "varargAnnotation?", "closeParens", "returnSpecifier?", "returnAnnotation?", "body", "endKeyword"]
   },
 
   "AstAttribute": {
-    properties: ["position", "text", "leadingTrivia", "trailingTrivia"]
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag"]
   },
 
   "AstGenericType": {
-    properties: ["name", "equals", "default"]
+    properties: ["tag", "name", "equals?", "default?"]
   },
 
   "AstGenericTypePack": {
-    properties: ["name", "ellipsis", "equals", "default"]
+    properties: ["tag", "name", "ellipsis", "equals?", "default?"]
+  },
+
+  // === ADDITIONAL HELPER TYPES ===
+  "AstExprIfElseIfs": {
+    properties: ["elseifKeyword", "condition", "thenKeyword", "consequent"]
+  },
+
+  "AstStatElseIf": {
+    properties: ["elseifKeyword", "condition", "thenKeyword", "consequent"]
+  },
+
+  "AstTypeFunctionParameter": {
+    properties: ["name?", "colon?", "type"]
+  },
+
+  "Eof": {
+    properties: ["leadingTrivia", "position", "text", "trailingTrivia", "tag"]
+  },
+
+  "Pair": {
+    properties: ["node", "separator?"]
+  },
+
+  "Punctuated": {
+    properties: ["pairs"]
   }
 };
 
