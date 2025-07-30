@@ -37,9 +37,6 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 
 ### Prerequisites
 - **Lute** [https://github.com/luau-lang/lute] Install via [Foreman](https://github.com/Roblox/foreman)
-  ```bash
-  foreman install
-  ```
 
 ## 🎮 Usage
 
@@ -167,7 +164,7 @@ We welcome contributions! Here's how to get started:
 ## 📋 Requirements
 
 - **VSCode** 1.60.0 or higher
-- **Lute** (install via Foreman)
+- **Lute** (latest version)
 - **Foreman** (See [Foreman](https://github.com/Roblox/foreman) for installation instructions)
 - **Node.js** 16+ (for development)
 
