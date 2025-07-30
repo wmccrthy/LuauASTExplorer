@@ -1,6 +1,6 @@
 # AST Highlight Helper
 
-A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees (AST) of Luau/Lua code with advanced diffing capabilities.
+A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees (AST) of Luau/Lua code with interactive type exploration, advanced diffing capabilities, and comprehensive AST node documentation.
 
 ## 🚀 Features
 
@@ -10,7 +10,6 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 - **Side-by-side view** of code and corresponding AST
 - **Perfect for learning** how code structures translate to AST nodes
 
-![Live Editor Demo](./docs/ASTExplorerLiveEditorGIF.gif)
 
 ### ⚡ **AST Diff Analyzer**
 - **Visual comparison** between two code snippets
@@ -22,20 +21,13 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
   - 🔵 **Blue** for modifications (`~`)
   - 🔵 **Circle** for containers with changes (`○`)
 
-![Diff Analyzer Demo](./docs/ASTExplorerDiffGIF.gif)
-
 ### 🎯 **Smart Tree Display**
-- **Auto-collapse irrelevant nodes** (trivia, location, position data, etc)
-- **Expandable/collapsible** tree branches
+- **Expandable/collapsible** tree branches and nodes
+- **Auto-collapse noisy nodes** (trivia, location, position data, etc)
 - **Clean visual hierarchy** for easy navigation
+- **Type-aware rendering** with enhanced annotation display
 
 ## 📦 Installation
-
-### From VSCode Marketplace
-1. Open VSCode
-2. Go to Extensions (`Ctrl+Shift+X` / `Cmd+Shift+X`)
-3. Search for "AST Highlight Helper"
-4. Click **Install**
 
 ### From VSIX File
 1. Download the `.vsix` file from [Releases](./releases)
@@ -44,7 +36,7 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 4. Select the downloaded `.vsix` file
 
 ### Prerequisites
-- **Lute**: Install via [Foreman](https://github.com/Roblox/foreman)
+- **Lute** [https://github.com/luau-lang/lute] Install via [Foreman](https://github.com/Roblox/foreman)
   ```bash
   foreman install
   ```
@@ -73,12 +65,14 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 - **Type or paste code** in the editor pane
 - **Click "Parse AST"** for on-demand parsing
 - **View real-time AST** as your code structure changes
-- **Perfect for experimentation** and learning
+- **Hover over type annotations** to see detailed property information
+- **Perfect for experimentation** and learning AST structure
 
 #### Diff Analyzer Mode
 - **Input two code snippets** in separate editors
 - **Click "Analyze Transformation"** to see differences
 - **Visual diff highlighting** shows exactly what changed
+- **Type tooltips work in diff mode** tool for enhanced analysis
 - **Understand code transformations** for refactoring and codemod work
 
 ## 🛠️ Development
@@ -120,8 +114,12 @@ vsce package
 │                 │                 │                         │
 │ • extension.ts  │ • App.tsx       │ • Lute (Luau parser)    │
 │ • astParser.ts  │ • TreeNode.tsx  │ • json-diff-ts          │
-│ • Luau helpers  │ • diffUtils.ts  │ • Foreman (tool mgmt)   │
+│ • Luau helpers  │ • TypeTooltip   │ • Foreman (tool mgmt)   │
+│ • Type system   │ • diffUtils.ts  │                         │
 └─────────────────┴─────────────────┴─────────────────────────┘
+
+Type Annotation Pipeline:
+Luau Code → Lute Parser → type_annotations.lua → JSON + _astType → React UI
 ```
 
 ### Project Structure
@@ -134,10 +132,17 @@ ASTHighlightHelper/
 │   ├── src/
 │   │   ├── App.tsx          # Main React component
 │   │   ├── TreeNode.tsx     # AST tree rendering
-│   │   └── diffUtils.ts     # Diff computation engine
+│   │   ├── astTypeDefinitions.ts  # Complete Luau AST type definitions
+│   │   ├── diffUtils.ts     # Diff computation engine
+│   │   └── components/
+│   │       ├── TypeTooltip.tsx    # Interactive type tooltips
+│   │       └── TypeTooltip.css    # VS Code theme styling
 │   └── build/              # Built React app
 ├── lua_helpers/            # Luau scripts for parsing
-│   └── ast_parser.luau     # AST serialization script
+│   ├── ast_to_json.luau    # Main AST serialization script
+│   └── type_annotations.lua # Enhanced type annotation system
+├── .github/workflows/      # GitHub Actions
+│   └── release.yml         # Automated VSIX packaging
 ├── package.json            # Extension manifest
 └── README.md              # This file
 ```
@@ -163,17 +168,14 @@ We welcome contributions! Here's how to get started:
 
 - **VSCode** 1.60.0 or higher
 - **Lute** (install via Foreman)
+- **Foreman** (See [Foreman](https://github.com/Roblox/foreman) for installation instructions)
 - **Node.js** 16+ (for development)
 
 ## 🐛 Known Issues
 
 - Large AST trees (1000+ nodes) may have performance impact
 - Diffing is not perfect, but it's a work in progress (open to suggestions and improvements)
-
-## 🗺️ Roadmap
-
-- [ ] **Better diffing**: Improve diffing algorithm to be more accurate, more usable, and properly display removals
-- [ ] **AST Editing**: Modify AST nodes to generate/modify code in the editor
+  - Removals don't show up because we don't yet inject the removed nodes into the displayed AST
 
 ## 📄 License
 
@@ -181,14 +183,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **luau-lang** for 
-- **rxi** for a lua json library
-- **json-diff-ts** for robust JSON diffing capabilities
+- **luau-lang** [https://github.com/luau-lang/] for all the luau tooling
+- **rxi** [https://github.com/rxi/json.lua] for a lua json library
+- **json-diff-ts** [https://github.com/ltwlf/json-diff-ts] for robust JSON diffing capabilities
 
 ## 📞 Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/your-username/ASTHighlightHelper/issues)
-- **Discussions**: [Ask questions or share ideas](https://github.com/your-username/ASTHighlightHelper/discussions)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/wmccrthy/ASTHighlightHelper/issues)
+- **Discussions**: [Ask questions or share ideas](https://github.com/wmccrthy/ASTHighlightHelper/discussions)
 
 ---
 
