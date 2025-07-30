@@ -180,9 +180,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **luau-lang** [https://github.com/luau-lang/] for all the luau tooling
-- **rxi** [https://github.com/rxi/json.lua] for a lua json library
-- **json-diff-ts** [https://github.com/ltwlf/json-diff-ts] for robust JSON diffing capabilities
+- [**luau-lang**](https://github.com/luau-lang/) for all the luau tooling
+- [**rxi**](https://github.com/rxi/json.lua) for a lua json library
+- [**json-diff-ts**](https://github.com/ltwlf/json-diff-ts) for robust JSON diffing capabilities
 
 ## 📞 Support
 
