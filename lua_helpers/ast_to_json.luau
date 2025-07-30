@@ -2,6 +2,7 @@
 local fs = require("@lute/fs")
 local parser = require("@std/syntax/parser")
 local json = require("./json")
+local annotateWithType = require("./type_annotations").annotateWithType
 
 -- Get the source file path from command line argument
 local args = { ... }
@@ -18,13 +19,13 @@ local sourceCode = fs.readfiletostring(sourceFilePath)
 -- Parse the AST using our custom parser
 local function parseBlock(src)
 	local success, ast = pcall(function()
-		return parser.parse(sourceCode)
+		return annotateWithType(parser.parse(sourceCode), "root")
 	end)
 	return success, ast
 end
 local function parseExpr(src)
 	local success, exprAST = pcall(function()
-		return parser.parseexpr(sourceCode)
+		return annotateWithType(parser.parseexpr(sourceCode), "root")
 	end)
 	return success, exprAST
 end
