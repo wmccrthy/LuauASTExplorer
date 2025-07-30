@@ -7,7 +7,7 @@ on:
 
 jobs:
     check_pr_type:
-        runs-on: [self-hosted, ubuntu-latest]
+        runs-on: ubuntu-latest
         steps:
             - name: Check PR title
               id: get-pr-title

@@ -9,7 +9,7 @@ jobs:
     check_push:
         outputs:
             is_feat: ${{ steps.check_commit_type.outputs.is_feat }}
-        runs-on: [self-hosted, ubuntu-latest]
+        runs-on: ubuntu-latest
         steps:
             - name: Get commit message
               id: get-commit-message
