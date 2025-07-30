@@ -6,6 +6,20 @@ on:
             - main
 
 jobs:
+    check_pr_type:
+        runs-on: [self-hosted, ubuntu-latest]
+        steps:
+            - name: Check PR title
+              id: get-pr-title
+              run: echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+
+            - name: Check PR type
+              run: |
+                if [[ ! $PR_TITLE =~ ^#(chore|feat) ]]; then
+                    echo "PR title must contain #chore or #feat"
+                    exit 1
+                fi
+
     checks:
         runs-on: [self-hosted, ubuntu-latest]
         steps:
