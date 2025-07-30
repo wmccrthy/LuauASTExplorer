@@ -1,0 +1,143 @@
+/* Type Tooltip Styling */
+
+.type-tooltip-trigger {
+  cursor: pointer;
+  border-bottom: 1px dotted var(--vscode-descriptionForeground);
+  transition: border-color 0.2s ease;
+}
+
+.type-tooltip-trigger:hover {
+  border-bottom-color: var(--vscode-textLink-foreground);
+}
+
+.type-tooltip {
+  position: fixed;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+  border-radius: 4px;
+  box-shadow: 
+    0 4px 16px var(--vscode-widget-shadow),
+    0 0 0 1px var(--vscode-contrastBorder);
+  z-index: 10000;
+  max-width: 300px;
+  min-width: 150px;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size, 13px);
+  line-height: 1.4;
+  color: var(--vscode-editorWidget-foreground);
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+.tooltip-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+  background: var(--vscode-editorGroupHeader-tabsBackground, var(--vscode-editorWidget-background));
+  border-radius: 4px 4px 0 0;
+}
+
+.tooltip-title {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--vscode-editorGroupHeader-tabsForeground, var(--vscode-editorWidget-foreground));
+  font-family: var(--vscode-font-family);
+}
+
+.type-tooltip.tooltip-below {
+  transform: translateX(-50%) translateY(0%) !important;
+}
+
+.type-tooltip.tooltip-below .tooltip-arrow {
+  top: -8px;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-100%) scale(1);
+  }
+}
+
+.tooltip-content {
+  padding: 4px 0;
+}
+
+.properties-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.property-item {
+  padding: 4px 12px;
+  background: var(--vscode-editorWidget-background);
+  transition: background-color 0.15s ease;
+}
+
+.property-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.property-name {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-weight: 500;
+  color: var(--vscode-symbolIcon-propertyForeground, var(--vscode-editor-foreground));
+  font-size: 12px;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--vscode-widget-border, var(--vscode-panel-border));
+}
+
+.tooltip-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: -7px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid var(--vscode-editorWidget-background);
+}
+
+/* VS Code theme variables handle light/dark modes automatically */
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .type-tooltip {
+    max-width: calc(100vw - 24px);
+    min-width: 120px;
+    font-size: 12px;
+  }
+  
+  .tooltip-header {
+    padding: 6px 10px;
+  }
+  
+  .tooltip-title {
+    font-size: 11px;
+  }
+  
+  .tooltip-content {
+    padding: 4px 0;
+  }
+  
+  .property-item {
+    padding: 5px 10px;
+  }
+} 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { DiffASTNode } from './typesAndInterfaces';
+import { TypeTooltip } from './components/TypeTooltip';
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -32,16 +33,22 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const baseIndent = '  '.repeat(level);
   const indent = baseIndent;
 
-  const getTagAndTypeAnnotation = () => {
-    let annotation = " (";
-    if (value.tag) annotation += `tag: "${value.tag}"`;
-    if (value._astType) annotation += `${value.tag ? ", " : ""}type: ${value._astType}`;
-    if (annotation.length > 2) {
-      annotation += ")";
-      return annotation;
+  const renderTypeAnnotations = () => {
+    if (value._astType) {
+      return (
+        <span className="ast-annotations">
+          {" ("}
+          <TypeTooltip key="type" typeName={value._astType}>
+            <span className="type-annotation">
+              type: {value._astType}
+            </span>
+          </TypeTooltip>
+          {")"}
+        </span>
+      );
     }
-    return "";
-  }
+    return null;
+  };
 
   // Get diff-specific styling
   const getDiffClassName = () => {
@@ -209,7 +216,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   }
 
   if (typeof value !== 'object') {
-    if (nodeKey === "tag" || nodeKey === "_astType") return null;
+    if (nodeKey === "_astType") return null;
     const displayValue = typeof value === 'string' ? `"${value}"` : String(value);
     return (
       <div className={diffClassName}>
@@ -237,7 +244,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           style={{ cursor: 'pointer' }}
           onClick={onToggle}
         >
-          {indent}<span className="tree-arrow" style={{ color: 'var(--vscode-symbolIcon-arrayForeground)' }}>{arrow}</span>{renderDiffIndicator()}{highlightText(`${nodeKey}${getTagAndTypeAnnotation()}`)}
+          {indent}<span className="tree-arrow" style={{ color: 'var(--vscode-symbolIcon-arrayForeground)' }}>{arrow}</span>{renderDiffIndicator()}{highlightText(nodeKey)}{renderTypeAnnotations()}
         </div>
         {expanded && value.map((item, index) => {
           // Pass through diff props for child nodes if they have diff annotations
@@ -300,7 +307,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         style={{ cursor: 'pointer' }}
         onClick={onToggle}
       >
-        {indent}<span className="tree-arrow" style={{ color: 'var(--vscode-symbolIcon-objectForeground)' }}>{arrow}</span>{renderDiffIndicator()}{highlightText(`${nodeKey}${getTagAndTypeAnnotation()}`)}
+        {indent}<span className="tree-arrow" style={{ color: 'var(--vscode-symbolIcon-objectForeground)' }}>{arrow}</span>{renderDiffIndicator()}{highlightText(nodeKey)}{renderTypeAnnotations()}
       </div>
       {expanded && keys.map(key => {
         // Pass through diff props for child nodes if they have diff annotations
