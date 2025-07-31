@@ -1,23 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { isSearchable } from './helpers';
-import TreeNodeContainer from './TreeNode';
-import CodeEditor from './CodeEditor';
-import './App.css';
-import { handleParseResult, parseAST, handleParseDiffResult, parseDiff } from './parsingMessageHandlers';
-import { ASTNode, ParseResultMessage, ParseDiffResultMessage, VSCodeAPI, WindowMode, DiffASTNode } from './typesAndInterfaces';
+import React, { useState, useEffect } from "react";
+import { isSearchable } from "./helpers";
+import TreeNodeContainer from "./TreeNode";
+import CodeEditor from "./CodeEditor";
+import "./App.css";
+import {
+  handleParseResult,
+  parseAST,
+  handleParseDiffResult,
+  parseDiff,
+} from "./parsingMessageHandlers";
+import {
+  ASTNode,
+  ParseResultMessage,
+  ParseDiffResultMessage,
+  VSCodeAPI,
+  WindowMode,
+  DiffASTNode,
+} from "./typesAndInterfaces";
 
 const App: React.FC = () => {
   // Original AST viewer state
-  const [originalContent, setOriginalContent] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [originalContent, setOriginalContent] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [totalMatches, setTotalMatches] = useState<number>(0);
-  const [astMode, setAstMode] = useState<'json' | 'text'>('text');
+  const [astMode, setAstMode] = useState<"json" | "text">("text");
   const [astTree, setAstTree] = useState<ASTNode | null>(null);
 
   // Multi-window state
-  const [windowMode, setWindowMode] = useState<WindowMode>(WindowMode.LiveEditor);
-  const [codeSnippet1, setCodeSnippet1] = useState<string>(''); // Live editor / Before code
-  const [codeSnippet2, setCodeSnippet2] = useState<string>(''); // After code (diff analyzer only)
+  const [windowMode, setWindowMode] = useState<WindowMode>(
+    WindowMode.LiveEditor
+  );
+  const [codeSnippet1, setCodeSnippet1] = useState<string>(""); // Live editor / Before code
+  const [codeSnippet2, setCodeSnippet2] = useState<string>(""); // After code (diff analyzer only)
 
   // Live parsing state
   const [isParsing, setIsParsing] = useState<boolean>(false);
@@ -31,13 +45,13 @@ const App: React.FC = () => {
 
   // Initialize with AST data from window
   useEffect(() => {
-    const mode = window.astMode || 'text';
+    const mode = window.astMode || "text";
     setAstMode(mode);
 
     if (window.astData) {
       const content = window.astData;
 
-      if (mode === 'json') {
+      if (mode === "json") {
         try {
           const parsedAST = JSON.parse(content);
           setAstTree(parsedAST);
@@ -48,17 +62,16 @@ const App: React.FC = () => {
         } catch (e) {
           // Fallback to text mode if JSON parsing fails
           setOriginalContent(content);
-          setAstMode('text');
+          setAstMode("text");
         }
       } else {
         setOriginalContent(content);
       }
 
-      setCodeSnippet1(window.selectedText || '');
-
+      setCodeSnippet1(window.selectedText || "");
     } else {
       // Fallback if no AST data
-      const testContent = 'No AST data received from extension';
+      const testContent = "No AST data received from extension";
       setOriginalContent(testContent);
     }
   }, []);
@@ -73,18 +86,28 @@ const App: React.FC = () => {
       const messageListener = (event: MessageEvent) => {
         const message = event.data;
 
-        if (message.command === 'parseResult') {
-          handleParseResult(message as ParseResultMessage, setIsParsing, setParseError, setAstTree);
-        } else if (message.command === 'parseDiffResult') {
-          handleParseDiffResult(message as ParseDiffResultMessage, setIsParsingDiff, setParseDiffError, setDiffTree);
+        if (message.command === "parseResult") {
+          handleParseResult(
+            message as ParseResultMessage,
+            setIsParsing,
+            setParseError,
+            setAstTree
+          );
+        } else if (message.command === "parseDiffResult") {
+          handleParseDiffResult(
+            message as ParseDiffResultMessage,
+            setIsParsingDiff,
+            setParseDiffError,
+            setDiffTree
+          );
         }
       };
 
-      window.addEventListener('message', messageListener);
+      window.addEventListener("message", messageListener);
 
       // Cleanup listener on unmount
       return () => {
-        window.removeEventListener('message', messageListener);
+        window.removeEventListener("message", messageListener);
       };
     }
   }, []);
@@ -98,7 +121,7 @@ const App: React.FC = () => {
     }
 
     // Text mode search with HTML marks and navigation
-    const regex = new RegExp(term, 'gi');
+    const regex = new RegExp(term, "gi");
     let matchCount = 0;
     const highlighted = originalContent.replace(regex, (match) => {
       matchCount++;
@@ -115,7 +138,6 @@ const App: React.FC = () => {
     setSearchTerm(term);
     performSearch(term);
   };
-
 
   // Render different window content based on mode
   const renderWindowContent = () => {
@@ -137,7 +159,7 @@ const App: React.FC = () => {
                 onClick={() => parseAST(codeSnippet1, vscodeApi, setParseError)}
                 disabled={isParsing || !codeSnippet1.trim()}
               >
-                {isParsing ? '⏳ Parsing...' : '🔄 Parse AST'}
+                {isParsing ? "⏳ Parsing..." : "🔄 Parse AST"}
               </button>
             </div>
             <div className="ast-view-section">
@@ -148,9 +170,7 @@ const App: React.FC = () => {
                     ❌ Parse Error: {parseError}
                   </div>
                 ) : isParsing ? (
-                  <div className="loading-message">
-                    ⏳ Parsing AST...
-                  </div>
+                  <div className="loading-message">⏳ Parsing AST...</div>
                 ) : astTree ? (
                   <div className="ast-content tree-view">
                     <TreeNodeContainer
@@ -161,7 +181,9 @@ const App: React.FC = () => {
                     />
                   </div>
                 ) : (
-                  <div className="placeholder">Click "Parse AST" to see the AST structure</div>
+                  <div className="placeholder">
+                    Click "Parse AST" to see the AST structure
+                  </div>
                 )}
               </div>
             </div>
@@ -174,7 +196,10 @@ const App: React.FC = () => {
           <div className="diff-analyzer-layout">
             <div className="diff-header">
               <h3>🔄 Codemod Transformation Analyzer</h3>
-              <p>Compare two code snippets to see how the AST needs to be modified to transform the first into the second</p>
+              <p>
+                Compare two code snippets to see how the AST needs to be
+                modified to transform the first into the second
+              </p>
             </div>
             <div className="code-inputs-section">
               <div className="code-input">
@@ -198,10 +223,19 @@ const App: React.FC = () => {
             </div>
             <button
               className="btn parse-btn"
-              onClick={() => parseDiff(codeSnippet1, codeSnippet2, vscodeApi, setParseDiffError)}
-              disabled={isParsingDiff || !codeSnippet1.trim() || !codeSnippet2.trim()}
+              onClick={() =>
+                parseDiff(
+                  codeSnippet1,
+                  codeSnippet2,
+                  vscodeApi,
+                  setParseDiffError
+                )
+              }
+              disabled={
+                isParsingDiff || !codeSnippet1.trim() || !codeSnippet2.trim()
+              }
             >
-              {isParsingDiff ? '⏳ Analyzing...' : '🔍 Analyze Transformation'}
+              {isParsingDiff ? "⏳ Analyzing..." : "🔍 Analyze Transformation"}
             </button>
             <div className="ast-view-section">
               <h4>🌳 AST Transformation Diff</h4>
@@ -225,7 +259,8 @@ const App: React.FC = () => {
                 </div>
               ) : (
                 <div className="placeholder">
-                  Enter code in both fields and click "Analyze Transformation" to see the AST diff
+                  Enter code in both fields and click "Analyze Transformation"
+                  to see the AST diff
                 </div>
               )}
             </div>
@@ -242,26 +277,35 @@ const App: React.FC = () => {
       <div className="header">
         <div className="title">
           🌳 AST Explorer
-          <span style={{
-            fontSize: '12px',
-            marginLeft: '8px',
-            padding: '2px 6px',
-            backgroundColor: astMode === 'json' ? 'var(--vscode-statusBarItem-prominentBackground)' : 'var(--vscode-badge-background)',
-            borderRadius: '3px'
-          }}>
+          <span
+            style={{
+              fontSize: "12px",
+              marginLeft: "8px",
+              padding: "2px 6px",
+              backgroundColor:
+                astMode === "json"
+                  ? "var(--vscode-statusBarItem-prominentBackground)"
+                  : "var(--vscode-badge-background)",
+              borderRadius: "3px",
+            }}
+          >
             {astMode.toUpperCase()}
           </span>
         </div>
 
         <div className="window-mode-toggle">
           <button
-            className={`btn ${windowMode === WindowMode.LiveEditor ? 'active' : ''}`}
+            className={`btn ${
+              windowMode === WindowMode.LiveEditor ? "active" : ""
+            }`}
             onClick={() => setWindowMode(WindowMode.LiveEditor)}
           >
             ✏️ Live Editor
           </button>
           <button
-            className={`btn ${windowMode === WindowMode.DiffAnalyzer ? 'active' : ''}`}
+            className={`btn ${
+              windowMode === WindowMode.DiffAnalyzer ? "active" : ""
+            }`}
             onClick={() => setWindowMode(WindowMode.DiffAnalyzer)}
           >
             🔄 Codemod Diff
@@ -277,7 +321,7 @@ const App: React.FC = () => {
               onChange={handleSearchChange}
             />
             <span className="search-info">
-              {totalMatches > 0 ? `${totalMatches} matches` : ''}
+              {totalMatches > 0 ? `${totalMatches} matches` : ""}
             </span>
           </div>
         )}
