@@ -208,29 +208,6 @@ function deepClone(obj: any): any {
 }
 
 /**
- * Create a clean copy of a node without diff metadata
- */
-function cleanDiffNode(node: any): any {
-  if (node === null || typeof node !== 'object') {
-    return node;
-  }
-  
-  if (Array.isArray(node)) {
-    return node.map(item => cleanDiffNode(item));
-  }
-  
-  const cleaned: any = {};
-  Object.keys(node).forEach(key => {
-    // Skip ALL diff metadata properties including nodeKey variations
-    if (!['diffStatus', 'beforeValue', 'afterValue', 'diffKey', 'before', 'after', 'childChanges'].includes(key)) {
-      cleaned[key] = cleanDiffNode(node[key]);
-    }
-  });
-  
-  return cleaned;
-}
-
-/**
  * Generate a human-readable description of a change
  */
 export function getChangeDescription(change: JsonDiffChange): string {
