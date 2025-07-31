@@ -51,6 +51,11 @@ jobs:
             - name: Build
               run: npm run compile
 
+            - name: Configure Git
+              run: |
+                git config --global user.email "fake@email.com"
+                git config --global user.name "Luau AST Explorer Release Bot"
+
             - name: Bump Version
               run: npm version patch # TODO: make this configurable/require changelogs w/ patch/minor/major in PRs so we can bump accordingly
             
