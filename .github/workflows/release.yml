@@ -33,7 +33,7 @@ jobs:
 
     release:
         needs: check_push
-        if: ${{ needs.check_push.outputs.is_feat == 'true' }}    
+        if: ${{ needs.check_push.outputs.is_feat == 'true' }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -44,7 +44,10 @@ jobs:
                 npm install
                 cd frontend && npm install
                 cd ..
-            
+                
+            - name: Install VSCE
+              run: npm install -g @vscode/vsce
+              
             - name: Build
               run: npm run compile
 
@@ -61,9 +64,6 @@ jobs:
               run: |
                 VERSION=$(cat package.json | jq -r '.version')
                 echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-
-            - name: Install VSCE
-              run: npm install -g @vscode/vsce
 
             - name: Package
               run: npm run package
