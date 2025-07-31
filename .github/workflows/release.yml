@@ -1,0 +1,80 @@
+name: Release AST Inspector VSIX
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    check_push:
+        outputs:
+            is_feat: ${{ steps.check_commit_type.outputs.is_feat }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get commit message
+              id: get-commit-message
+              run: echo "COMMIT_MESSAGE=${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
+
+            - name: Check commit type
+              id: check_commit_type
+              run: |
+                if [[ ! "${{ steps.get-commit-message.outputs.COMMIT_MESSAGE }}" =~ ^\#(chore|feat) ]]; then
+                    echo "Commit message must contain #chore or #feat"
+                    exit 1
+                else
+                    if [[ "${{ steps.get-commit-message.outputs.COMMIT_MESSAGE }}" =~ ^\#(feat) ]]; then
+                        echo "Commit message contains #feat, proceeding with release"
+                        echo "is_feat=true" >> $GITHUB_OUTPUT
+                    else
+                        echo "Commit message contains #chore, skipping release"
+                        echo "is_feat=false" >> $GITHUB_OUTPUT
+                    fi
+                fi
+
+    release:
+        needs: check_push
+        if: ${{ needs.check_push.outputs.is_feat == 'true' }}    
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Install dependencies
+              run: |
+                npm install
+                cd frontend && npm install
+                cd ..
+            
+            - name: Build
+              run: npm run compile
+
+            - name: Package
+              run: npm run package
+
+            - name: Bump Version
+              run: npm version patch # TODO: make this configurable/require changelogs w/ patch/minor/major in PRs so we can bump accordingly
+            
+            - name: Get version
+              id: get-version
+              run: |
+                VERSION=$(cat package.json | jq -r '.version')
+                echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+            
+            - name: Create release
+              id: create-release
+              uses: actions/create-release@v1
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                tag_name: ${{ steps.get-version.outputs.VERSION }}
+                release_name: Release ${{ steps.get-version.outputs.VERSION }}
+                draft: false
+                prerelease: true
+
+            - name: Upload VSIX
+              uses: actions/upload-release-asset@v1
+              with:
+                upload_url: ${{ steps.create-release.outputs.upload_url }}
+                asset_path: ./ast-inspector-*.vsix
+                asset_name: ast-inspector-${{ steps.get-version.outputs.VERSION }}.vsix
+                asset_content_type: application/zip
