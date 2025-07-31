@@ -44,10 +44,10 @@ jobs:
                 npm install
                 cd frontend && npm install
                 cd ..
-                
+            
             - name: Install VSCE
               run: npm install -g @vscode/vsce
-              
+            
             - name: Build
               run: npm run compile
 
