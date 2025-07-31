@@ -35,6 +35,10 @@ jobs:
         needs: check_push
         permissions:
             contents: write
+            actions: read
+            security-events: write
+            issues: write
+            pull-requests: write
         if: ${{ needs.check_push.outputs.is_feat == 'true' }}
         runs-on: ubuntu-latest
         steps:
