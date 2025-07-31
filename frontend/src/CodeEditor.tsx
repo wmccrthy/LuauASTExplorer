@@ -1,4 +1,4 @@
-import React, { KeyboardEvent } from 'react';
+import React, { KeyboardEvent } from "react";
 
 interface CodeEditorProps {
   value: string;
@@ -11,21 +11,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   value,
   onChange,
   placeholder = "Enter your Luau code here...",
-  height = "200px"
+  height = "200px",
 }) => {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     // Handle Tab key for indentation
-    if (e.key === 'Tab') {
+    if (e.key === "Tab") {
       e.preventDefault();
-      
+
       const textarea = e.target as HTMLTextAreaElement;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      
+
       // Insert 2 spaces for indentation
-      const newValue = value.substring(0, start) + '  ' + value.substring(end);
+      const newValue = value.substring(0, start) + "  " + value.substring(end);
       onChange(newValue);
-      
+
       // Move cursor to after the inserted spaces
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 2;
@@ -48,4 +48,4 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   );
 };
 
-export default CodeEditor; 
+export default CodeEditor;
