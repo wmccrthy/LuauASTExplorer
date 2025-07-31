@@ -71,7 +71,6 @@
     }
   },
   "scripts": {
-    "install": "npm install && cd frontend && npm install",
     "vscode:prepublish": "npm run compile",
     "compile": "npm run build:frontend && tsc -p ./",
     "build:frontend": "cd frontend && npm run build",
