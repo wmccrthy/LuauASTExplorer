@@ -36,7 +36,7 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 4. Select the downloaded `.vsix` file
 
 ### Prerequisites
-- **Lute** [https://github.com/luau-lang/lute] Install via [Foreman](https://github.com/Roblox/foreman)
+- **Lute** [https://github.com/luau-lang/lute] Install via [Foreman](https://github.com/Roblox/foreman) or [Rokit](https://github.com/rojo-rbx/rokit)
 
 ## 🎮 Usage
 
@@ -84,8 +84,10 @@ cd LuauASTExplorer
 npm install
 cd frontend && npm install && cd ..
 
-# Install Lute
+# Install Lute with foreman...
 foreman install
+# or with rokit...
+rokit install
 ```
 
 ### Building
