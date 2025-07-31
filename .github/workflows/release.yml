@@ -51,6 +51,9 @@ jobs:
                 cd frontend && npm install
                 cd ..
             
+            - name: Clear any package-lock changes
+              run: git checkout -- .
+            
             - name: Install VSCE
               run: npm install -g @vscode/vsce
 
@@ -65,7 +68,7 @@ jobs:
             
             - name: Build
               run: npm run compile
-            
+
             - name: Get version
               id: get-version
               run: |
