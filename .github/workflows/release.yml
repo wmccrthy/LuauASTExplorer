@@ -74,6 +74,19 @@ jobs:
 
             - name: Package
               run: npm run package
+
+            - name: Update package.json
+              run: |
+                echo "Updating package.json with new version..."
+                echo "{\"version\": \"${{ steps.get-version.outputs.VERSION }}\"}" > package.json
+
+            - name: Create PR for JSON bump
+              uses: peter-evans/create-pull-request@v6
+              with:
+                title: '#chore Bump version to ${{ steps.get-version.outputs.VERSION }}'
+                body: 'Automated version bump to ${{ steps.get-version.outputs.VERSION }}'
+                branch: package-json-bump-${{ steps.get-version.outputs.VERSION }}
+                base: main
             
             - name: Create release
               uses: softprops/action-gh-release@v2

@@ -2,17 +2,17 @@
   "name": "luau-ast-explorer",
   "displayName": "Luau AST Explorer",
   "description": "Explore Luau/Lua AST structures, analyze code transformations, and assist with codemod development",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "internal",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/ASTHighlightHelper.git"
+    "url": "https://github.com/wmccrthy/LuauASTExplorer.git"
   },
-  "homepage": "https://github.com/your-username/ASTHighlightHelper#readme",
+  "homepage": "https://github.com/wmccrthy/LuauASTExplorer#readme",
   "bugs": {
-    "url": "https://github.com/your-username/ASTHighlightHelper/issues"
+    "url": "https://github.com/wmccrthy/LuauASTExplorer/issues"
   },
   "engines": {
     "vscode": "^1.74.0"

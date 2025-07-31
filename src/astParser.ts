@@ -15,7 +15,7 @@ export class ASTParser {
         this.extensionPath = context.extensionPath;
         
         // Get the Lute executable path from configuration
-        const config = vscode.workspace.getConfiguration('astHighlightHelper');
+        const config = vscode.workspace.getConfiguration('luauAstExplorer');
         const configuredPath = config.get('luteExecutable') as string;
         
         if (configuredPath) {
