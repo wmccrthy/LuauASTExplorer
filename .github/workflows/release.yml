@@ -60,7 +60,7 @@ jobs:
             - name: Configure Git
               run: |
                 git config --global user.email "fake@email.com"
-                git config --global user.name "Luau AST Explorer Release Bot"
+                git config --global user.name "luau-ast-explorer-bot"
 
             - name: Bump Version
               run: |
@@ -90,13 +90,14 @@ jobs:
                 body: 'Automated version bump to ${{ steps.get-version.outputs.VERSION }}'
                 branch: package-json-bump-${{ steps.get-version.outputs.VERSION }}
                 base: main
+                author: 'luau-ast-explorer-bot <luau-ast-explorer-bot@users.noreply.github.com>'
                 token: ${{ secrets.AUTH_PAT }}
             
             - name: Create release
               uses: softprops/action-gh-release@v2
               with:
                 tag_name: ${{ steps.get-version.outputs.VERSION }}
-                name: Luau AST Explorer ${{ steps.get-version.outputs.VERSION }}
+                name: v${{ steps.get-version.outputs.VERSION }}
                 files: ./luau-ast-explorer-${{ steps.get-version.outputs.VERSION }}.vsix
                 draft: false
                 prerelease: true
