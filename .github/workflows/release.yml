@@ -33,6 +33,8 @@ jobs:
 
     release:
         needs: check_push
+        permissions:
+            contents: write
         if: ${{ needs.check_push.outputs.is_feat == 'true' }}
         runs-on: ubuntu-latest
         steps:
