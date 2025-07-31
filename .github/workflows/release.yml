@@ -90,7 +90,7 @@ jobs:
                 body: 'Automated version bump to ${{ steps.get-version.outputs.VERSION }}'
                 branch: package-json-bump-${{ steps.get-version.outputs.VERSION }}
                 base: main
-                token: ${{ secrets.GITHUB_TOKEN }}
+                token: ${{ secrets.AUTH_PAT }}
             
             - name: Create release
               uses: softprops/action-gh-release@v2
