@@ -100,5 +100,5 @@ The AST will show detailed information like:
 
 ## Configuration
 You can customize settings in VSCode:
-- `astHighlightHelper.hotkey`: Change the trigger key combination
-- `astHighlightHelper.luteExecutable`: Path to Lute executable 
+- `luauAstExplorer.hotkey`: Change the trigger key combination
+- `luauAstExplorer.luteExecutable`: Path to Lute executable 

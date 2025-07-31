@@ -77,8 +77,8 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/ASTHighlightHelper.git
-cd ASTHighlightHelper
+git clone https://github.com/wmccrthy/LuauASTExplorer.git
+cd LuauASTExplorer
 
 # Install dependencies
 npm install
@@ -121,7 +121,7 @@ Luau Code → Lute Parser → type_annotations.lua → JSON + _astType → React
 
 ### Project Structure
 ```
-ASTHighlightHelper/
+LuauASTExplorer/
 ├── src/                     # VSCode extension backend
 │   ├── extension.ts         # Main entry point
 │   └── astParser.ts         # Lute integration
@@ -186,8 +186,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/wmccrthy/ASTHighlightHelper/issues)
-- **Discussions**: [Ask questions or share ideas](https://github.com/wmccrthy/ASTHighlightHelper/discussions)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/wmccrthy/LuauASTExplorer/issues)
+- **Discussions**: [Ask questions or share ideas](https://github.com/wmccrthy/LuauASTExplorer/discussions)
 
 ---
 
