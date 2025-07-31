@@ -33,7 +33,7 @@ jobs:
 
     release:
         needs: check_push
-        if: ${{ needs.check_push.outputs.is_feat == 'true' }}    
+        if: ${{ needs.check_push.outputs.is_feat == 'true' }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -45,11 +45,11 @@ jobs:
                 cd frontend && npm install
                 cd ..
             
+            - name: Install VSCE
+              run: npm install -g @vscode/vsce
+            
             - name: Build
               run: npm run compile
-
-            - name: Package
-              run: npm run package
 
             - name: Bump Version
               run: npm version patch # TODO: make this configurable/require changelogs w/ patch/minor/major in PRs so we can bump accordingly
@@ -59,6 +59,9 @@ jobs:
               run: |
                 VERSION=$(cat package.json | jq -r '.version')
                 echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+            - name: Package
+              run: npm run package
             
             - name: Create release
               id: create-release
