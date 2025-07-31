@@ -4,16 +4,34 @@ on:
     pull_request:
         branches:
             - main
+        types:
+            - opened
+            - edited
+            - reopened
+            - synchronize
 
 jobs:
+    check_pr_type:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check PR type
+              run: |
+                if [[ ! "${{ github.event.pull_request.title }}" =~ ^\#(chore|feat) ]]; then
+                    echo "PR title must contain #chore or #feat"
+                    exit 1
+                fi
+
     checks:
-        runs-on: [self-hosted, ubuntu-latest]
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout code
               uses: actions/checkout@v3
 
             - name: Install dependencies
-              run: npm install
+              run: |
+                npm install
+                cd frontend && npm install
+                cd ..
 
             - name: Run tests
               run: npm run test

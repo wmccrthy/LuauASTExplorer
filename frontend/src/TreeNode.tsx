@@ -1,5 +1,4 @@
 import React from 'react';
-import { DiffASTNode } from './typesAndInterfaces';
 import { TypeTooltip } from './components/TypeTooltip';
 
 interface TreeNodeProps {
