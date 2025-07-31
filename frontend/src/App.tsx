@@ -8,7 +8,6 @@ import { ASTNode, ParseResultMessage, ParseDiffResultMessage, VSCodeAPI, WindowM
 
 const App: React.FC = () => {
   // Original AST viewer state
-  const [astContent, setAstContent] = useState<string>('');
   const [originalContent, setOriginalContent] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [totalMatches, setTotalMatches] = useState<number>(0);
@@ -45,16 +44,13 @@ const App: React.FC = () => {
 
           // For now, show formatted JSON until we build tree view
           const formatted = JSON.stringify(parsedAST, null, 2);
-          setAstContent(formatted);
           setOriginalContent(formatted);
         } catch (e) {
           // Fallback to text mode if JSON parsing fails
-          setAstContent(content);
           setOriginalContent(content);
           setAstMode('text');
         }
       } else {
-        setAstContent(content);
         setOriginalContent(content);
       }
 
@@ -63,7 +59,6 @@ const App: React.FC = () => {
     } else {
       // Fallback if no AST data
       const testContent = 'No AST data received from extension';
-      setAstContent(testContent);
       setOriginalContent(testContent);
     }
   }, []);
@@ -97,7 +92,7 @@ const App: React.FC = () => {
   // Search functionality
   const performSearch = (term: string) => {
     if (!term || !isSearchable(term)) {
-      setAstContent(originalContent);
+      setOriginalContent(originalContent);
       setTotalMatches(0);
       return;
     }
@@ -110,7 +105,7 @@ const App: React.FC = () => {
       return `<mark id="match-${matchCount}" class="search-match">${match}</mark>`;
     });
 
-    setAstContent(highlighted);
+    setOriginalContent(highlighted);
     setTotalMatches(matchCount);
   };
 
