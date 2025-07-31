@@ -34,7 +34,7 @@ jobs:
     release:
         needs: check_push
         if: ${{ needs.check_push.outputs.is_feat == 'true' }}    
-        runs-on: [self-hosted, ubuntu-latest]
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout code
               uses: actions/checkout@v3
