@@ -1,9 +1,7 @@
-import { useState } from "react";
 import CodeEditor from "./CodeEditor";
 import FilterDropdown from "./components/filterDropdown";
 import { parseAST } from "./parsingMessageHandlers";
 import { VSCodeAPI, ASTNode } from "./typesAndInterfaces";
-import { isSearchable } from "./helpers";
 import TreeNodeContainer from "./TreeNode";
 
 interface LiverEditorProps {
