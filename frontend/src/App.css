@@ -40,10 +40,14 @@
   background: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
   border: none;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  box-sizing: border-box;
   transition: background-color 0.2s ease;
 }
 
@@ -59,6 +63,15 @@
 .btn.active {
   background: var(--vscode-button-secondaryBackground);
   border: 1px solid var(--vscode-button-border, var(--vscode-contrastActiveBorder));
+}
+
+/* Button Section */
+.button-section {
+  display: flex;
+  justify-content: left;
+  align-items: left;
+  gap: 16px;
+  background: transparent;
 }
 
 .search-box {
@@ -283,10 +296,6 @@
   color: var(--vscode-titleBar-activeForeground);
 }
 
-.parse-btn {
-  margin-top: 8px;
-}
-
 /* Diff Analyzer Layout */
 .diff-analyzer-layout {
   display: flex;
@@ -414,4 +423,81 @@
 .type-annotation:hover {
   color: var(--vscode-textLink-foreground, #007acc);
   border-bottom-style: solid;
+}
+
+/* Filter Dropdown Styles */
+.filter-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-dropdown-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background: var(--vscode-dropdown-background);
+  border: 1px solid var(--vscode-dropdown-border);
+  border-radius: 3px;
+  min-width: 300px;
+  max-height: 400px;
+  box-shadow: var(--vscode-widget-shadow) 0px 2px 8px;
+}
+
+.filter-dropdown-controls {
+  padding: 8px;
+  border-bottom: 1px solid var(--vscode-dropdown-border);
+}
+
+.filter-search {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--vscode-input-border);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border-radius: 2px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.filter-search::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-action-btn {
+  flex: 1;
+}
+
+.filter-dropdown-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.filter-node-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 2px;
+}
+
+.filter-node-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.filter-node-item input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.filter-node-label {
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-editor-font-family);
 }

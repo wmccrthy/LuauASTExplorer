@@ -17,9 +17,12 @@ import {
   WindowMode,
   DiffASTNode,
 } from "./typesAndInterfaces";
+import FilterDropdown from "./components/filterDropdown";
 
 const App: React.FC = () => {
-  // Original AST viewer state
+  // Get all available node keys and start with none hidden (all visible)
+  const [hiddenNodes, setHiddenNodes] = useState<string[]>([]);
+
   const [originalContent, setOriginalContent] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [totalMatches, setTotalMatches] = useState<number>(0);
@@ -154,13 +157,16 @@ const App: React.FC = () => {
                 placeholder="Edit your Luau code here..."
                 height="200px"
               />
+            </div>
+            <div className="button-section">
               <button
-                className="btn parse-btn"
+                className="btn"
                 onClick={() => parseAST(codeSnippet1, vscodeApi, setParseError)}
                 disabled={isParsing || !codeSnippet1.trim()}
               >
                 {isParsing ? "⏳ Parsing..." : "🔄 Parse AST"}
               </button>
+              <FilterDropdown hiddenNodes={hiddenNodes} setHiddenNodes={setHiddenNodes} />
             </div>
             <div className="ast-view-section">
               <h3>🌳 Live AST</h3>
@@ -178,6 +184,7 @@ const App: React.FC = () => {
                       value={astTree}
                       level={0}
                       searchTerm={searchTerm}
+                      hiddenNodes={hiddenNodes}
                     />
                   </div>
                 ) : (
@@ -221,22 +228,25 @@ const App: React.FC = () => {
                 />
               </div>
             </div>
-            <button
-              className="btn parse-btn"
-              onClick={() =>
-                parseDiff(
-                  codeSnippet1,
-                  codeSnippet2,
-                  vscodeApi,
-                  setParseDiffError
-                )
-              }
-              disabled={
-                isParsingDiff || !codeSnippet1.trim() || !codeSnippet2.trim()
-              }
-            >
-              {isParsingDiff ? "⏳ Analyzing..." : "🔍 Analyze Transformation"}
-            </button>
+            <div className="button-section">
+              <button
+                className="btn"
+                onClick={() =>
+                  parseDiff(
+                    codeSnippet1,
+                    codeSnippet2,
+                    vscodeApi,
+                    setParseDiffError
+                  )
+                }
+                disabled={
+                  isParsingDiff || !codeSnippet1.trim() || !codeSnippet2.trim()
+                }
+              >
+                {isParsingDiff ? "⏳ Analyzing..." : "🔍 Analyze Transformation"}
+              </button>
+              <FilterDropdown hiddenNodes={hiddenNodes} setHiddenNodes={setHiddenNodes} />
+            </div>
             <div className="ast-view-section">
               <h4>🌳 AST Transformation Diff</h4>
               {parseDiffError ? (
@@ -255,6 +265,7 @@ const App: React.FC = () => {
                     level={0}
                     searchTerm={searchTerm}
                     isDiffMode={true}
+                    hiddenNodes={hiddenNodes}
                   />
                 </div>
               ) : (
