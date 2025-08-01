@@ -1,5 +1,6 @@
 import React from "react";
 import { TypeTooltip } from "./components/TypeTooltip";
+import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -18,6 +19,7 @@ interface TreeNodeProps {
   beforeValue?: any;
   afterValue?: any;
   parentChanges?: any;
+  hiddenNodes?: string[];
 }
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
@@ -32,6 +34,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   beforeValue,
   afterValue,
   parentChanges = {},
+  hiddenNodes = [],
 }) => {
   // Always reserve space for diff indicator to maintain consistent indentation
   const baseIndent = "  ".repeat(level);
@@ -90,6 +93,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   };
 
   const diffClassName = getDiffClassName();
+  const fullClassName = `${diffClassName}`; // might use for adding specific node styling (by importance proxy) later on
 
   // Debug diff props (only log meaningful changes)
   if (
@@ -267,7 +271,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName}>
+      <div className={fullClassName}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {indent}
@@ -281,7 +285,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return (
-        <div className={diffClassName}>
+        <div className={fullClassName}>
           {/* include empty span to ensure indentation aligns with expandable nodes */}
           <span className="tree-arrow"></span>
           {indent}
@@ -293,7 +297,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
     const arrow = expanded ? "▼" : "▶";
     return (
-      <div className={diffClassName}>
+      <div className={fullClassName}>
         <div style={{ cursor: "pointer" }} onClick={onToggle}>
           {indent}
           <span
@@ -349,6 +353,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 searchTerm={searchTerm}
                 parentChanges={nodeChildChanges}
                 {...childDiffProps}
+                hiddenNodes={hiddenNodes}
               />
             );
           })}
@@ -370,7 +375,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   if (keys.length === 0) {
     return (
-      <div className={diffClassName}>
+      <div className={fullClassName}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {indent}
@@ -382,7 +387,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   const arrow = expanded ? "▼" : "▶";
   return (
-    <div className={diffClassName}>
+    <div className={fullClassName}>
       <div style={{ cursor: "pointer" }} onClick={onToggle}>
         {indent}
         <span
@@ -446,6 +451,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               level={level + 1}
               searchTerm={searchTerm}
               parentChanges={nodeChildChanges}
+              hiddenNodes={hiddenNodes}
               {...childDiffProps}
             />
           );
@@ -470,30 +476,22 @@ interface TreeNodeContainerProps {
   beforeValue?: any;
   afterValue?: any;
   parentChanges?: any;
+  hiddenNodes?: string[];
 }
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
-  // Auto-collapse irrelevant node types by default
-  const shouldAutoCollapse = [
-    "leadingTrivia",
-    "trailingTrivia",
-    "location",
-    "argLocation",
-    "indexLocation",
-    "position",
-    "equals",
-    "closeBrace",
-    "closeParen",
-    "closeBracket",
-    "openBrace",
-    "openParen",
-    "openBracket",
-  ].includes(props.nodeKey);
-  const [expanded, setExpanded] = React.useState(!shouldAutoCollapse); // Most expanded by default, irrelevant nodes collapsed
+  const [expanded, setExpanded] = React.useState(
+    !shouldAutoCollapse(props.nodeKey)
+  );
 
   const handleToggle = () => {
     setExpanded(!expanded);
   };
+
+  // Hide nodes that are in the hidden nodes list (when filtering is active)
+  if (props.hiddenNodes && props.hiddenNodes.includes(props.nodeKey)) {
+    return null;
+  }
 
   return <TreeNode {...props} expanded={expanded} onToggle={handleToggle} />;
 };
