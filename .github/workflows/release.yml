@@ -106,8 +106,9 @@ jobs:
 
                 branch: release-vsix
                 base: main
-                author: 'luau-ast-explorer-bot <luau-ast-explorer-bot@users.noreply.github.com>'
-                token: ${{ secrets.AUTH_PAT }}
+                author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
+                committer: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
+                token: ${{ secrets.GITHUB_TOKEN }}
                 delete-branch: true
 
     release_vsix:
