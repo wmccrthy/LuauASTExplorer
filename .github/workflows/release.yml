@@ -17,7 +17,6 @@ jobs:
               run: |
                 COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
                 
-                # Check if this is a release PR (format: "Release v1.2.3")
                 if [[ "$COMMIT_MESSAGE" =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
                     echo "Release commit detected, proceeding with VSIX release"
                     echo "is_release=true" >> $GITHUB_OUTPUT
@@ -93,7 +92,7 @@ jobs:
             - name: Create PR for Release
               uses: peter-evans/create-pull-request@v6
               with:
-                title: 'Release v${{ steps.get-version.outputs.VERSION }}'
+                title: 'Release v${{ steps.get-version.outputs.VERSION }} #chore'
                 body: |
                   🚀 **Release v${{ steps.get-version.outputs.VERSION }}**
                   
