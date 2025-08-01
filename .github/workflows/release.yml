@@ -8,30 +8,30 @@ on:
 jobs:
     check_push:
         outputs:
-            is_feat: ${{ steps.check_commit_type.outputs.is_feat }}
+            is_feat_or_bug: ${{ steps.check_commit_type.outputs.is_feat_or_bug }}
+            is_release: ${{ steps.check_commit_type.outputs.is_release }}
         runs-on: ubuntu-latest
         steps:
-            - name: Get commit message
-              id: get-commit-message
-              run: echo "COMMIT_MESSAGE=${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
-
             - name: Check commit type
               id: check_commit_type
               run: |
-                if [[ ! "${{ steps.get-commit-message.outputs.COMMIT_MESSAGE }}" =~ ^\#(chore|feat) ]]; then
-                    echo "Commit message must contain #chore or #feat"
-                    exit 1
+                COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+                
+                if [[ "$COMMIT_MESSAGE" =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+                    echo "Release commit detected, proceeding with VSIX release"
+                    echo "is_release=true" >> $GITHUB_OUTPUT
+                    echo "is_feat_or_bug=false" >> $GITHUB_OUTPUT
+                elif [[ "$COMMIT_MESSAGE" =~ ^\#(feat|bug) ]]; then
+                    echo "Feature or bug commit detected, proceeding with release preparation"
+                    echo "is_feat_or_bug=true" >> $GITHUB_OUTPUT
+                    echo "is_release=false" >> $GITHUB_OUTPUT
                 else
-                    if [[ "${{ steps.get-commit-message.outputs.COMMIT_MESSAGE }}" =~ ^\#(feat) ]]; then
-                        echo "Commit message contains #feat, proceeding with release"
-                        echo "is_feat=true" >> $GITHUB_OUTPUT
-                    else
-                        echo "Commit message contains #chore, skipping release"
-                        echo "is_feat=false" >> $GITHUB_OUTPUT
-                    fi
+                    echo "No release action needed for this commit"
+                    echo "is_feat_or_bug=false" >> $GITHUB_OUTPUT
+                    echo "is_release=false" >> $GITHUB_OUTPUT
                 fi
 
-    release:
+    prepare_release:
         needs: check_push
         permissions:
             contents: write
@@ -39,7 +39,83 @@ jobs:
             security-events: write
             issues: write
             pull-requests: write
-        if: ${{ needs.check_push.outputs.is_feat == 'true' }}
+        if: ${{ needs.check_push.outputs.is_feat_or_bug == 'true' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+              with:
+                fetch-depth: 0
+
+            - name: Check if release branch exists
+              id: check_branch
+              run: |
+                git fetch origin
+                if git show-ref --verify --quiet refs/remotes/origin/release-vsix; then
+                  echo "Release branch exists, skipping version bump"
+                  echo "should_bump=false" >> $GITHUB_OUTPUT
+                else
+                  echo "Release branch doesn't exist, will bump version"
+                  echo "should_bump=true" >> $GITHUB_OUTPUT
+                fi
+
+            - name: Install dependencies
+              run: |
+                npm install
+                cd frontend && npm install
+                cd ..
+            
+            - name: Clear any package-lock changes
+              run: git checkout -- .
+
+            - name: Configure Git
+              run: |
+                git config --global user.email "luau-ast-explorer-bot@users.noreply.github.com"
+                git config --global user.name "luau-ast-explorer-bot"
+
+            - name: Bump Version
+              if: ${{ steps.check_branch.outputs.should_bump == 'true' }}
+              run: |
+                npm version patch
+            
+            - name: Get version
+              id: get-version
+              run: |
+                VERSION=$(cat package.json | jq -r '.version')
+                echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+            - name: Process Changelog
+              run: |
+                echo "Processing changelog files for version ${{ steps.get-version.outputs.VERSION }}..."
+                npm run process-changelog ${{ steps.get-version.outputs.VERSION }}
+
+            - name: Create PR for Release
+              uses: peter-evans/create-pull-request@v6
+              with:
+                title: 'Release v${{ steps.get-version.outputs.VERSION }} #chore'
+                body: |
+                  🚀 **Release v${{ steps.get-version.outputs.VERSION }}**
+                  
+                  This PR contains:
+                  - Version bump to ${{ steps.get-version.outputs.VERSION }}
+                  - Updated CHANGELOG.md
+                  
+                  **To complete the release:**
+                  1. Review the changes
+                  2. Merge this PR to trigger the release
+
+                branch: release-vsix
+                base: main
+                author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
+                committer: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
+                token: ${{ secrets.GITHUB_TOKEN }}
+                delete-branch: true
+
+    release_vsix:
+        needs: check_push
+        permissions:
+            contents: write
+        if: ${{ needs.check_push.outputs.is_release == 'true' }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -51,23 +127,8 @@ jobs:
                 cd frontend && npm install
                 cd ..
             
-            - name: Clear any package-lock changes
-              run: git checkout -- .
-            
             - name: Install VSCE
               run: npm install -g @vscode/vsce
-
-            - name: Configure Git
-              run: |
-                git config --global user.email "fake@email.com"
-                git config --global user.name "luau-ast-explorer-bot"
-
-            - name: Bump Version
-              run: |
-                npm version patch
-            
-            - name: Build
-              run: npm run compile
 
             - name: Get version
               id: get-version
@@ -75,30 +136,19 @@ jobs:
                 VERSION=$(cat package.json | jq -r '.version')
                 echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
 
+            - name: Build
+              run: npm run compile
+
             - name: Package
               run: npm run package
 
-            - name: Update package.json
-              run: |
-                echo "Updating package.json with new version..."
-                jq --arg version "${{ steps.get-version.outputs.VERSION }}" '.version = $version' package.json > package.json.tmp && mv package.json.tmp package.json
-
-            - name: Create PR for JSON bump
-              uses: peter-evans/create-pull-request@v6
-              with:
-                title: '#chore Bump version to ${{ steps.get-version.outputs.VERSION }}'
-                body: 'Automated version bump to ${{ steps.get-version.outputs.VERSION }}'
-                branch: package-json-bump-${{ steps.get-version.outputs.VERSION }}
-                base: main
-                author: 'luau-ast-explorer-bot <luau-ast-explorer-bot@users.noreply.github.com>'
-                token: ${{ secrets.AUTH_PAT }}
-            
             - name: Create release
               uses: softprops/action-gh-release@v2
               with:
-                tag_name: ${{ steps.get-version.outputs.VERSION }}
+                tag_name: v${{ steps.get-version.outputs.VERSION }}
                 name: v${{ steps.get-version.outputs.VERSION }}
                 files: ./luau-ast-explorer-${{ steps.get-version.outputs.VERSION }}.vsix
                 draft: false
-                prerelease: true
+                prerelease: false
                 token: ${{ secrets.GITHUB_TOKEN }}
+                generate_release_notes: true
