@@ -89,11 +89,14 @@ function annotateDiffTreeRecursive(
   // Check if this exact path has a direct change
   const directChange = changeMap.get(currentPath);
 
-  // Find immediate child changes (only direct children, not grandchildren)
+  // Find immediate child and descendant changes
+  let anyDescendantChanges = false;
   const directChildChanges = Array.from(changeMap.keys()).filter((path) => {
-    if (!path.startsWith(currentPath + ".")) return false;
+    const pathPrefix = currentPath ? `${currentPath}.` : "";
+    if (!path.startsWith(pathPrefix)) return false;
     const remainingPath = path.substring(currentPath.length + 1);
     const isDirectChild = !remainingPath.includes("."); // No further dots = direct child
+    anyDescendantChanges = anyDescendantChanges || !isDirectChild;
     console.log(
       `Checking child path "${path}" from parent "${currentPath}": remaining="${remainingPath}", isDirect=${isDirectChild}`
     );
@@ -165,6 +168,8 @@ function annotateDiffTreeRecursive(
       `Parent with child changes: "${currentPath}" (${directChildChanges.length} children)`,
       Object.keys(node.childChanges)
     );
+  } else if (anyDescendantChanges) {
+    node.diffStatus = "contains-nested-changes";
   } else if (!directChange) {
     node.diffStatus = "unchanged";
   }
@@ -183,8 +188,15 @@ function annotateDiffTreeRecursive(
 
       const childPath = currentPath ? `${currentPath}.${key}` : key;
       const beforeChildNode = beforeNode?.[key];
-
       if (Array.isArray(node[key])) {
+        const arrayDescendantChanges = Array.from(changeMap.keys()).filter(
+          (path) => {
+            return path.startsWith(childPath + ".");
+          }
+        ).length;
+        (node[key] as any).diffStatus =
+          arrayDescendantChanges > 0 ? "contains-nested-changes" : "unchanged";
+
         // Handle arrays - use dot notation to match json-diff-ts format
         node[key].forEach((item: any, index: number) => {
           if (item && typeof item === "object") {

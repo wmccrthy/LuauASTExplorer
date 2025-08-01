@@ -15,7 +15,8 @@ interface TreeNodeProps {
     | "removed"
     | "updated"
     | "unchanged"
-    | "contains-changes";
+    | "contains-changes"
+    | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
   parentChanges?: any;
@@ -472,7 +473,8 @@ interface TreeNodeContainerProps {
     | "removed"
     | "updated"
     | "unchanged"
-    | "contains-changes";
+    | "contains-changes"
+    | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
   parentChanges?: any;
@@ -481,8 +483,8 @@ interface TreeNodeContainerProps {
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
   const [expanded, setExpanded] = React.useState(
-    !shouldAutoCollapse(props.nodeKey)
-  );
+    !(shouldAutoCollapse(props.nodeKey) || (props.isDiffMode && props.diffStatus === "unchanged"))
+  ); // small issue is that less "impotant" nodes will be collapsed even if they have changes (ie trivia) so you might not see change
 
   const handleToggle = () => {
     setExpanded(!expanded);

@@ -56,7 +56,8 @@ export interface DiffASTNode extends ASTNode {
     | "removed"
     | "updated"
     | "unchanged"
-    | "contains-changes";
+    | "contains-changes"
+    | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
   diffKey?: string;

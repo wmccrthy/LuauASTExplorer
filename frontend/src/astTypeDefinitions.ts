@@ -502,29 +502,29 @@ export function getAllTypes(): string[] {
 export function getAllNodeKeys(): string[] {
   // Extract all unique property names from all type definitions
   const allProperties: string[] = [];
-  
+
   Object.values(astTypeDefinitions).forEach((typeDef) => {
     // Add properties from the main properties array
     if (typeDef.properties) {
       typeDef.properties.forEach((prop) => {
         // Remove the '?' suffix for optional properties
-        const cleanProp = prop.endsWith('?') ? prop.slice(0, -1) : prop;
+        const cleanProp = prop.endsWith("?") ? prop.slice(0, -1) : prop;
         allProperties.push(cleanProp);
       });
     }
-    
+
     // Add properties from kinds (for union types)
     if (typeDef.kinds) {
       Object.values(typeDef.kinds).forEach((kindDef) => {
         if (kindDef.properties) {
           kindDef.properties.forEach((prop) => {
-            const cleanProp = prop.endsWith('?') ? prop.slice(0, -1) : prop;
+            const cleanProp = prop.endsWith("?") ? prop.slice(0, -1) : prop;
             allProperties.push(cleanProp);
           });
         }
       });
     }
   });
-  
+
   return Array.from(new Set(allProperties)).sort();
 }
