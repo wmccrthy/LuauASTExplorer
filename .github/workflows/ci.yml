@@ -22,6 +22,12 @@ jobs:
                 fi
 
     auto_changelog:
+        permissions:
+            contents: write
+            actions: read
+            security-events: write
+            issues: write
+            pull-requests: write
         runs-on: ubuntu-latest
         needs: check_pr_type
         if: ${{ !contains(github.event.pull_request.title, '#chore') }}
