@@ -1,1 +1,1 @@
-added changelog for better release system
+Added changelog CI for better release system
