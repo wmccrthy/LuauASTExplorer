@@ -16,7 +16,7 @@ jobs:
         steps:
             - name: Check PR type
               run: |
-                if [[ ! "${{ github.event.pull_request.title }}" =~ ^\#(chore|feat|bug) ]]; then
+                if [[ ! "${{ github.event.pull_request.title }}" =~ \#(chore|feat|bug) ]]; then
                     echo "PR title must contain #chore, #feat, or #bug"
                     exit 1
                 fi
