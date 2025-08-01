@@ -482,9 +482,11 @@ interface TreeNodeContainerProps {
 }
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
-  const [expanded, setExpanded] = React.useState(
-    !(shouldAutoCollapse(props.nodeKey) || (props.isDiffMode && props.diffStatus === "unchanged"))
-  ); // small issue is that less "impotant" nodes will be collapsed even if they have changes (ie trivia) so you might not see change
+  const autoCollapse = props.isDiffMode
+    ? props.diffStatus === "unchanged"
+    : shouldAutoCollapse(props.nodeKey);
+
+  const [expanded, setExpanded] = React.useState(!autoCollapse);
 
   const handleToggle = () => {
     setExpanded(!expanded);
