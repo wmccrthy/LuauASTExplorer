@@ -213,7 +213,7 @@ function annotateDiffTreeRecursive(
               changeMap,
               beforeChildNode?.[index],
               arrayPath,
-              node.diffStatus == "added" || node.diffStatus == "nested-add",
+              node.diffStatus === "added" || node.diffStatus === "nested-add",
             );
           }
         });
@@ -224,7 +224,7 @@ function annotateDiffTreeRecursive(
           changeMap,
           beforeChildNode,
           childPath,
-          node.diffStatus == "added" || node.diffStatus == "nested-add",
+          node.diffStatus === "added" || node.diffStatus === "nested-add",
         );
       }
     });
