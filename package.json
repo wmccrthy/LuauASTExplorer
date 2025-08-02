@@ -2,7 +2,7 @@
   "name": "luau-ast-explorer",
   "displayName": "Luau AST Explorer",
   "description": "Explore Luau/Lua AST structures, analyze code transformations, and assist with codemod development",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "internal",
   "license": "MIT",
   "icon": "icon.png",
