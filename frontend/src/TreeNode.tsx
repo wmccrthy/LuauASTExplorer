@@ -12,6 +12,7 @@ interface TreeNodeProps {
   isDiffMode?: boolean;
   diffStatus?:
     | "added"
+    | "nested-add"
     | "removed"
     | "updated"
     | "unchanged"
@@ -470,6 +471,7 @@ interface TreeNodeContainerProps {
   isDiffMode?: boolean;
   diffStatus?:
     | "added"
+    | "nested-add"
     | "removed"
     | "updated"
     | "unchanged"

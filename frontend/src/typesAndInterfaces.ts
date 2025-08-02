@@ -53,6 +53,7 @@ export interface ASTNode {
 export interface DiffASTNode extends ASTNode {
   diffStatus?:
     | "added"
+    | "nested-add"
     | "removed"
     | "updated"
     | "unchanged"
