@@ -204,7 +204,7 @@ function annotateDiffTreeRecursive(
         (node[key] as any).diffStatus =
           arrayDescendantChanges > 0 ? "contains-nested-changes" : "unchanged";
         // if node[key] is array, we don't call annotate on the array itself, so make sure we assign nested-add appropriately
-        if (node.diffStatus == "added" || hasAdd) {
+        if (node.diffStatus === "added" || hasAdd) {
           (node[key] as any).diffStatus = "nested-add";
         }
 
