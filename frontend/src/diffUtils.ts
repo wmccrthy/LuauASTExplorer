@@ -203,6 +203,10 @@ function annotateDiffTreeRecursive(
         ).length;
         (node[key] as any).diffStatus =
           arrayDescendantChanges > 0 ? "contains-nested-changes" : "unchanged";
+        // if node[key] is array, we don't call annotate on the array itself, so make sure we assign nested-add appropriately
+        if (node.diffStatus === "added" || hasAdd) {
+          (node[key] as any).diffStatus = "nested-add";
+        }
 
         // Handle arrays - use dot notation to match json-diff-ts format
         node[key].forEach((item: any, index: number) => {
@@ -213,7 +217,7 @@ function annotateDiffTreeRecursive(
               changeMap,
               beforeChildNode?.[index],
               arrayPath,
-              node.diffStatus === "added" || node.diffStatus === "nested-add",
+              node.diffStatus === "added" || hasAdd
             );
           }
         });
@@ -224,7 +228,7 @@ function annotateDiffTreeRecursive(
           changeMap,
           beforeChildNode,
           childPath,
-          node.diffStatus === "added" || node.diffStatus === "nested-add",
+          node.diffStatus === "added" || hasAdd,
         );
       }
     });
