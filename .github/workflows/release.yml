@@ -83,10 +83,6 @@ jobs:
                 body: |
                   🚀 **Release v${{ steps.get-version.outputs.VERSION }}**
                   
-                  This PR contains:
-                  - Version bump to ${{ steps.get-version.outputs.VERSION }}
-                  - Updated CHANGELOG.md
-                  
                   **To complete the release:**
                   1. Review the changes
                   2. Merge this PR to trigger the release
@@ -123,6 +119,16 @@ jobs:
                 VERSION=$(cat package.json | jq -r '.version')
                 echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
 
+            - name: Get changelog diff
+              id: get-changelog-diff
+              run: |
+                CHANGELOG_DIFF=$(git diff HEAD~1 HEAD -- CHANGELOG.md | grep '^+' | grep -v '^+++' | sed 's/^+//' | grep -E '^(### |- )' || echo "No changelog entries found")
+                
+                # Format the changelog for release notes
+                echo "CHANGELOG_DIFF<<EOF" >> $GITHUB_OUTPUT
+                echo "$CHANGELOG_DIFF" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+
             - name: Build
               run: npm run compile
 
@@ -136,6 +142,10 @@ jobs:
                 name: v${{ steps.get-version.outputs.VERSION }}
                 files: ./luau-ast-explorer-${{ steps.get-version.outputs.VERSION }}.vsix
                 draft: false
-                prerelease: false
+                prerelease: true
                 token: ${{ secrets.GITHUB_TOKEN }}
-                generate_release_notes: true
+                generate_release_notes: false
+                body: |                  
+                  ${{ steps.get-changelog-diff.outputs.CHANGELOG_DIFF }}
+                  
+                  **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get-version.outputs.VERSION }}...HEAD 
