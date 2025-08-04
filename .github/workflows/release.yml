@@ -122,8 +122,6 @@ jobs:
             - name: Get changelog diff
               id: get-changelog-diff
               run: |
-                # Get the changelog changes from the previous commit to current commit
-                # Extract everything between the new version header and the next version header
                 CHANGELOG_DIFF=$(git diff HEAD~1 HEAD -- CHANGELOG.md | grep '^+' | grep -v '^+++' | sed 's/^+//' | grep -E '^(### |- )' || echo "No changelog entries found")
                 
                 # Format the changelog for release notes
