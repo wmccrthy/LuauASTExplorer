@@ -78,7 +78,7 @@ jobs:
               
               echo "Created changelog file: $CHANGELOG_FILE"
 
-    checks:
+    build:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
