@@ -1,8 +1,8 @@
-import React, { ReactElement } from "react";
+import React from "react";
 import { TypeTooltip } from "./components/TypeTooltip";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
-import { render } from "@testing-library/react";
 import { JSX } from "react/jsx-runtime";
+import { render } from "@testing-library/react";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -77,39 +77,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         return "";
     }
   };
-
-  const arrow = expanded ? "▼" : "▶";
-
-  const getRenderedContent = React.useCallback(
-    (
-      renderArrow: boolean,
-      renderValue: string | JSX.Element | React.ReactNode[],
-      renderTypeAnnotation: boolean,
-      isArray?: boolean
-    ) => {
-      return (
-        <React.Fragment>
-          {indent}
-          {renderArrow ? (
-            <span
-              className="tree-arrow"
-              style={{
-                color: isArray
-                  ? "var(--vscode-symbolIcon-arrayForeground)"
-                  : "var(--vscode-symbolIcon-objectForeground)",
-              }}
-            >
-              {arrow}
-            </span>
-          ) : null}
-          {renderDiffIndicator()}
-          {renderValue}
-          {renderTypeAnnotation ? renderTypeAnnotations() : null}
-        </React.Fragment>
-      );
-    },
-    []
-  );
 
   const getChildDiffProps = (value: any, key: string | number, child: any) => {
     const nodeChildChanges = (value as any)?.childChanges || {};
@@ -224,6 +191,39 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         return highlightText(`${nodeKey}: ${displayValue}`);
     }
   };
+
+  const arrow = expanded ? "▼" : "▶";
+
+  const getRenderedContent = React.useCallback(
+    (
+      renderArrow: boolean,
+      renderValue: string | JSX.Element | React.ReactNode[],
+      renderTypeAnnotation: boolean,
+      isArray?: boolean
+    ) => {
+      return (
+        <React.Fragment>
+          {indent}
+          {renderArrow ? (
+            <span
+              className="tree-arrow"
+              style={{
+                color: isArray
+                  ? "var(--vscode-symbolIcon-arrayForeground)"
+                  : "var(--vscode-symbolIcon-objectForeground)",
+              }}
+            >
+              {arrow}
+            </span>
+          ) : null}
+          {renderDiffIndicator()}
+          {renderValue}
+          {renderTypeAnnotation ? renderTypeAnnotations() : null}
+        </React.Fragment>
+      );
+    },
+    [arrow, indent, renderDiffIndicator, renderTypeAnnotations]
+  );
 
   // Render primitive values
   if (value === null || value === undefined) {
