@@ -61,16 +61,10 @@ function buildChangeMap(
 
     // If this change has nested changes, recurse deeper and don't add this intermediate node
     if (change.changes && change.changes.length > 0) {
-      console.log(`Recursing into nested changes for path: "${currentPath}"`);
       buildChangeMap(change.changes, currentPath, changeMap);
     } else {
       // Only add leaf changes (changes with actual oldValue/value) to the map
       if (change.oldValue !== undefined || change.value !== undefined) {
-        console.log(`Adding leaf change to map: "${currentPath}"`, {
-          type: change.type,
-          oldValue: change.oldValue,
-          value: change.value,
-        });
         changeMap.set(currentPath, change);
       }
     }
@@ -87,7 +81,6 @@ function annotateDiffTreeRecursive(
   currentPath: string,
   hasAdd?: boolean // whenever we come across an add, all of the children should be annotated as ADD too (can just propogate down)
 ): void {
-
   if (hasAdd) {
     node.diffStatus = "nested-add";
   } // simple check and can bypass subsequent checks of directChange/childChanges
@@ -103,13 +96,8 @@ function annotateDiffTreeRecursive(
       const remainingPath = path.substring(currentPath.length + 1);
       const isDirectChild = !remainingPath.includes("."); // No further dots = direct child
       anyDescendantChanges = anyDescendantChanges || !isDirectChild;
-      console.log(
-        `Checking child path "${path}" from parent "${currentPath}": remaining="${remainingPath}", isDirect=${isDirectChild}`
-      );
       return isDirectChild;
     });
-
-    console.log(`Direct children for "${currentPath}":`, directChildChanges);
 
     if (directChange) {
       // This node itself has changed - annotate it if possible
@@ -132,15 +120,6 @@ function annotateDiffTreeRecursive(
             break;
         }
         node.diffKey = directChange.key;
-        console.log(`Direct change annotated: "${currentPath}"`, {
-          type: directChange.type,
-          status: node.diffStatus,
-        });
-      } else {
-        console.log(`Cannot annotate primitive value: "${currentPath}"`, {
-          type: directChange.type,
-          value: node,
-        });
       }
     }
 
@@ -161,19 +140,10 @@ function annotateDiffTreeRecursive(
             ...change,
             fullPath: changePath,
           };
-          console.log(
-            `Storing child change: "${childKey}" with full path "${changePath}"`,
-            change
-          );
         }
 
         return acc;
       }, {} as any);
-
-      console.log(
-        `Parent with child changes: "${currentPath}" (${directChildChanges.length} children)`,
-        Object.keys(node.childChanges)
-      );
     } else if (anyDescendantChanges) {
       node.diffStatus = "contains-nested-changes";
     } else if (!directChange) {
@@ -188,7 +158,8 @@ function annotateDiffTreeRecursive(
         key === "diffStatus" ||
         key === "beforeValue" ||
         key === "afterValue" ||
-        key === "diffKey"
+        key === "diffKey" ||
+        key === "childChanges"
       ) {
         return; // Skip our added diff properties
       }
@@ -196,16 +167,29 @@ function annotateDiffTreeRecursive(
       const childPath = currentPath ? `${currentPath}.${key}` : key;
       const beforeChildNode = beforeNode?.[key];
       if (Array.isArray(node[key])) {
-        const arrayDescendantChanges = Array.from(changeMap.keys()).filter(
-          (path) => {
-            return path.startsWith(childPath + ".");
+        const arrayDirectChange = changeMap.get(childPath);
+        if (arrayDirectChange) {
+          (node[key] as any).diffStatus =
+            arrayDirectChange.type === "ADD"
+              ? "added"
+              : arrayDirectChange.type === "REMOVE"
+              ? "removed"
+              : "updated";
+        } else {
+          const arrayDescendantChanges = Array.from(changeMap.keys()).filter(
+            (path) => {
+              return path.startsWith(childPath + ".");
+            }
+          ).length;
+          (node[key] as any).diffStatus =
+            arrayDescendantChanges > 0
+              ? "contains-nested-changes"
+              : "unchanged";
+
+          // if node[key] is array, we don't call annotate on the array itself, so make sure we assign nested-add appropriately
+          if (node.diffStatus === "added" || hasAdd) {
+            (node[key] as any).diffStatus = "nested-add";
           }
-        ).length;
-        (node[key] as any).diffStatus =
-          arrayDescendantChanges > 0 ? "contains-nested-changes" : "unchanged";
-        // if node[key] is array, we don't call annotate on the array itself, so make sure we assign nested-add appropriately
-        if (node.diffStatus === "added" || hasAdd) {
-          (node[key] as any).diffStatus = "nested-add";
         }
 
         // Handle arrays - use dot notation to match json-diff-ts format
@@ -217,7 +201,9 @@ function annotateDiffTreeRecursive(
               changeMap,
               beforeChildNode?.[index],
               arrayPath,
-              node.diffStatus === "added" || hasAdd
+              node[key].diffStatus === "added" ||
+                node[key].diffStatus === "nested-add" ||
+                hasAdd
             );
           }
         });
@@ -228,7 +214,7 @@ function annotateDiffTreeRecursive(
           changeMap,
           beforeChildNode,
           childPath,
-          node.diffStatus === "added" || hasAdd,
+          node.diffStatus === "added" || hasAdd
         );
       }
     });
