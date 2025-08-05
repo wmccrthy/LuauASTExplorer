@@ -1,6 +1,7 @@
 import React from "react";
 import { TypeTooltip } from "./components/TypeTooltip";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
+import { JSX } from "react/jsx-runtime";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -20,7 +21,6 @@ interface TreeNodeProps {
     | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
-  parentChanges?: any;
   hiddenNodes?: string[];
 }
 
@@ -35,14 +35,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   diffStatus = "unchanged",
   beforeValue,
   afterValue,
-  parentChanges = {},
   hiddenNodes = [],
 }) => {
   // Always reserve space for diff indicator to maintain consistent indentation
   const baseIndent = "  ".repeat(level);
   const indent = baseIndent;
 
-  const renderTypeAnnotations = () => {
+  const renderTypeAnnotations = React.useCallback(() => {
     if (value._astType) {
       return (
         <span className="ast-annotations">
@@ -58,28 +57,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       );
     }
     return null;
-  };
+  }, [value]);
 
   // Get diff-specific styling
   const getDiffClassName = () => {
     if (!isDiffMode) return "";
 
-    // Check if this specific value changed via parent change info
-    const isChanged = parentChanges[nodeKey];
-    if (isChanged) {
-      switch (isChanged.type) {
-        case "ADD":
-          return "diff-added";
-        case "REMOVE":
-          return "diff-removed";
-        case "UPDATE":
-          return "diff-updated";
-        default:
-          return "";
-      }
-    }
-
-    // Normal diff status
     switch (diffStatus) {
       case "added":
         return "diff-added";
@@ -94,80 +77,70 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
   };
 
+  const getChildDiffProps = React.useCallback(
+    (value: any, key: string | number, child: any) => {
+      const nodeChildChanges = (value as any)?.childChanges || {};
+      const childChange =
+        nodeChildChanges[typeof key == "number" ? key.toString() : key];
+
+      const childDiffProps =
+        child && typeof child === "object" && "diffStatus" in child
+          ? {
+              isDiffMode,
+              diffStatus: child.diffStatus,
+              beforeValue: child.beforeValue,
+              afterValue: child.afterValue,
+            }
+          : childChange // handles cases where child is primitive value
+          ? {
+              isDiffMode,
+              diffStatus:
+                childChange.type === "ADD"
+                  ? ("added" as const)
+                  : childChange.type === "REMOVE"
+                  ? ("removed" as const)
+                  : ("updated" as const),
+              beforeValue: childChange.oldValue,
+              afterValue: childChange.value,
+            }
+          : {
+              isDiffMode,
+              diffStatus: "unchanged" as const,
+            };
+
+      return childDiffProps;
+    },
+    [isDiffMode]
+  );
+
   const diffClassName = getDiffClassName();
-  const fullClassName = `${diffClassName}`; // might use for adding specific node styling (by importance proxy) later on
-
-  // Debug diff props (only log meaningful changes)
-  if (
-    isDiffMode &&
-    diffStatus !== "unchanged" &&
-    (beforeValue !== undefined || afterValue !== undefined)
-  ) {
-    const logMsg =
-      diffStatus === "updated"
-        ? `TreeNode [${nodeKey}]: ${diffStatus} (${beforeValue} → ${afterValue})`
-        : `TreeNode [${nodeKey}]: ${diffStatus} (${beforeValue || afterValue})`;
-    console.log(logMsg);
-  }
-
-  // Debug parent changes being passed down
-  if (isDiffMode && Object.keys(parentChanges).length > 0) {
-    console.log(`TreeNode [${nodeKey}] received parentChanges:`, parentChanges);
-  }
 
   // Simple highlight with pronounced styling
-  const highlightText = (text: string) => {
-    if (!searchTerm) return text;
-    const regex = new RegExp(searchTerm, "gi");
-    const parts = text.split(regex);
-    const matches = text.match(regex) || [];
+  const highlightText = React.useCallback(
+    (text: string) => {
+      if (!searchTerm) return text;
+      const regex = new RegExp(searchTerm, "gi");
+      const parts = text.split(regex);
+      const matches = text.match(regex) || [];
 
-    return parts.reduce((acc, part, i) => {
-      acc.push(part);
-      if (matches[i]) {
-        acc.push(
-          <mark key={i} className="search-match tree-highlight">
-            {matches[i]}
-          </mark>
-        );
-      }
-      return acc;
-    }, [] as React.ReactNode[]);
-  };
+      return parts.reduce((acc, part, i) => {
+        acc.push(part);
+        if (matches[i]) {
+          acc.push(
+            <mark key={i} className="search-match tree-highlight">
+              {matches[i]}
+            </mark>
+          );
+        }
+        return acc;
+      }, [] as React.ReactNode[]);
+    },
+    [searchTerm]
+  );
 
   // Render diff indicator for changed values - always render to maintain consistent indentation
-  const renderDiffIndicator = () => {
-    if (!isDiffMode) return <span className="diff-indicator"> </span>;
-
-    // Check for parent change information first
-    const isChanged = parentChanges[nodeKey];
-    if (isChanged) {
-      if (isChanged.fullPath) {
-        console.log(
-          `Node [${nodeKey}] checking parent change: path="${isChanged.fullPath}", level=${level}`
-        );
-      } else {
-        console.log(
-          `Node [${nodeKey}] has parent change (no path):`,
-          isChanged,
-          "at level",
-          level
-        );
-      }
-
-      switch (isChanged.type) {
-        case "ADD":
-          return <span className="diff-indicator diff-added-indicator">+</span>;
-        case "REMOVE":
-          return (
-            <span className="diff-indicator diff-removed-indicator">-</span>
-          );
-        case "UPDATE":
-          return (
-            <span className="diff-indicator diff-updated-indicator">~</span>
-          );
-      }
-    }
+  const renderDiffIndicator = React.useCallback(() => {
+    if (!isDiffMode) return <span className="diff-indicator"></span>;
 
     switch (diffStatus) {
       case "added":
@@ -179,37 +152,39 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       case "contains-changes":
         return <span className="diff-indicator diff-updated-indicator">○</span>;
       default:
-        return <span className="diff-indicator"> </span>;
+        return <span className="diff-indicator"></span>;
     }
-  };
+  }, [isDiffMode, diffStatus]);
 
   // Render value with diff information
-  const renderValueWithDiff = (displayValue: string) => {
-    if (!isDiffMode) {
-      return highlightText(`${nodeKey}: ${displayValue}`);
-    }
+  const renderValueWithDiff = React.useCallback(
+    (displayValue: string) => {
+      if (!isDiffMode) {
+        return highlightText(`${nodeKey}: ${displayValue}`);
+      }
+      // Fall back to node's own diff status
+      if (diffStatus === "unchanged") {
+        return highlightText(`${nodeKey}: ${displayValue}`);
+      }
 
-    // Check for parent change information first
-    const isChanged = parentChanges[nodeKey];
-    if (isChanged) {
-      switch (isChanged.type) {
-        case "ADD":
+      switch (diffStatus) {
+        case "added":
           return highlightText(`${nodeKey}: ${displayValue}`);
-        case "REMOVE":
-          const removedDisplay =
-            typeof isChanged.oldValue === "string"
-              ? `"${isChanged.oldValue}"`
-              : String(isChanged.oldValue);
-          return highlightText(`${nodeKey}: ${removedDisplay}`);
-        case "UPDATE":
+        case "removed":
+          const beforeDisplayValue =
+            typeof beforeValue === "string"
+              ? `"${beforeValue}"`
+              : String(beforeValue);
+          return highlightText(`${nodeKey}: ${beforeDisplayValue}`);
+        case "updated":
           const beforeDisplay =
-            typeof isChanged.oldValue === "string"
-              ? `"${isChanged.oldValue}"`
-              : String(isChanged.oldValue);
+            typeof beforeValue === "string"
+              ? `"${beforeValue}"`
+              : String(beforeValue);
           const afterDisplay =
-            typeof isChanged.value === "string"
-              ? `"${isChanged.value}"`
-              : String(isChanged.value);
+            typeof afterValue === "string"
+              ? `"${afterValue}"`
+              : String(afterValue);
           return (
             <>
               {highlightText(`${nodeKey}: `)}
@@ -218,52 +193,51 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               <span className="diff-after">{afterDisplay}</span>
             </>
           );
+        default:
+          return highlightText(`${nodeKey}: ${displayValue}`);
       }
-    }
+    },
+    [isDiffMode, diffStatus, beforeValue, afterValue, nodeKey, highlightText]
+  );
 
-    // Fall back to node's own diff status
-    if (diffStatus === "unchanged") {
-      return highlightText(`${nodeKey}: ${displayValue}`);
-    }
+  const arrow = expanded ? "▼" : "▶";
 
-    switch (diffStatus) {
-      case "added":
-        return highlightText(`${nodeKey}: ${displayValue}`);
-      case "removed":
-        const beforeDisplayValue =
-          typeof beforeValue === "string"
-            ? `"${beforeValue}"`
-            : String(beforeValue);
-        return highlightText(`${nodeKey}: ${beforeDisplayValue}`);
-      case "updated":
-        const beforeDisplay =
-          typeof beforeValue === "string"
-            ? `"${beforeValue}"`
-            : String(beforeValue);
-        const afterDisplay =
-          typeof afterValue === "string"
-            ? `"${afterValue}"`
-            : String(afterValue);
-        return (
-          <>
-            {highlightText(`${nodeKey}: `)}
-            <span className="diff-before">{beforeDisplay}</span>
-            <span className="diff-arrow"> → </span>
-            <span className="diff-after">{afterDisplay}</span>
-          </>
-        );
-      default:
-        return highlightText(`${nodeKey}: ${displayValue}`);
-    }
-  };
+  const getRenderedContent = React.useCallback(
+    (
+      renderArrow: boolean,
+      renderValue: string | JSX.Element | React.ReactNode[],
+      renderTypeAnnotation: boolean,
+      isArray?: boolean
+    ) => {
+      return (
+        <React.Fragment>
+          {indent}
+          {renderArrow ? (
+            <span
+              className="tree-arrow"
+              style={{
+                color: isArray
+                  ? "var(--vscode-symbolIcon-arrayForeground)"
+                  : "var(--vscode-symbolIcon-objectForeground)",
+              }}
+            >
+              {arrow}
+            </span>
+          ) : null}
+          {renderDiffIndicator()}
+          {renderValue}
+          {renderTypeAnnotation ? renderTypeAnnotations() : null}
+        </React.Fragment>
+      );
+    },
+    [arrow, indent, renderDiffIndicator, renderTypeAnnotations]
+  );
 
   // Render primitive values
   if (value === null || value === undefined) {
     return (
       <div className={diffClassName}>
-        {indent}
-        {renderDiffIndicator()}
-        {renderValueWithDiff("null")}
+        {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
   }
@@ -273,12 +247,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={fullClassName}>
+      <div className={diffClassName}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
-        {indent}
-        {renderDiffIndicator()}
-        {renderValueWithDiff(displayValue)}
+        {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
       </div>
     );
   }
@@ -287,64 +259,23 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return (
-        <div className={fullClassName}>
+        <div className={diffClassName}>
           {/* include empty span to ensure indentation aligns with expandable nodes */}
           <span className="tree-arrow"></span>
-          {indent}
-          {renderDiffIndicator()}
-          {renderValueWithDiff("[]")}
+          {getRenderedContent(false, renderValueWithDiff("[]"), false)}
         </div>
       );
     }
 
-    const arrow = expanded ? "▼" : "▶";
     return (
-      <div className={fullClassName}>
+      <div className={diffClassName}>
         <div style={{ cursor: "pointer" }} onClick={onToggle}>
-          {indent}
-          <span
-            className="tree-arrow"
-            style={{ color: "var(--vscode-symbolIcon-arrayForeground)" }}
-          >
-            {arrow}
-          </span>
-          {renderDiffIndicator()}
-          {highlightText(nodeKey)}
-          {renderTypeAnnotations()}
+          {getRenderedContent(true, highlightText(nodeKey), true, true)}
         </div>
         {expanded &&
           value.map((item, index) => {
             // Pass through diff props for child nodes if they have diff annotations
-            // Check if this child has change information (from props or value)
-            const nodeChildChanges = (value as any)?.childChanges || {};
-            const childChange =
-              nodeChildChanges[index.toString()] ||
-              parentChanges[index.toString()];
-
-            const childDiffProps =
-              item && typeof item === "object" && "diffStatus" in item
-                ? {
-                    isDiffMode,
-                    diffStatus: item.diffStatus,
-                    beforeValue: item.beforeValue,
-                    afterValue: item.afterValue,
-                  }
-                : childChange
-                ? {
-                    isDiffMode,
-                    diffStatus:
-                      childChange.type === "ADD"
-                        ? ("added" as const)
-                        : childChange.type === "REMOVE"
-                        ? ("removed" as const)
-                        : ("updated" as const),
-                    beforeValue: childChange.oldValue,
-                    afterValue: childChange.value,
-                  }
-                : {
-                    isDiffMode,
-                    diffStatus: "unchanged" as const,
-                  };
+            const childDiffProps = getChildDiffProps(value, index, item);
 
             return (
               <TreeNodeContainer
@@ -353,7 +284,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 value={item}
                 level={level + 1}
                 searchTerm={searchTerm}
-                parentChanges={nodeChildChanges}
                 {...childDiffProps}
                 hiddenNodes={hiddenNodes}
               />
@@ -377,7 +307,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   if (keys.length === 0) {
     return (
-      <div className={fullClassName}>
+      <div className={diffClassName}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {indent}
@@ -387,63 +317,16 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     );
   }
 
-  const arrow = expanded ? "▼" : "▶";
   return (
-    <div className={fullClassName}>
+    <div className={diffClassName}>
       <div style={{ cursor: "pointer" }} onClick={onToggle}>
-        {indent}
-        <span
-          className="tree-arrow"
-          style={{ color: "var(--vscode-symbolIcon-objectForeground)" }}
-        >
-          {arrow}
-        </span>
-        {renderDiffIndicator()}
-        {highlightText(nodeKey)}
-        {renderTypeAnnotations()}
+        {getRenderedContent(true, highlightText(nodeKey), true)}
       </div>
       {expanded &&
         keys.map((key) => {
           // Pass through diff props for child nodes if they have diff annotations
           const childValue = value[key];
-          // Check if this child has change information (from props or value)
-          const nodeChildChanges = (value as any)?.childChanges || {};
-          const childChange = nodeChildChanges[key] || parentChanges[key];
-
-          // Debug: Check if we're getting changes correctly
-          if (childChange) {
-            console.log(
-              `Child [${key}] at level ${level} has change:`,
-              childChange
-            );
-          }
-
-          const childDiffProps =
-            childValue &&
-            typeof childValue === "object" &&
-            "diffStatus" in childValue
-              ? {
-                  isDiffMode,
-                  diffStatus: childValue.diffStatus,
-                  beforeValue: childValue.beforeValue,
-                  afterValue: childValue.afterValue,
-                }
-              : childChange
-              ? {
-                  isDiffMode,
-                  diffStatus:
-                    childChange.type === "ADD"
-                      ? ("added" as const)
-                      : childChange.type === "REMOVE"
-                      ? ("removed" as const)
-                      : ("updated" as const),
-                  beforeValue: childChange.oldValue,
-                  afterValue: childChange.value,
-                }
-              : {
-                  isDiffMode,
-                  diffStatus: "unchanged" as const,
-                };
+          const childDiffProps = getChildDiffProps(value, key, childValue);
 
           return (
             <TreeNodeContainer
@@ -452,7 +335,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               value={childValue}
               level={level + 1}
               searchTerm={searchTerm}
-              parentChanges={nodeChildChanges}
               hiddenNodes={hiddenNodes}
               {...childDiffProps}
             />
@@ -479,7 +361,6 @@ interface TreeNodeContainerProps {
     | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
-  parentChanges?: any;
   hiddenNodes?: string[];
 }
 
