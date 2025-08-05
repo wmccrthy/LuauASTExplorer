@@ -2,7 +2,6 @@ import React from "react";
 import { TypeTooltip } from "./components/TypeTooltip";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
-import { render } from "@testing-library/react";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -42,7 +41,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const baseIndent = "  ".repeat(level);
   const indent = baseIndent;
 
-  const renderTypeAnnotations = () => {
+  const renderTypeAnnotations = React.useCallback(() => {
     if (value._astType) {
       return (
         <span className="ast-annotations">
@@ -58,7 +57,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       );
     }
     return null;
-  };
+  }, [value]);
 
   // Get diff-specific styling
   const getDiffClassName = () => {
@@ -134,7 +133,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   };
 
   // Render diff indicator for changed values - always render to maintain consistent indentation
-  const renderDiffIndicator = () => {
+  const renderDiffIndicator = React.useCallback(() => {
     if (!isDiffMode) return <span className="diff-indicator"></span>;
 
     switch (diffStatus) {
@@ -149,48 +148,51 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       default:
         return <span className="diff-indicator"></span>;
     }
-  };
+  }, [isDiffMode, diffStatus]);
 
   // Render value with diff information
-  const renderValueWithDiff = (displayValue: string) => {
-    if (!isDiffMode) {
-      return highlightText(`${nodeKey}: ${displayValue}`);
-    }
-    // Fall back to node's own diff status
-    if (diffStatus === "unchanged") {
-      return highlightText(`${nodeKey}: ${displayValue}`);
-    }
+  const renderValueWithDiff = React.useCallback(
+    (displayValue: string) => {
+      if (!isDiffMode) {
+        return highlightText(`${nodeKey}: ${displayValue}`);
+      }
+      // Fall back to node's own diff status
+      if (diffStatus === "unchanged") {
+        return highlightText(`${nodeKey}: ${displayValue}`);
+      }
 
-    switch (diffStatus) {
-      case "added":
-        return highlightText(`${nodeKey}: ${displayValue}`);
-      case "removed":
-        const beforeDisplayValue =
-          typeof beforeValue === "string"
-            ? `"${beforeValue}"`
-            : String(beforeValue);
-        return highlightText(`${nodeKey}: ${beforeDisplayValue}`);
-      case "updated":
-        const beforeDisplay =
-          typeof beforeValue === "string"
-            ? `"${beforeValue}"`
-            : String(beforeValue);
-        const afterDisplay =
-          typeof afterValue === "string"
-            ? `"${afterValue}"`
-            : String(afterValue);
-        return (
-          <>
-            {highlightText(`${nodeKey}: `)}
-            <span className="diff-before">{beforeDisplay}</span>
-            <span className="diff-arrow"> → </span>
-            <span className="diff-after">{afterDisplay}</span>
-          </>
-        );
-      default:
-        return highlightText(`${nodeKey}: ${displayValue}`);
-    }
-  };
+      switch (diffStatus) {
+        case "added":
+          return highlightText(`${nodeKey}: ${displayValue}`);
+        case "removed":
+          const beforeDisplayValue =
+            typeof beforeValue === "string"
+              ? `"${beforeValue}"`
+              : String(beforeValue);
+          return highlightText(`${nodeKey}: ${beforeDisplayValue}`);
+        case "updated":
+          const beforeDisplay =
+            typeof beforeValue === "string"
+              ? `"${beforeValue}"`
+              : String(beforeValue);
+          const afterDisplay =
+            typeof afterValue === "string"
+              ? `"${afterValue}"`
+              : String(afterValue);
+          return (
+            <>
+              {highlightText(`${nodeKey}: `)}
+              <span className="diff-before">{beforeDisplay}</span>
+              <span className="diff-arrow"> → </span>
+              <span className="diff-after">{afterDisplay}</span>
+            </>
+          );
+        default:
+          return highlightText(`${nodeKey}: ${displayValue}`);
+      }
+    },
+    [isDiffMode, diffStatus, beforeValue, afterValue, nodeKey, highlightText]
+  );
 
   const arrow = expanded ? "▼" : "▶";
 
