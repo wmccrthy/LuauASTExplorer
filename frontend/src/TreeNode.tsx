@@ -77,60 +77,66 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
   };
 
-  const getChildDiffProps = React.useCallback((value: any, key: string | number, child: any) => {
-    const nodeChildChanges = (value as any)?.childChanges || {};
-    const childChange =
-      nodeChildChanges[typeof key == "number" ? key.toString() : key];
+  const getChildDiffProps = React.useCallback(
+    (value: any, key: string | number, child: any) => {
+      const nodeChildChanges = (value as any)?.childChanges || {};
+      const childChange =
+        nodeChildChanges[typeof key == "number" ? key.toString() : key];
 
-    const childDiffProps =
-      child && typeof child === "object" && "diffStatus" in child
-        ? {
-            isDiffMode,
-            diffStatus: child.diffStatus,
-            beforeValue: child.beforeValue,
-            afterValue: child.afterValue,
-          }
-        : childChange // handles cases where child is primitive value
-        ? {
-            isDiffMode,
-            diffStatus:
-              childChange.type === "ADD"
-                ? ("added" as const)
-                : childChange.type === "REMOVE"
-                ? ("removed" as const)
-                : ("updated" as const),
-            beforeValue: childChange.oldValue,
-            afterValue: childChange.value,
-          }
-        : {
-            isDiffMode,
-            diffStatus: "unchanged" as const,
-          };
+      const childDiffProps =
+        child && typeof child === "object" && "diffStatus" in child
+          ? {
+              isDiffMode,
+              diffStatus: child.diffStatus,
+              beforeValue: child.beforeValue,
+              afterValue: child.afterValue,
+            }
+          : childChange // handles cases where child is primitive value
+          ? {
+              isDiffMode,
+              diffStatus:
+                childChange.type === "ADD"
+                  ? ("added" as const)
+                  : childChange.type === "REMOVE"
+                  ? ("removed" as const)
+                  : ("updated" as const),
+              beforeValue: childChange.oldValue,
+              afterValue: childChange.value,
+            }
+          : {
+              isDiffMode,
+              diffStatus: "unchanged" as const,
+            };
 
-    return childDiffProps;
-  }, [isDiffMode]);
+      return childDiffProps;
+    },
+    [isDiffMode]
+  );
 
   const diffClassName = getDiffClassName();
 
   // Simple highlight with pronounced styling
-  const highlightText = React.useCallback((text: string) => {
-    if (!searchTerm) return text;
-    const regex = new RegExp(searchTerm, "gi");
-    const parts = text.split(regex);
-    const matches = text.match(regex) || [];
+  const highlightText = React.useCallback(
+    (text: string) => {
+      if (!searchTerm) return text;
+      const regex = new RegExp(searchTerm, "gi");
+      const parts = text.split(regex);
+      const matches = text.match(regex) || [];
 
-    return parts.reduce((acc, part, i) => {
-      acc.push(part);
-      if (matches[i]) {
-        acc.push(
-          <mark key={i} className="search-match tree-highlight">
-            {matches[i]}
-          </mark>
-        );
-      }
-      return acc;
-    }, [] as React.ReactNode[]);
-  }, [searchTerm])
+      return parts.reduce((acc, part, i) => {
+        acc.push(part);
+        if (matches[i]) {
+          acc.push(
+            <mark key={i} className="search-match tree-highlight">
+              {matches[i]}
+            </mark>
+          );
+        }
+        return acc;
+      }, [] as React.ReactNode[]);
+    },
+    [searchTerm]
+  );
 
   // Render diff indicator for changed values - always render to maintain consistent indentation
   const renderDiffIndicator = React.useCallback(() => {
