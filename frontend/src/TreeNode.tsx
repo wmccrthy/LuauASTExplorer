@@ -11,16 +11,15 @@ interface TreeNodeProps {
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
-    | "added"
-    | "nested-add"
-    | "removed"
-    | "updated"
-    | "unchanged"
-    | "contains-changes"
-    | "contains-nested-changes";
+  | "added"
+  | "nested-add"
+  | "removed"
+  | "updated"
+  | "unchanged"
+  | "contains-changes"
+  | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
-  parentChanges?: any;
   hiddenNodes?: string[];
 }
 
@@ -35,7 +34,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   diffStatus = "unchanged",
   beforeValue,
   afterValue,
-  parentChanges = {},
   hiddenNodes = [],
 }) => {
   // Always reserve space for diff indicator to maintain consistent indentation
@@ -64,22 +62,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const getDiffClassName = () => {
     if (!isDiffMode) return "";
 
-    // Check if this specific value changed via parent change info
-    const isChanged = parentChanges[nodeKey];
-    if (isChanged) {
-      switch (isChanged.type) {
-        case "ADD":
-          return "diff-added";
-        case "REMOVE":
-          return "diff-removed";
-        case "UPDATE":
-          return "diff-updated";
-        default:
-          return "";
-      }
-    }
-
-    // Normal diff status
     switch (diffStatus) {
       case "added":
         return "diff-added";
@@ -110,11 +92,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     console.log(logMsg);
   }
 
-  // Debug parent changes being passed down
-  if (isDiffMode && Object.keys(parentChanges).length > 0) {
-    console.log(`TreeNode [${nodeKey}] received parentChanges:`, parentChanges);
-  }
-
   // Simple highlight with pronounced styling
   const highlightText = (text: string) => {
     if (!searchTerm) return text;
@@ -139,36 +116,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const renderDiffIndicator = () => {
     if (!isDiffMode) return <span className="diff-indicator"> </span>;
 
-    // Check for parent change information first
-    const isChanged = parentChanges[nodeKey];
-    if (isChanged) {
-      if (isChanged.fullPath) {
-        console.log(
-          `Node [${nodeKey}] checking parent change: path="${isChanged.fullPath}", level=${level}`
-        );
-      } else {
-        console.log(
-          `Node [${nodeKey}] has parent change (no path):`,
-          isChanged,
-          "at level",
-          level
-        );
-      }
-
-      switch (isChanged.type) {
-        case "ADD":
-          return <span className="diff-indicator diff-added-indicator">+</span>;
-        case "REMOVE":
-          return (
-            <span className="diff-indicator diff-removed-indicator">-</span>
-          );
-        case "UPDATE":
-          return (
-            <span className="diff-indicator diff-updated-indicator">~</span>
-          );
-      }
-    }
-
     switch (diffStatus) {
       case "added":
         return <span className="diff-indicator diff-added-indicator">+</span>;
@@ -188,39 +135,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     if (!isDiffMode) {
       return highlightText(`${nodeKey}: ${displayValue}`);
     }
-
-    // Check for parent change information first
-    const isChanged = parentChanges[nodeKey];
-    if (isChanged) {
-      switch (isChanged.type) {
-        case "ADD":
-          return highlightText(`${nodeKey}: ${displayValue}`);
-        case "REMOVE":
-          const removedDisplay =
-            typeof isChanged.oldValue === "string"
-              ? `"${isChanged.oldValue}"`
-              : String(isChanged.oldValue);
-          return highlightText(`${nodeKey}: ${removedDisplay}`);
-        case "UPDATE":
-          const beforeDisplay =
-            typeof isChanged.oldValue === "string"
-              ? `"${isChanged.oldValue}"`
-              : String(isChanged.oldValue);
-          const afterDisplay =
-            typeof isChanged.value === "string"
-              ? `"${isChanged.value}"`
-              : String(isChanged.value);
-          return (
-            <>
-              {highlightText(`${nodeKey}: `)}
-              <span className="diff-before">{beforeDisplay}</span>
-              <span className="diff-arrow"> → </span>
-              <span className="diff-after">{afterDisplay}</span>
-            </>
-          );
-      }
-    }
-
     // Fall back to node's own diff status
     if (diffStatus === "unchanged") {
       return highlightText(`${nodeKey}: ${displayValue}`);
@@ -317,31 +231,29 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             // Pass through diff props for child nodes if they have diff annotations
             // Check if this child has change information (from props or value)
             const nodeChildChanges = (value as any)?.childChanges || {};
-            const childChange =
-              nodeChildChanges[index.toString()] ||
-              parentChanges[index.toString()];
+            const childChange = nodeChildChanges[index.toString()];
 
             const childDiffProps =
               item && typeof item === "object" && "diffStatus" in item
                 ? {
-                    isDiffMode,
-                    diffStatus: item.diffStatus,
-                    beforeValue: item.beforeValue,
-                    afterValue: item.afterValue,
-                  }
+                  isDiffMode,
+                  diffStatus: item.diffStatus,
+                  beforeValue: item.beforeValue,
+                  afterValue: item.afterValue,
+                }
                 : childChange
-                ? {
+                  ? {
                     isDiffMode,
                     diffStatus:
                       childChange.type === "ADD"
                         ? ("added" as const)
                         : childChange.type === "REMOVE"
-                        ? ("removed" as const)
-                        : ("updated" as const),
+                          ? ("removed" as const)
+                          : ("updated" as const),
                     beforeValue: childChange.oldValue,
                     afterValue: childChange.value,
                   }
-                : {
+                  : {
                     isDiffMode,
                     diffStatus: "unchanged" as const,
                   };
@@ -353,7 +265,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 value={item}
                 level={level + 1}
                 searchTerm={searchTerm}
-                parentChanges={nodeChildChanges}
                 {...childDiffProps}
                 hiddenNodes={hiddenNodes}
               />
@@ -408,7 +319,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           const childValue = value[key];
           // Check if this child has change information (from props or value)
           const nodeChildChanges = (value as any)?.childChanges || {};
-          const childChange = nodeChildChanges[key] || parentChanges[key];
+          const childChange = nodeChildChanges[key];
 
           // Debug: Check if we're getting changes correctly
           if (childChange) {
@@ -420,27 +331,27 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
           const childDiffProps =
             childValue &&
-            typeof childValue === "object" &&
-            "diffStatus" in childValue
+              typeof childValue === "object" &&
+              "diffStatus" in childValue
               ? {
-                  isDiffMode,
-                  diffStatus: childValue.diffStatus,
-                  beforeValue: childValue.beforeValue,
-                  afterValue: childValue.afterValue,
-                }
+                isDiffMode,
+                diffStatus: childValue.diffStatus,
+                beforeValue: childValue.beforeValue,
+                afterValue: childValue.afterValue,
+              }
               : childChange
-              ? {
+                ? {
                   isDiffMode,
                   diffStatus:
                     childChange.type === "ADD"
                       ? ("added" as const)
                       : childChange.type === "REMOVE"
-                      ? ("removed" as const)
-                      : ("updated" as const),
+                        ? ("removed" as const)
+                        : ("updated" as const),
                   beforeValue: childChange.oldValue,
                   afterValue: childChange.value,
                 }
-              : {
+                : {
                   isDiffMode,
                   diffStatus: "unchanged" as const,
                 };
@@ -452,7 +363,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               value={childValue}
               level={level + 1}
               searchTerm={searchTerm}
-              parentChanges={nodeChildChanges}
               hiddenNodes={hiddenNodes}
               {...childDiffProps}
             />
@@ -470,16 +380,15 @@ interface TreeNodeContainerProps {
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
-    | "added"
-    | "nested-add"
-    | "removed"
-    | "updated"
-    | "unchanged"
-    | "contains-changes"
-    | "contains-nested-changes";
+  | "added"
+  | "nested-add"
+  | "removed"
+  | "updated"
+  | "unchanged"
+  | "contains-changes"
+  | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
-  parentChanges?: any;
   hiddenNodes?: string[];
 }
 
