@@ -1,7 +1,8 @@
-import React from "react";
+import React, { ReactElement } from "react";
 import { TypeTooltip } from "./components/TypeTooltip";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
-
+import { render } from "@testing-library/react";
+import { JSX } from "react/jsx-runtime";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -12,13 +13,13 @@ interface TreeNodeProps {
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
-  | "added"
-  | "nested-add"
-  | "removed"
-  | "updated"
-  | "unchanged"
-  | "contains-changes"
-  | "contains-nested-changes";
+    | "added"
+    | "nested-add"
+    | "removed"
+    | "updated"
+    | "unchanged"
+    | "contains-changes"
+    | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
   hiddenNodes?: string[];
@@ -77,31 +78,65 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
   };
 
+  const arrow = expanded ? "▼" : "▶";
+
+  const getRenderedContent = React.useCallback(
+    (
+      renderArrow: boolean,
+      renderValue: string | JSX.Element | React.ReactNode[],
+      renderTypeAnnotation: boolean,
+      isArray?: boolean
+    ) => {
+      return (
+        <React.Fragment>
+          {indent}
+          {renderArrow ? (
+            <span
+              className="tree-arrow"
+              style={{
+                color: isArray
+                  ? "var(--vscode-symbolIcon-arrayForeground)"
+                  : "var(--vscode-symbolIcon-objectForeground)",
+              }}
+            >
+              {arrow}
+            </span>
+          ) : null}
+          {renderDiffIndicator()}
+          {renderValue}
+          {renderTypeAnnotation ? renderTypeAnnotations() : null}
+        </React.Fragment>
+      );
+    },
+    []
+  );
+
   const getChildDiffProps = (value: any, key: string | number, child: any) => {
     const nodeChildChanges = (value as any)?.childChanges || {};
-    const childChange = nodeChildChanges[typeof (key) == "number" ? key.toString() : key];
+    const childChange =
+      nodeChildChanges[typeof key == "number" ? key.toString() : key];
 
     const childDiffProps =
       child && typeof child === "object" && "diffStatus" in child
         ? {
-          isDiffMode,
-          diffStatus: child.diffStatus,
-          beforeValue: child.beforeValue,
-          afterValue: child.afterValue,
-        }
+            isDiffMode,
+            diffStatus: child.diffStatus,
+            beforeValue: child.beforeValue,
+            afterValue: child.afterValue,
+          }
         : childChange // handles cases where child is primitive value
-          ? {
+        ? {
             isDiffMode,
             diffStatus:
               childChange.type === "ADD"
                 ? ("added" as const)
                 : childChange.type === "REMOVE"
-                  ? ("removed" as const)
-                  : ("updated" as const),
+                ? ("removed" as const)
+                : ("updated" as const),
             beforeValue: childChange.oldValue,
             afterValue: childChange.value,
           }
-          : {
+        : {
             isDiffMode,
             diffStatus: "unchanged" as const,
           };
@@ -110,20 +145,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   };
 
   const diffClassName = getDiffClassName();
-  const fullClassName = `${diffClassName}`; // might use for adding specific node styling (by importance proxy) later on
-
-  // Debug diff props (only log meaningful changes)
-  if (
-    isDiffMode &&
-    diffStatus !== "unchanged" &&
-    (beforeValue !== undefined || afterValue !== undefined)
-  ) {
-    const logMsg =
-      diffStatus === "updated"
-        ? `TreeNode [${nodeKey}]: ${diffStatus} (${beforeValue} → ${afterValue})`
-        : `TreeNode [${nodeKey}]: ${diffStatus} (${beforeValue || afterValue})`;
-    console.log(logMsg);
-  }
 
   // Simple highlight with pronounced styling
   const highlightText = (text: string) => {
@@ -147,7 +168,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   // Render diff indicator for changed values - always render to maintain consistent indentation
   const renderDiffIndicator = () => {
-    if (!isDiffMode) return <span className="diff-indicator"> </span>;
+    if (!isDiffMode) return <span className="diff-indicator"></span>;
 
     switch (diffStatus) {
       case "added":
@@ -159,7 +180,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       case "contains-changes":
         return <span className="diff-indicator diff-updated-indicator">○</span>;
       default:
-        return <span className="diff-indicator"> </span>;
+        return <span className="diff-indicator"></span>;
     }
   };
 
@@ -208,9 +229,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   if (value === null || value === undefined) {
     return (
       <div className={diffClassName}>
-        {indent}
-        {renderDiffIndicator()}
-        {renderValueWithDiff("null")}
+        {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
   }
@@ -220,12 +239,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={fullClassName}>
+      <div className={diffClassName}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
-        {indent}
-        {renderDiffIndicator()}
-        {renderValueWithDiff(displayValue)}
+        {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
       </div>
     );
   }
@@ -234,35 +251,22 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return (
-        <div className={fullClassName}>
+        <div className={diffClassName}>
           {/* include empty span to ensure indentation aligns with expandable nodes */}
           <span className="tree-arrow"></span>
-          {indent}
-          {renderDiffIndicator()}
-          {renderValueWithDiff("[]")}
+          {getRenderedContent(false, renderValueWithDiff("[]"), false)}
         </div>
       );
     }
 
-    const arrow = expanded ? "▼" : "▶";
     return (
-      <div className={fullClassName}>
+      <div className={diffClassName}>
         <div style={{ cursor: "pointer" }} onClick={onToggle}>
-          {indent}
-          <span
-            className="tree-arrow"
-            style={{ color: "var(--vscode-symbolIcon-arrayForeground)" }}
-          >
-            {arrow}
-          </span>
-          {renderDiffIndicator()}
-          {highlightText(nodeKey)}
-          {renderTypeAnnotations()}
+          {getRenderedContent(true, highlightText(nodeKey), true, true)}
         </div>
         {expanded &&
           value.map((item, index) => {
             // Pass through diff props for child nodes if they have diff annotations
-            // Check if this child has change information (from props or value)
             const childDiffProps = getChildDiffProps(value, index, item);
 
             return (
@@ -295,7 +299,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   if (keys.length === 0) {
     return (
-      <div className={fullClassName}>
+      <div className={diffClassName}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {indent}
@@ -305,20 +309,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     );
   }
 
-  const arrow = expanded ? "▼" : "▶";
   return (
-    <div className={fullClassName}>
+    <div className={diffClassName}>
       <div style={{ cursor: "pointer" }} onClick={onToggle}>
-        {indent}
-        <span
-          className="tree-arrow"
-          style={{ color: "var(--vscode-symbolIcon-objectForeground)" }}
-        >
-          {arrow}
-        </span>
-        {renderDiffIndicator()}
-        {highlightText(nodeKey)}
-        {renderTypeAnnotations()}
+        {getRenderedContent(true, highlightText(nodeKey), true)}
       </div>
       {expanded &&
         keys.map((key) => {
@@ -350,13 +344,13 @@ interface TreeNodeContainerProps {
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
-  | "added"
-  | "nested-add"
-  | "removed"
-  | "updated"
-  | "unchanged"
-  | "contains-changes"
-  | "contains-nested-changes";
+    | "added"
+    | "nested-add"
+    | "removed"
+    | "updated"
+    | "unchanged"
+    | "contains-changes"
+    | "contains-nested-changes";
   beforeValue?: any;
   afterValue?: any;
   hiddenNodes?: string[];
