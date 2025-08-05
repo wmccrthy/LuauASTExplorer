@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [0.1.4] - 2025-08-05
+
+### Fixes
+
+- Fix `diffUtils` inconsistencies that enforce redundant logic in `TreeNode` and remove the redundant logic. [#25](https://github.com/wmccrthy/LuauASTExplorer/pull/25)
+
+
 ## [0.1.3] - 2025-08-03
 
 ### Features
