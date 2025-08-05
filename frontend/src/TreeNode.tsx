@@ -113,7 +113,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const diffClassName = getDiffClassName();
 
   // Simple highlight with pronounced styling
-  const highlightText = (text: string) => {
+  const highlightText = React.useCallback((text: string) => {
     if (!searchTerm) return text;
     const regex = new RegExp(searchTerm, "gi");
     const parts = text.split(regex);
@@ -130,7 +130,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       }
       return acc;
     }, [] as React.ReactNode[]);
-  };
+  }, [searchTerm])
 
   // Render diff indicator for changed values - always render to maintain consistent indentation
   const renderDiffIndicator = React.useCallback(() => {
