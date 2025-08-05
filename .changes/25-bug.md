@@ -1,1 +1,1 @@
-Fix DiffUtils inconsistencies that require redundant logic in TreeNode
+Fix `diffUtils` inconsistencies that enforce redundant logic in `TreeNode` -> remove redundant logic
