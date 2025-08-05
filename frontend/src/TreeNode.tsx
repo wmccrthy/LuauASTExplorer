@@ -77,7 +77,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
   };
 
-  const getChildDiffProps = (value: any, key: string | number, child: any) => {
+  const getChildDiffProps = React.useCallback((value: any, key: string | number, child: any) => {
     const nodeChildChanges = (value as any)?.childChanges || {};
     const childChange =
       nodeChildChanges[typeof key == "number" ? key.toString() : key];
@@ -108,7 +108,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           };
 
     return childDiffProps;
-  };
+  }, [isDiffMode]);
 
   const diffClassName = getDiffClassName();
 
