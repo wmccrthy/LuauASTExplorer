@@ -2,6 +2,7 @@ import React from "react";
 import { TypeTooltip } from "./components/TypeTooltip";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
+import { getArrayType } from "./astTypeDefinitions";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -42,15 +43,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const indent = baseIndent;
 
   const renderTypeAnnotations = React.useCallback(() => {
-    if (value._astType) {
+    let type = value._astType;
+    let kind = value.kind;
+    if (Array.isArray(value)) {
+      [type, kind] = getArrayType(nodeKey, nodeKey == "entries" ? value : undefined);
+    }
+    if (type) {
       return (
         <span className="ast-annotations">
           {" ("}
-          <TypeTooltip key="type" typeName={value._astType} kind={value.kind}>
-            <span className="type-annotation">
-              type: {value._astType}
-              {value.kind ? ` (${value.kind})` : ""}
-            </span>
+          <TypeTooltip key="type" typeName={type} kind={kind}>
+            <span className="type-annotation">type: {type}</span>
           </TypeTooltip>
           {")"}
         </span>
