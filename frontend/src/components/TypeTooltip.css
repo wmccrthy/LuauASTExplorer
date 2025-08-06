@@ -140,4 +140,63 @@
   .property-item {
     padding: 5px 10px;
   }
+}
+
+/* Property Type Styling */
+.property-type {
+  color: var(--vscode-symbolIcon-typeForeground, var(--vscode-descriptionForeground));
+  font-style: italic;
+  margin-left: 4px;
+}
+
+/* Base Type Styling */
+.base-type {
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  background: var(--vscode-editorWidget-background);
+  border-left: 3px solid var(--vscode-symbolIcon-classForeground);
+  border-radius: 0 3px 3px 0;
+}
+
+.base-type-label {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.base-type-name {
+  color: var(--vscode-symbolIcon-classForeground);
+  font-weight: 600;
+}
+
+/* Union Type Styling */
+.union-members {
+  padding: 4px 0;
+}
+
+.union-header {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  font-style: italic;
+  margin-bottom: 4px;
+  padding: 0 8px;
+}
+
+.union-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.union-member {
+  padding: 3px 8px;
+  color: var(--vscode-symbolIcon-typeForeground, var(--vscode-editor-foreground));
+  font-family: var(--vscode-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
+  border-left: 2px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.union-member:hover {
+  border-left-color: var(--vscode-textLink-foreground);
+  background: var(--vscode-list-hoverBackground);
 } 
