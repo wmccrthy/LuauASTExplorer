@@ -114,46 +114,29 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
   const handleTypeProperties = () => {
     if (typeDefinition && typeDefinition.properties) {
       return typeDefinition.properties.map((prop, index) => {
-        // Handle both old string format and new PropertyDefinition format
-        if (typeof prop === "string") {
-          return (
-            <li key={index} className="property-item">
-              <span className="property-name">{prop}</span>
-            </li>
-          );
-        } else {
-          const typeDisplay = prop.generic || renderPropertyType(prop.type);
-          return (
-            <li key={index} className="property-item">
-              <span className="property-name">
-                {prop.name}
-                {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
-              </span>
-              <span className="property-type">{typeDisplay}</span>
-            </li>
-          );
-        }
+        const typeDisplay = prop.generic || renderPropertyType(prop.type);
+        return (
+          <li key={index} className="property-item">
+            <span className="property-name">
+              {prop.name}
+              {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
+            </span>
+            <span className="property-type">{typeDisplay}</span>
+          </li>
+        );
       });
     } else if (typeDefinition && typeDefinition.kinds) {
       return typeDefinition.kinds[kind].properties?.map((prop, index) => {
-        if (typeof prop === "string") {
-          return (
-            <li key={index} className="property-item">
-              <span className="property-name">{prop}</span>
-            </li>
-          );
-        } else {
-          const typeDisplay = prop.generic || renderPropertyType(prop.type);
-          return (
-            <li key={index} className="property-item">
-              <span className="property-name">
-                {prop.name}
-                {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
-              </span>
-              <span className="property-type">{typeDisplay}</span>
-            </li>
-          );
-        }
+        const typeDisplay = prop.generic || renderPropertyType(prop.type);
+        return (
+          <li key={index} className="property-item">
+            <span className="property-name">
+              {prop.name}
+              {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
+            </span>
+            <span className="property-type">{typeDisplay}</span>
+          </li>
+        );
       });
     }
     return null;
