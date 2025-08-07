@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ASTTypeDefinition } from "../astTypeDefinitions";
+import { ASTTypeDefinition, unpackArrayType } from "../astTypeDefinitions";
 import "./TypeTooltip.css";
 
 interface TypeTooltipProps {
-  unpackedType: string;
+  typeName: string;
   typeDefinition?: ASTTypeDefinition;
   arrayType?: boolean;
   children: React.ReactNode;
@@ -12,7 +12,7 @@ interface TypeTooltipProps {
 }
 
 export const TypeTooltip: React.FC<TypeTooltipProps> = ({
-  unpackedType,
+  typeName,
   typeDefinition,
   arrayType,
   children,
@@ -67,11 +67,34 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+    // Add a small delay before hiding to allow moving to tooltip
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 100);
+  };
+
+  const handleTooltipMouseEnter = () => {
+    // Cancel hide timeout when entering tooltip
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const handleTooltipMouseLeave = () => {
+    // Hide immediately when leaving tooltip
     setIsVisible(false);
   };
 
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as Node | null;
+      const inTooltip =
+        tooltipRef.current && tooltipRef.current.contains(target as Node);
+      const inTrigger =
+        triggerRef.current && triggerRef.current.contains(target as Node);
+      if (inTooltip || inTrigger) {
+        return; // ignore scrolls originating from tooltip or trigger
+      }
       setIsVisible(false);
     };
 
@@ -159,10 +182,10 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
           const triggerRect = triggerRef.current?.getBoundingClientRect();
           if (triggerRect) {
             y = triggerRect.bottom + 10;
-            tooltip.classList.add('tooltip-below');
+            tooltip.classList.add("tooltip-below");
           }
         } else {
-          tooltip.classList.remove('tooltip-below');
+          tooltip.classList.remove("tooltip-below");
         }
 
         setPosition({ x, y });
@@ -193,6 +216,8 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
           <div
             ref={tooltipRef}
             className="type-tooltip"
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleTooltipMouseLeave}
             style={{
               left: position.x,
               top: position.y,
@@ -201,7 +226,9 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
           >
             <div className="tooltip-header">
               {arrayType ? "Table of " : ""}
-              <span className="tooltip-title">{unpackedType}</span>
+              <span className="tooltip-title">
+                {arrayType ? unpackArrayType(typeName) : typeName}
+              </span>
             </div>
 
             <div className="tooltip-content">

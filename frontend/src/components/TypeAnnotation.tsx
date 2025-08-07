@@ -19,7 +19,7 @@ export const TypeAnnotation: React.FC<TypeAnnotationProps> = ({
     <span className="ast-annotations">
       <TypeTooltip
         key="type"
-        unpackedType={typeName}
+        typeName={typeName}
         typeDefinition={typeDefinition}
         arrayType={isArrayType}
         kind={kind}
