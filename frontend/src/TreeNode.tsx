@@ -1,5 +1,6 @@
 import React from "react";
 import { TypeTooltip } from "./components/TypeTooltip";
+import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
 import { getArrayType } from "./astTypeDefinitions";
@@ -83,17 +84,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const renderTypeAnnotations = React.useCallback(() => {
     if (type) {
       return (
-        <span className="ast-annotations">
-          <TypeTooltip
-            key="type"
-            unpackedType={type}
-            typeDefinition={typeDefinition}
-            arrayType={arrayType}
-            kind={kind}
-          >
-            <span className="type-annotation"> (type: {type})</span>
-          </TypeTooltip>
-        </span>
+        <TypeAnnotation
+          typeName={type}
+          typeDefinition={typeDefinition}
+          isArrayType={arrayType}
+          kind={kind}
+        ></TypeAnnotation>
       );
     }
     return null;
