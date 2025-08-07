@@ -15,6 +15,11 @@ export interface ASTTypeDefinition {
   unionMembers?: string[]; // for "AstExpr = A | B | C"
 }
 
+export interface GenericTypeDefinition {
+  baseType: string;
+  genericType: string;
+}
+
 export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   // === UTILITY TYPES ===
   Position: {
@@ -1018,9 +1023,42 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
 };
 
 export function getTypeDefinition(
-  typeName: string
+  typeName: string | GenericTypeDefinition
 ): ASTTypeDefinition | undefined {
-  return astTypeDefinitions[typeName];
+  if (typeof typeName === "string") {
+    return astTypeDefinitions[typeName];
+  }
+
+  return getGenericTypeDefinition(typeName);
+}
+
+export function getGenericTypeDefinition(
+  genericType: GenericTypeDefinition
+): ASTTypeDefinition {
+  switch (genericType.baseType) {
+    case "Pair":
+      const splitGenericType = genericType.genericType.split(",");
+      return {
+        properties: [
+          { name: "node", type: splitGenericType[0] },
+          {
+            name: "separator",
+            type: `Token${
+              splitGenericType[1] ? `<${splitGenericType[1].trim()}>` : ""
+            }`,
+            optional: true,
+          },
+        ],
+      };
+    case "Punctuated":
+      return {
+        properties: [
+          { name: "", type: `{ Pair<${genericType.genericType}> }` },
+        ],
+      };
+    default:
+      return { properties: [] };
+  }
 }
 
 export function getAllTypes(): string[] {
@@ -1055,7 +1093,7 @@ export function getAllNodeKeys(): string[] {
 }
 
 const resolveEntriesType = (value: any[]): string => {
-  if (value[0].colon) {
+  if (value[0] && value[0].colon) {
     return "{ AstTypeTableItem }";
   }
 
@@ -1063,8 +1101,8 @@ const resolveEntriesType = (value: any[]): string => {
 };
 
 const resolveEntriesKind = (value: any[]): string => {
-  return value[0].kind;
-}
+  return value.length > 0 ? value[0].kind : "";
+};
 
 const arrayTypeFallbacks: Record<string, string | ((item: any[]) => string)> = {
   statements: "{ AstStat }",
@@ -1076,7 +1114,10 @@ const arrayTypeFallbacks: Record<string, string | ((item: any[]) => string)> = {
   entries: resolveEntriesType,
 };
 
-export const getArrayType = (arrayKey: string, arrayValue?: any[]): [string, string] => {
+export const getArrayType = (
+  arrayKey: string,
+  arrayValue?: any[]
+): [string, string] => {
   const fallback = arrayTypeFallbacks[arrayKey];
   if (typeof fallback === "function") {
     const entryKind = resolveEntriesKind(arrayValue ?? []);
@@ -1090,7 +1131,17 @@ export const isArrayType = (type: string) => {
 };
 
 export const unpackArrayType = (type: string): string => {
-  // extract type from inside curly braces {}
-  const match = type.match(/^\{\s*([\w<>| ]+)\s*\}$/);
-  return match ? match[1].trim() : type;
+  // Match any content inside curly braces, including nested angle brackets, quotes, etc.
+  // This regex matches everything between the first { and last }
+  const matchAny = type.match(/^\{\s*([\s\S]+?)\s*\}$/);
+  return matchAny ? matchAny[1] : type;
+};
+
+// Parse generic types like "Pair<AstExpr>" -> { baseType: "Pair", genericType: "AstExpr" }
+export const parseGenericType = (type: string) => {
+  const match = type.match(/^(\w+)<(.+)>$/);
+  if (match) {
+    return { baseType: match[1], genericType: match[2] };
+  }
+  return null;
 };

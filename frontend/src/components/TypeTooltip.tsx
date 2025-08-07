@@ -1,16 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
-import { getTypeDefinition, isArrayType, unpackArrayType } from "../astTypeDefinitions";
+import { ASTTypeDefinition } from "../astTypeDefinitions";
 import "./TypeTooltip.css";
 
 interface TypeTooltipProps {
-  typeName: string;
+  unpackedType: string;
+  typeDefinition?: ASTTypeDefinition;
+  arrayType?: boolean;
   children: React.ReactNode;
   kind?: string;
   delay?: number;
 }
 
 export const TypeTooltip: React.FC<TypeTooltipProps> = ({
-  typeName,
+  unpackedType,
+  typeDefinition,
+  arrayType,
   children,
   kind = "",
   delay = 20,
@@ -20,10 +24,6 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
   const timeoutRef = useRef<NodeJS.Timeout>(null);
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-
-  const arrayType = isArrayType(typeName);
-  const unpackedType = arrayType ? unpackArrayType(typeName) : typeName
-  const typeDefinition = getTypeDefinition(unpackedType);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
     if (
@@ -104,7 +104,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
             <li key={index} className="property-item">
               <span className="property-name">
                 {prop.name}
-                {prop.optional ? "?:" : ":"}
+                {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
               </span>
               <span className="property-type">{typeDisplay}</span>
             </li>
@@ -125,7 +125,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
             <li key={index} className="property-item">
               <span className="property-name">
                 {prop.name}
-                {prop.optional ? "?:" : ":"}
+                {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
               </span>
               <span className="property-type">{typeDisplay}</span>
             </li>
@@ -236,4 +236,4 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
         )}
     </>
   );
-}
+};
