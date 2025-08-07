@@ -84,7 +84,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     if (type) {
       return (
         <span className="ast-annotations">
-          {" ("}
           <TypeTooltip
             key="type"
             unpackedType={type}
@@ -92,9 +91,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             arrayType={arrayType}
             kind={kind}
           >
-            <span className="type-annotation">type: {type}</span>
+            <span className="type-annotation"> (type: {type})</span>
           </TypeTooltip>
-          {")"}
         </span>
       );
     }

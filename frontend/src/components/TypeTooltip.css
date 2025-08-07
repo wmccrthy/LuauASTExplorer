@@ -2,7 +2,6 @@
 
 .type-tooltip-trigger {
   cursor: pointer;
-  border-bottom: 1px dotted var(--vscode-descriptionForeground);
   transition: border-color 0.2s ease;
 }
 

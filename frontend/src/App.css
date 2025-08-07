@@ -416,13 +416,14 @@
   font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Consolas, monospace);
   font-weight: 500;
   cursor: pointer;
-  border-bottom: 1px dotted currentColor;
   transition: all 0.2s ease;
+  opacity: 0.25;
 }
 
 .type-annotation:hover {
   color: var(--vscode-textLink-foreground, #007acc);
-  border-bottom-style: solid;
+  /* border-bottom-style: solid; */
+  opacity: 1;
 }
 
 /* Filter Dropdown Styles */
