@@ -140,15 +140,6 @@ local typeDefinitions = {
 		["vararg"] = "AstTypePack",
 		["tailType"] = "AstTypePack",
 
-		-- REMOVED: All Punctuated types - need manual resolution
-		["arguments"] = "Punctuated", -- needs context
-		["variables"] = "Punctuated", -- needs context
-		["parameters"] = "Punctuated", -- needs context
-		["values"] = "Punctuated", -- needs context
-		["generics"] = "Punctuated", -- needs context
-		["genericPacks"] = "Punctuated", -- needs context
-		["types"] = "Punctuated", -- needs context
-
 		-- Special properties
 		["text"] = "string",
 		["upvalue"] = "boolean",
@@ -161,7 +152,6 @@ local typeDefinitions = {
 		["separator"] = "Token",
 		["leading"] = "Token",
 		-- ["pairs"] = "{ Pair }",
-		["node"] = "any",
 		-- ["value"] = "boolean",  -- Note: highly ambiguous, needs manual resolution
 
 		-- Trivia
@@ -253,13 +243,10 @@ local function resolveAmbiguousType(node)
 		return "AstExprTable" -- Default to expression table
 	elseif tag == "string" then
 		-- AstTypeSingletonString typically has fewer quote styles
-		if node.quoteStyle == "block" or node.quoteStyle == "interp" then
+		if node.quoteStyle == "block" or node.quoteStyle == "interp" or node.blockDepth then
 			return "AstExprConstantString" -- Only expressions have these
-		elseif node.blockDepth then
-			return "AstExprConstantString" -- Only expressions have blockDepth
 		else
-			-- Could be either, default to expression for now
-			return "AstExprConstantString"
+			return "AstTypeSingletonString"
 		end
 	end
 
@@ -355,9 +342,6 @@ local function resolveAmbiguousKeys(nodeKey, node, parentNode, parentKey)
 		else
 			return "AstExpr"
 		end
-	elseif typeDefinitions.keys[parentKey] == "Punctuated" then
-		-- catches array nodes with no tags, and gives some context on parent array type (since we don't annotate arrays directly until we're in the frontend due to JSON encoding issues)
-		return "Pair"
 	end
 
 	-- Fallback to original key mapping
