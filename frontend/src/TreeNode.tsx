@@ -1,5 +1,4 @@
 import React from "react";
-import { TypeTooltip } from "./components/TypeTooltip";
 import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
@@ -58,12 +57,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     if (Array.isArray(value)) {
       [type, kind] = getArrayType(
         nodeKey,
-        nodeKey == "entries" ? value : undefined
+        nodeKey === "entries" ? value : undefined
       );
     }
     type = !type ? parentInferredType : type; // if type is null, fallback to parentInferredType (this should handle Punctuated well)
     return [type, kind];
-  }, [value, nodeKey]);
+  }, [value, nodeKey, parentInferredType]);
 
   const [typeDefinition, arrayType] = React.useMemo(() => {
     if (type) {
@@ -93,7 +92,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       );
     }
     return null;
-  }, [value]);
+  }, [type, arrayType, typeDefinition, kind]);
 
   // Get diff-specific styling
   const getDiffClassName = React.useCallback(() => {
@@ -305,7 +304,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
     // check if it's an array of a Punctuated type (want a more robust check than this ideally)
     const punctuatedType = typeDefinition?.properties?.find(
-      (item) => item.name == ""
+      (item) => item.name === ""
     );
 
     return (
