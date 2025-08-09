@@ -1,7 +1,5 @@
 local luau = require("@lute/luau")
 local visitor = require("@std/syntax/visitor")
-local parser = require("@std/syntax/parser")
-local annotateWithType = require("../../lua_helpers/type_annotations").annotateWithType
 
 local typeAnnotationVisitor = visitor.createVisitor()
 
@@ -39,7 +37,7 @@ local function verifyOutput(
 		if type(verifier) == "function" then verifier(node) else verifier,
 		`Incorrectly annotated node as {node._astType} in {visitorFunction}`
 	)
-	print(`Correctly annotated node as {node._astType} in {visitorFunction}`)
+	print(`✓ Correctly annotated node as {node._astType} in {visitorFunction}`)
 end
 
 typeAnnotationVisitor.visitToken = function(token: luau.Token)
