@@ -184,7 +184,7 @@ local typeDefinitions = {
 }
 
 -- Context-aware type resolution for ambiguous tags
-local function resolveAmbiguousType(node)
+local function resolveAmbiguousTags(node)
 	local tag = node.tag
 	if not tag then
 		return nil
@@ -357,7 +357,7 @@ local function annotateWithType(node, nodeKey, parent, parentKey)
 
 	-- Priority 1: Context-aware tag-based type resolution
 	if node.tag then
-		astType = resolveAmbiguousType(node)
+		astType = resolveAmbiguousTags(node)
 	elseif node.kind then
 		astType = typeDefinitions.kinds[node.kind]
 
