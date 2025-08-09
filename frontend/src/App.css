@@ -415,7 +415,7 @@
   color: var(--vscode-descriptionForeground);
   font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Consolas, monospace);
   font-weight: 400;
-  cursor: help;
+  cursor: pointer;
   opacity: 0.6; /* de-emphasized but still readable */
   border-bottom: 1px dotted transparent; /* subtle affordance without clutter */
   text-underline-offset: 2px;
