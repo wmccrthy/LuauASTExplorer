@@ -390,4 +390,6 @@ end
 
 return {
 	annotateWithType = annotateWithType,
+	resolveAmbiguousTags = resolveAmbiguousTags,
+	resolveAmbiguousKeys = resolveAmbiguousKeys,
 }
