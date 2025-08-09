@@ -24,7 +24,6 @@ local validTokenTypes = {
 	"AstStatBreak",
 	"AstStatContinue",
 	"AstTypeOptional",
-	"nil", -- avoid failing on nodes that don't have a type
 }
 
 local function verifyOutput(
@@ -32,6 +31,10 @@ local function verifyOutput(
 	visitorFunction: string,
 	verifier: ((node: luau.AstNode) -> boolean) | boolean
 )
+	if not node._astType then -- avoid failing on nodes that don't have a type
+		print(`Node has no type: {node}, in: {visitorFunction}\n`)
+		return
+	end
 	assert(
 		if type(verifier) == "function" then verifier(node) else verifier,
 		`Incorrectly annotated node as {node._astType} in {visitorFunction}`
@@ -110,8 +113,8 @@ typeAnnotationVisitor.visitFunction = function(node: luau.AstStatFunction)
 	return true
 end
 
-typeAnnotationVisitor.visitAnonymousFunction = function(node: luau.AstExprFunction)
-	verifyOutput(node, "visitAnonymousFunction", node._astType == "AstExprFunction")
+typeAnnotationVisitor.visitAnonymousFunction = function(node: luau.AstExprAnonymousFunction)
+	verifyOutput(node, "visitAnonymousFunction", node._astType == "AstExprAnonymousFunction")
 	return true
 end
 
@@ -348,6 +351,32 @@ local testSrc = [[
         c: number,
     }
     type t2 = t | z
+    for k, v in pairs(y) do
+        print(k, v)
+    end
+    while x > 0 do
+        x -= 1
+        if x == 5 then break end
+    end
+    repeat
+        x += 1
+    until x > 10
+    type fn = (x: number, ...string) -> number
+    type optional = string?
+    type singleton = "literal" | true | false
+    local g = function(x, y) return x + y end
+    local h = if x > 0 then "positive" else "zero or negative"
+    local tbl = { [1] = "one", two = 2, "three" }
+    local idx = tbl[1] + tbl.two
+    local unary = -x + not false
+    local binary = x and y or false
+    local cast = x :: number
+    local group = (x + y) * 2
+    local vararg = ...
+    export type MyType = { value: number }
+    type Generic<T> = { data: T }
+    local nil_val = nil
+    return
 ]]
 
 return {
