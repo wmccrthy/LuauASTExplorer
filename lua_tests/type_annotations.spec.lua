@@ -6,42 +6,35 @@ local resolveAmbiguousTags, resolveAmbiguousKeys =
 	type_annotations.resolveAmbiguousTags, type_annotations.resolveAmbiguousKeys
 local typeAnnotationHelpers = require("./helpers/typeAnnotationHelpers")
 
--- for testAnnotate, match snippets of src (perhaps many small, of each type) to expected output; i am curious how I will be able to generate expected outputs (without being extremely verbose)
 local function annotateWithType_test()
+    -- parse and annotate src code snippet (with large coverage of syntax constructs)
 	local testAST = annotateWithType(parser.parse(typeAnnotationHelpers.testSrc))
+    -- visit annotated tree to check for correct type assignment (using typeAnnotationVisitor)
 	local typeAnnotationChecker = typeAnnotationHelpers.typeAnnotationVisitor
 	visitor.visitBlock(testAST, typeAnnotationChecker)
 end
--- can we write a visitor to annotate the tree according to the type of visit function
--- super verbose but write a visitor that overrides each possible visit function
---[[typeAnnotater.visitNodeType = function(node)
-        node._astType = NodeType
-        return true
+
+-- test function on manually created AstNodes that map to expected output
+local function resolveAmbiguousTags_test()    
+    for _, case in ipairs(typeAnnotationHelpers.ambiguousTagTestCases) do
+        local result = resolveAmbiguousTags(case[1])
+        assert(result == case[2], string.format("Failed %s: expected %s, got %s", case[3], case[2], result))
+        print(string.format("✓ %s -> %s", case[3], result))
     end
-]]
-
--- test function on manually created AstNodes that map to expected output
-local function resolveAmbiguousTags_test()
-	--[[
-        call parseExpr on snippets of code; match type on outermost node against expectedResult
-        for ex:
-            local testNode = parser.parse('if true then return end')
-            local testNodeType = annotateWithType(testNode)
-            assert(testNodeType == "AstStatIf")
-
-            local testNode = parser.parse('if true then return else print(1) end')
-            local testNodeType = annotateWithType(testNode)
-            assert(testNodeType == "AstStatIfElse")
-    ]]
 end
 
 -- test function on manually created AstNodes that map to expected output
-local function resolveAmbiguousKeys_test() end
-
-local function runner()
-	annotateWithType_test()
-	resolveAmbiguousTags_test()
-	resolveAmbiguousKeys_test()
+local function resolveAmbiguousKeys_test()    
+    for _, case in ipairs(typeAnnotationHelpers.ambiguousKeyTestCases) do
+        local result = resolveAmbiguousKeys(case[1], case[2], case[3])
+        local expected = case[4]
+        assert(result == expected, string.format("Failed %s: expected %s, got %s", case[5], tostring(expected), tostring(result)))
+        print(string.format("✓ %s -> %s", case[5], tostring(result)))
+    end
 end
 
-runner()
+return {
+    annotateWithType_test = annotateWithType_test,
+    resolveAmbiguousTags_test = resolveAmbiguousTags_test,
+    resolveAmbiguousKeys_test = resolveAmbiguousKeys_test,
+}

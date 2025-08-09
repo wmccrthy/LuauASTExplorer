@@ -9,8 +9,6 @@ local typeAnnotationVisitor = visitor.createVisitor()
     In writing these tests, I realized we could have just used visitor to annotate types in the first place... (perhaps revisit later)
 ]]
 
--- hard to write super precise tests bc some visitor functions are generic/broad (our type assignment cud b more specific)
--- so only test visits that are already narrow
 local validTokenTypes = {
 	"AstExprConstantString",
 	"AstExprConstantBool",
@@ -32,14 +30,16 @@ local function verifyOutput(
 	verifier: ((node: luau.AstNode) -> boolean) | boolean
 )
 	if not node._astType then -- avoid failing on nodes that don't have a type
-		print(`Node has no type: {node}, in: {visitorFunction}\n`)
+		print(`Node has no type: {node}, in: {visitorFunction}`)
+        -- printTable(" ", node)
+        -- print("\n")
 		return
 	end
 	assert(
 		if type(verifier) == "function" then verifier(node) else verifier,
 		`Incorrectly annotated node as {node._astType} in {visitorFunction}`
 	)
-	print(`Correctly annotated node as {node._astType} in {visitorFunction}\n`)
+	print(`Correctly annotated node as {node._astType} in {visitorFunction}`)
 end
 
 typeAnnotationVisitor.visitToken = function(token: luau.Token)
@@ -63,8 +63,6 @@ typeAnnotationVisitor.visitNumber = function(token: luau.AstExprConstantNumber)
 	verifyOutput(token, "visitNumber", token._astType == "AstExprConstantNumber")
 	return true
 end
-
--- we can add similar specific resolution as we use in type_annotations, in certain blocks to try and test precise things like Punctuated<generics>, Pari<generic> and so on
 
 typeAnnotationVisitor.visitBlock = function(block: luau.AstStatBlock)
 	verifyOutput(block, "visitBlock", block._astType == "AstStatBlock")
@@ -90,8 +88,6 @@ typeAnnotationVisitor.visitLocalFunction = function(node: luau.AstStatLocalFunct
 	verifyOutput(node, "visitLocalFunction", node._astType == "AstStatLocalFunction")
 	return true
 end
-
--- want a test for generics somehow...
 
 typeAnnotationVisitor.visitIfExpression = function(node: luau.AstExprIfElse)
 	verifyOutput(node, "visitIfExpression", node._astType == "AstExprIfElse")
@@ -313,7 +309,7 @@ function printTable(indent, tbl)
 	for k, v in pairs(tbl) do
 		if typeof(v) == "table" then
 			print(indent .. k .. ":")
-			printTable(indent .. " ", v)
+			printTable(indent .. "  ", v)
 		else
 			print(indent .. k .. ": ", v)
 		end
@@ -326,41 +322,18 @@ local testSrc = [[
     x = 2
     if x == 1 then print(1) end
     if x == 1 then print(1) else print(2) end
-    local function f(x: number)
-        return x + 1
-    end
+    local function f(x: number) return x + 1 end
     f(1)
-    local y = {
-        a = 1,
-        b = 2,
-        ['a'] = 3
-    }
+    local y = { a = 1, b = 2, ['a'] = 3 }
     if y.a then print(y[a]) end
-    for i=1, 10 do
-        continue
-    end
-    type z = {
-        a: number,
-        b: string?,
-        [string]: number,
-    }
-    function f(x: number)
-        return x + 1
-    end
-    type t = z & {
-        c: number,
-    }
+    for i=1, 10 do continue end
+    type z = { a: number, b: string?, [string]: number }
+    function f(x: number) return x + 1 end
+    type t = z & { c: number }
     type t2 = t | z
-    for k, v in pairs(y) do
-        print(k, v)
-    end
-    while x > 0 do
-        x -= 1
-        if x == 5 then break end
-    end
-    repeat
-        x += 1
-    until x > 10
+    for k, v in pairs(y) do print(k, v) end
+    while x > 0 do x -= 1 end
+    repeat x += 1 until x > 10
     type fn = (x: number, ...string) -> number
     type optional = string?
     type singleton = "literal" | true | false
@@ -379,8 +352,48 @@ local testSrc = [[
     return
 ]]
 
+local ambiguousTagTestCases = {
+    -- {nodeTable, expectedType, description}
+    {{ tag = "conditional", endKeyword = {} }, "AstStatIf", "if statement"},
+    {{ tag = "conditional" }, "AstExprIfElse", "if expression"},
+    {{ tag = "function", returnArrow = {} }, "AstTypeFunction", "type function"},
+    {{ tag = "function", name = {} }, "AstStatFunction", "function statement"},
+    {{ tag = "function" }, "AstExprAnonymousFunction", "anonymous function"},
+    {{ tag = "group", expression = {} }, "AstExprGroup", "expression group"},
+    {{ tag = "group", type = {} }, "AstTypeGroup", "type group"},
+    {{ tag = "local", token = {}, upvalue = false }, "AstExprLocal", "local expression"},
+    {{ tag = "local", localKeyword = {}, variables = {} }, "AstStatLocal", "local statement"},
+    {{ tag = "generic", ellipsis = {} }, "AstTypePackGeneric", "generic type pack"},
+    {{ tag = "generic" }, "AstGenericType", "generic type"},
+}
+
+local ambiguousKeyTestCases = {
+    -- {key, node, parent, expectedType, description}
+    {"body", {statements={}, openParens={}}, {}, "AstFunctionBody", "function body"},
+    {"body", {statements={}}, {tag="if"}, "AstStatBlock", "if body"},
+    {"operand", {tag="call"}, {operator={}}, "AstExpr", "unary operand"},
+    {"self", {}, {}, "AstLocal", "self parameter"},
+    {"self", {}, {tag={}}, "boolean", "no self parameter"},
+    {"condition", {tag="binary"}, {}, "AstExpr", "condition expression"},
+    {"expression", {tag="call"}, {}, "AstExpr", "expression"},
+    {"func", {tag="function"}, {}, "AstExpr", "function expression"},
+    {"key", {}, {kind="record"}, "Token", "record key"},
+    {"key", {}, {kind="indexer"}, "AstType", "indexer key"},
+    {"key", {}, {kind="general"}, "AstExpr", "general key"},
+    -- we should focus on the most ambiguous case
+    {"value", {}, {colon={}}, "AstType", "type value"},
+    {"value", {}, {kind="general"}, "AstExpr", "expression value"},
+    {"value", {}, {tag="boolean"}, "boolean", "boolean value"},
+    {"value", {}, {tag="number"}, "number", "number value"},
+    {"name", {text="x"}, {}, "Token", "token name"},
+    {"name", {name={}}, {}, "AstLocal", "local name"},
+    {"name", {}, {}, "AstExpr", "expr name"},
+}
+
 return {
 	typeAnnotationVisitor = typeAnnotationVisitor,
 	testSrc = testSrc,
 	printTable = printTable,
+    ambiguousTagTestCases = ambiguousTagTestCases,
+    ambiguousKeyTestCases = ambiguousKeyTestCases,
 }
