@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { getAllNodeKeys } from "../astTypeDefinitions";
+import { getAllNodeKeys } from "../utils/astTypeHelpers";
 
 interface FilterDropdownProps {
   hiddenNodes: string[];

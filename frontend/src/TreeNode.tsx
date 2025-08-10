@@ -2,7 +2,7 @@ import React from "react";
 import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
-import { getType, getTypeMetadata, unpackArrayType } from "./astTypeDefinitions";
+import { getType, getTypeMetadata, unpackArrayType } from "./utils/astTypeHelpers";
 
 interface TreeNodeProps {
   nodeKey: string;

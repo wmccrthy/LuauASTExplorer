@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ASTTypeDefinition, unpackArrayType } from "../astTypeDefinitions";
+import { ASTTypeDefinition, unpackArrayType } from "../utils/astTypeHelpers";
 import "./TypeTooltip.css";
 
 interface TypeTooltipProps {
