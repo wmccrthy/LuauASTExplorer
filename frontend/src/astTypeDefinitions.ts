@@ -1126,6 +1126,7 @@ export const getArrayType = (
   return [fallback, ""];
 };
 
+// true if type is a table of subtypes (i.e. { Trivia })
 export const isArrayType = (type: string) => {
   return /^\{\s*[\w<>| ]+\s*\}$/.test(type);
 };
@@ -1144,4 +1145,37 @@ export const parseGenericType = (type: string) => {
     return { baseType: match[1], genericType: match[2] };
   }
   return null;
+};
+
+export const getType = (
+  value: any,
+  nodeKey: string,
+  parentInferredType?: string | string[]
+) => {
+  let type = value._astType;
+  let kind = value.kind;
+  if (Array.isArray(value)) {
+    [type, kind] = getArrayType(
+      nodeKey,
+      nodeKey === "entries" ? value : undefined
+    );
+  }
+  if (parentInferredType != type) {
+    console.log("type:", type, "vs. parentInferredType:", parentInferredType);
+  }
+  type = !type ? parentInferredType : type; // if type is null, fallback to parentInferredType (this should handle Punctuated well)
+  return [type, kind];
+};
+
+export const getTypeMetadata = (type: string): [ASTTypeDefinition | undefined, boolean] => {
+  const genericTypeInfo = Array.isArray(type)
+    ? undefined
+    : parseGenericType(type);
+  const isArray = isArrayType(type);
+  const unpackedType = isArray
+    ? unpackArrayType(type)
+    : genericTypeInfo
+    ? genericTypeInfo
+    : type;
+  return [getTypeDefinition(unpackedType), isArray];
 };

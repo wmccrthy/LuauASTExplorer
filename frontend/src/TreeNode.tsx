@@ -2,13 +2,7 @@ import React from "react";
 import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
-import { getArrayType } from "./astTypeDefinitions";
-import {
-  isArrayType,
-  unpackArrayType,
-  getTypeDefinition,
-  parseGenericType,
-} from "./astTypeDefinitions";
+import { getType, getTypeMetadata, unpackArrayType } from "./astTypeDefinitions";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -52,30 +46,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   // get all this metadata at tree node level; pass to TypeTooltip
   const [type, kind] = React.useMemo(() => {
-    let type = value._astType;
-    let kind = value.kind;
-    if (Array.isArray(value)) {
-      [type, kind] = getArrayType(
-        nodeKey,
-        nodeKey === "entries" ? value : undefined
-      );
-    }
-    type = !type ? parentInferredType : type; // if type is null, fallback to parentInferredType (this should handle Punctuated well)
-    return [type, kind];
+    return getType(value, nodeKey, parentInferredType);
   }, [value, nodeKey, parentInferredType]);
 
   const [typeDefinition, arrayType] = React.useMemo(() => {
     if (type) {
-      const genericTypeInfo = Array.isArray(type)
-        ? undefined
-        : parseGenericType(type);
-      const isArray = isArrayType(type);
-      const unpackedType = isArray
-        ? unpackArrayType(type)
-        : genericTypeInfo
-        ? genericTypeInfo
-        : type;
-      return [getTypeDefinition(unpackedType), isArray];
+      return getTypeMetadata(type);
     }
     return [undefined, false];
   }, [type]);
@@ -302,7 +278,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       );
     }
 
-    // check if it's an array of a Punctuated type (want a more robust check than this ideally)
+    // check if node is an array of a Punctuated type (want a more robust check than this ideally)
     const punctuatedType = typeDefinition?.properties?.find(
       (item) => item.name === ""
     );
