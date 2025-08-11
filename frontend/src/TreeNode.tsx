@@ -7,7 +7,6 @@ import {
   getType,
   unpackArrayType,
 } from "./utils/astTypeHelpers";
-import exp from "constants";
 
 interface TreeNodeProps {
   nodeKey: string;
