@@ -78,7 +78,7 @@ jobs:
               
               echo "Created changelog file: $CHANGELOG_FILE"
 
-    build:
+    test_and_build:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -91,5 +91,5 @@ jobs:
                 cd ..
 
             - name: Run tests
-              run: npm run test
+              run: npm run test:compile
               
