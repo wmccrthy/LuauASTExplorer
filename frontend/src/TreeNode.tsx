@@ -278,7 +278,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       );
     }
 
-    // check if node is an array of a Punctuated type (want a more robust check than this ideally)
+    // check if node is an array of a Punctuated type (TO-DO: add more robust check than this)
     const punctuatedType = typeDefinition?.properties?.find(
       (item) => item.name === ""
     );
@@ -351,8 +351,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           const childPropertyDefinition = typeDefinition?.properties?.find(
             (prop) => prop.name === key
           );
-          // rather than trying to perfectly capture these generic types with very specific edge cases in lua-side (type_annotations) annotation,
-          // we can use the existing (and quite robust) info we get from astTypeDefinitions during TreeNode traversal and pass it down the tree
           const parentInferredType = childPropertyDefinition?.generic
             ? childPropertyDefinition.generic
             : childPropertyDefinition?.type;
