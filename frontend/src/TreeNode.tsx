@@ -261,7 +261,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} title={path}>
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -272,7 +272,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} title={path}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -299,7 +299,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
     return (
       <div className={diffClassName}>
-        <div style={{ cursor: "pointer" }} onClick={onToggle}>
+        <div style={{ cursor: "pointer" }} onClick={onToggle} title={path}>
           {getRenderedContent(true, highlightText(nodeKey), true, true)}
         </div>
         {expanded &&
@@ -355,7 +355,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   return (
     <div className={diffClassName}>
-      <div style={{ cursor: "pointer" }} onClick={onToggle}>
+      <div style={{ cursor: "pointer" }} onClick={onToggle} title={path}>
         {getRenderedContent(true, highlightText(nodeKey), true)}
       </div>
       {expanded &&
