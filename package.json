@@ -77,13 +77,17 @@
     "watch": "tsc -watch -p ./",
     "dev": "npm run build:frontend && npm run watch",
     "package": "vsce package",
-    "test": "npm run compile",
+    "test:compile": "jest && npm run compile",
+    "test": "jest",
     "process-changelog": "npx ts-node ci_scripts/read_changelog.ts"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "16.x",
     "@types/react": "^19.1.8",
     "@types/vscode": "^1.74.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1",
     "ts-node": "^10.9.0",
     "typescript": "^4.9.4"
   },
