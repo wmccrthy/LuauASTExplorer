@@ -1,1 +1,1 @@
-Better diff styling display
+Smarter diff highlight styling
