@@ -14,6 +14,7 @@ interface TreeNodeProps {
   level: number;
   expanded: boolean;
   onToggle: () => void;
+  path: string;
   searchTerm?: string;
   parentInferredType?: string | string[];
   isDiffMode?: boolean;
@@ -35,6 +36,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   value,
   level,
   expanded,
+  path,
   onToggle,
   searchTerm = "",
   isDiffMode = false,
@@ -317,8 +319,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                     : undefined
                 }
                 searchTerm={searchTerm}
-                {...childDiffProps}
+                path={`${path}.${index}`}
                 hiddenNodes={hiddenNodes}
+                {...childDiffProps}
               />
             );
           })}
@@ -376,6 +379,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               parentInferredType={parentInferredType}
               searchTerm={searchTerm}
               hiddenNodes={hiddenNodes}
+              path={`${path}.${key}`}
               {...childDiffProps}
             />
           );
@@ -389,6 +393,7 @@ interface TreeNodeContainerProps {
   nodeKey: string;
   value: any;
   level: number;
+  path: string;
   searchTerm?: string;
   parentInferredType?: string | string[];
   isDiffMode?: boolean;
