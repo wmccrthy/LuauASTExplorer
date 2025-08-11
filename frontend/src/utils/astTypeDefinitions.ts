@@ -1,4 +1,21 @@
-import { ASTTypeDefinition } from "./astTypeHelpers";
+export interface PropertyDefinition {
+  name: string;
+  type: string | string[]; // string[] for unions like "true" | "false"
+  optional?: boolean;
+  generic?: string; // for Token<"specific"> types
+}
+
+export interface ASTTypeDefinition {
+  properties?: PropertyDefinition[];
+  kinds?: Record<string, ASTTypeDefinition>;
+  baseType?: string; // for intersections like "Token &"
+  unionMembers?: string[]; // for "AstExpr = A | B | C"
+}
+
+export interface GenericTypeDefinition {
+  baseType: string;
+  genericType: string;
+}
 
 export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   // === UTILITY TYPES ===

@@ -1,25 +1,6 @@
 // Comprehensive Luau AST Type Definitions
 // Generated from official Luau type definitions for maximum accuracy
-import { astTypeDefinitions } from "./astTypeDefinitions";
-
-export interface PropertyDefinition {
-  name: string;
-  type: string | string[]; // string[] for unions like "true" | "false"
-  optional?: boolean;
-  generic?: string; // for Token<"specific"> types
-}
-
-export interface ASTTypeDefinition {
-  properties?: PropertyDefinition[];
-  kinds?: Record<string, ASTTypeDefinition>;
-  baseType?: string; // for intersections like "Token &"
-  unionMembers?: string[]; // for "AstExpr = A | B | C"
-}
-
-export interface GenericTypeDefinition {
-  baseType: string;
-  genericType: string;
-}
+import { ASTTypeDefinition, GenericTypeDefinition, astTypeDefinitions } from "./astTypeDefinitions";
 
 export function getTypeDefinition(
   typeName: string | GenericTypeDefinition
@@ -28,10 +9,10 @@ export function getTypeDefinition(
     return astTypeDefinitions[typeName];
   }
 
-  return getGenericTypeDefinition(typeName);
+  return getGenericASTTypeDefinition(typeName);
 }
 
-export function getGenericTypeDefinition(
+export function getGenericASTTypeDefinition(
   genericType: GenericTypeDefinition
 ): ASTTypeDefinition {
   switch (genericType.baseType) {
@@ -100,7 +81,7 @@ const resolveEntriesType = (value: any[]): string => {
 };
 
 const resolveEntriesKind = (value: any[]): string => {
-  return value.length > 0 ? value[0].kind : "";
+  return value.length > 0 && value[0].kind ? value[0].kind : "";
 };
 
 const arrayTypeFallbacks: Record<string, string | ((item: any[]) => string)> = {
@@ -125,7 +106,7 @@ export const getArrayType = (
   return [fallback, ""];
 };
 
-// true if type is a table of subtypes (i.e. { Trivia })
+// true if type is a table of subtypes (i.e. { Trivia }) literally just checks for curly braces
 export const isArrayType = (type: string) => {
   return /^\{\s*[\w<>| ]+\s*\}$/.test(type);
 };
@@ -138,35 +119,35 @@ export const unpackArrayType = (type: string): string => {
 };
 
 // Parse generic types like "Pair<AstExpr>" -> { baseType: "Pair", genericType: "AstExpr" }
-export const parseGenericType = (type: string) => {
+export const parseGenericType = (type: string): GenericTypeDefinition | undefined => {
   const match = type.match(/^(\w+)<(.+)>$/);
   if (match) {
     return { baseType: match[1], genericType: match[2] };
   }
-  return null;
+  return undefined;
 };
 
-export const getType = (
+export const getTypeString = (
   value: any,
   nodeKey: string,
   parentInferredType?: string | string[]
 ) => {
   let type = value._astType;
-  let kind = value.kind;
+  let kind = value.kind || "";
   if (Array.isArray(value)) {
     [type, kind] = getArrayType(
       nodeKey,
       nodeKey === "entries" ? value : undefined
     );
   }
-  if (parentInferredType != type) {
+  if (parentInferredType !== type) {
     console.log("type:", type, "vs. parentInferredType:", parentInferredType);
   }
   type = !type ? parentInferredType : type; // if type is null, fallback to parentInferredType (this should handle Punctuated well)
   return [type, kind];
 };
 
-export const getTypeMetadata = (type: string): [ASTTypeDefinition | undefined, boolean] => {
+export const getType = (type: string): [ASTTypeDefinition | undefined, boolean] => {
   const genericTypeInfo = Array.isArray(type)
     ? undefined
     : parseGenericType(type);

@@ -1,6 +1,6 @@
 import React from "react";
 import { TypeTooltip } from "./TypeTooltip";
-import { ASTTypeDefinition } from "../utils/astTypeHelpers";
+import { ASTTypeDefinition } from "../utils/astTypeDefinitions";
 
 export interface TypeAnnotationProps {
   typeName: string;

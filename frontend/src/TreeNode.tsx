@@ -2,7 +2,7 @@ import React from "react";
 import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
-import { getType, getTypeMetadata, unpackArrayType } from "./utils/astTypeHelpers";
+import { getTypeString, getType, unpackArrayType } from "./utils/astTypeHelpers";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -46,12 +46,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   // get all this metadata at tree node level; pass to TypeTooltip
   const [type, kind] = React.useMemo(() => {
-    return getType(value, nodeKey, parentInferredType);
+    return getTypeString(value, nodeKey, parentInferredType);
   }, [value, nodeKey, parentInferredType]);
 
   const [typeDefinition, arrayType] = React.useMemo(() => {
     if (type) {
-      return getTypeMetadata(type);
+      return getType(type);
     }
     return [undefined, false];
   }, [type]);
