@@ -412,17 +412,28 @@
 }
 
 .type-annotation {
-  color: var(--vscode-symbolIcon-classForeground, #4ec9b0);
+  color: var(--vscode-descriptionForeground);
   font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Consolas, monospace);
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  border-bottom: 1px dotted currentColor;
-  transition: all 0.2s ease;
+  opacity: 0.6; /* de-emphasized but still readable */
+  border-bottom: 1px dotted transparent; /* subtle affordance without clutter */
+  text-underline-offset: 2px;
+  transition: color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
 }
 
-.type-annotation:hover {
+.type-annotation:hover,
+.type-annotation:focus-visible {
   color: var(--vscode-textLink-foreground, #007acc);
-  border-bottom-style: solid;
+  opacity: 1;
+  border-bottom-color: var(--vscode-textLink-foreground, #007acc);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-annotation {
+    transition: none;
+  }
 }
 
 /* Filter Dropdown Styles */

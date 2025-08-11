@@ -1,9 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { getTypeDefinition } from '../astTypeDefinitions';
-import './TypeTooltip.css';
+import React, { useState, useRef, useEffect } from "react";
+import { unpackArrayType } from "../utils/astTypeHelpers";
+import { ASTTypeDefinition } from "../utils/astTypeDefinitions";
+import "./TypeTooltip.css";
 
 interface TypeTooltipProps {
   typeName: string;
+  typeDefinition?: ASTTypeDefinition;
+  arrayType?: boolean;
   children: React.ReactNode;
   kind?: string;
   delay?: number;
@@ -11,9 +14,11 @@ interface TypeTooltipProps {
 
 export const TypeTooltip: React.FC<TypeTooltipProps> = ({
   typeName,
+  typeDefinition,
+  arrayType,
   children,
   kind = "",
-  delay = 200
+  delay = 20,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -21,10 +26,14 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const typeDefinition = getTypeDefinition(typeName);
-
   const handleMouseEnter = (e: React.MouseEvent) => {
-    if (!typeDefinition || (typeDefinition.properties?.length === 0 && !typeDefinition.kinds)) {
+    if (
+      !typeDefinition ||
+      (typeDefinition.properties?.length === 0 &&
+        !typeDefinition.kinds &&
+        !typeDefinition.unionMembers &&
+        !typeDefinition.baseType)
+    ) {
       return;
     }
 
@@ -44,7 +53,7 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
 
         const newPosition = {
           x: rect.left + rect.width / 2,
-          y: rect.top - 10
+          y: rect.top - 10,
         };
 
         setPosition(newPosition);
@@ -59,36 +68,80 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+    // Add a small delay before hiding to allow moving to tooltip
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 100);
+  };
+
+  const handleTooltipMouseEnter = () => {
+    // Cancel hide timeout when entering tooltip
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const handleTooltipMouseLeave = () => {
+    // Hide immediately when leaving tooltip
     setIsVisible(false);
   };
 
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as Node | null;
+      const inTooltip =
+        tooltipRef.current && tooltipRef.current.contains(target as Node);
+      const inTrigger =
+        triggerRef.current && triggerRef.current.contains(target as Node);
+      if (inTooltip || inTrigger) {
+        return; // ignore scrolls originating from tooltip or trigger
+      }
       setIsVisible(false);
     };
 
     if (isVisible) {
-      window.addEventListener('scroll', handleScroll, true);
-      return () => window.removeEventListener('scroll', handleScroll, true);
+      window.addEventListener("scroll", handleScroll, true);
+      return () => window.removeEventListener("scroll", handleScroll, true);
     }
   }, [isVisible]);
 
+  const renderPropertyType = (type: string | string[]) => {
+    if (Array.isArray(type)) {
+      return type.join(" | ");
+    }
+    return type;
+  };
+
   const handleTypeProperties = () => {
     if (typeDefinition && typeDefinition.properties) {
-      return typeDefinition.properties.map((prop, index) => (
-        <li key={index} className="property-item">
-          <span className="property-name">{prop}</span>
-        </li>
-      ))
+      return typeDefinition.properties.map((prop, index) => {
+        const typeDisplay = prop.generic || renderPropertyType(prop.type);
+        return (
+          <li key={index} className="property-item">
+            <span className="property-name">
+              {prop.name}
+              {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
+            </span>
+            <span className="property-type">{typeDisplay}</span>
+          </li>
+        );
+      });
     } else if (typeDefinition && typeDefinition.kinds) {
-      return typeDefinition.kinds[kind].properties?.map((prop, index) => (
-        <li key={index} className="property-item">
-          <span className="property-name">{prop}</span>
-        </li>
-      ))
+      return typeDefinition.kinds[kind].properties?.map((prop, index) => {
+        const typeDisplay = prop.generic || renderPropertyType(prop.type);
+        return (
+          <li key={index} className="property-item">
+            <span className="property-name">
+              {prop.name}
+              {prop.optional ? "?:" : prop.name.length > 0 ? ":" : ""}
+            </span>
+            <span className="property-type">{typeDisplay}</span>
+          </li>
+        );
+      });
     }
     return null;
-  }
+  };
 
   // Adjust tooltip position to stay within viewport
   useEffect(() => {
@@ -113,10 +166,10 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
           const triggerRect = triggerRef.current?.getBoundingClientRect();
           if (triggerRect) {
             y = triggerRect.bottom + 10;
-            tooltip.classList.add('tooltip-below');
+            tooltip.classList.add("tooltip-below");
           }
         } else {
-          tooltip.classList.remove('tooltip-below');
+          tooltip.classList.remove("tooltip-below");
         }
 
         setPosition({ x, y });
@@ -125,8 +178,6 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
       }
     }
   }, [isVisible, position]);
-
-
 
   return (
     <>
@@ -140,32 +191,60 @@ export const TypeTooltip: React.FC<TypeTooltipProps> = ({
         {children}
       </span>
 
-      {isVisible && typeDefinition && ((typeDefinition.properties && typeDefinition.properties.length > 0) || (typeDefinition.kinds && kind !== "")) && (
-        <div
-          ref={tooltipRef}
-          className="type-tooltip"
-          style={{
-            left: position.x,
-            top: position.y,
-            transform: 'translateX(-50%) translateY(-100%)',
-          }}
-        >
-          <div className="tooltip-header">
-            <span className="tooltip-title">{typeName}{kind ? ` (${kind})` : ""}</span>
+      {isVisible &&
+        typeDefinition &&
+        ((typeDefinition.properties && typeDefinition.properties.length > 0) ||
+          (typeDefinition.kinds && kind !== "") ||
+          typeDefinition.unionMembers ||
+          typeDefinition.baseType) && (
+          <div
+            ref={tooltipRef}
+            className="type-tooltip"
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleTooltipMouseLeave}
+            style={{
+              left: position.x,
+              top: position.y,
+              transform: "translateX(-50%) translateY(-100%)",
+            }}
+          >
+            <div className="tooltip-header">
+              {arrayType ? "Table of " : ""}
+              <span className="tooltip-title">
+                {arrayType ? unpackArrayType(typeName) : typeName}
+              </span>
+            </div>
+
+            <div className="tooltip-content">
+              {typeDefinition.baseType && (
+                <div className="base-type">
+                  <span className="base-type-label">extends </span>
+                  <span className="base-type-name">
+                    {typeDefinition.baseType}
+                  </span>
+                </div>
+              )}
+
+              {typeDefinition.unionMembers ? (
+                <div className="union-members">
+                  <div className="union-header">Union of:</div>
+                  <ul className="union-list">
+                    {typeDefinition.unionMembers.map((member, index) => (
+                      <li key={index} className="union-member">
+                        {member}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <ul className="properties-list">{handleTypeProperties()}</ul>
+              )}
+            </div>
+
+            {/* Arrow pointing to the trigger */}
+            <div className="tooltip-arrow"></div>
           </div>
-
-          <div className="tooltip-content">
-            <ul className="properties-list">
-              {handleTypeProperties()}
-            </ul>
-          </div>
-
-          {/* Arrow pointing to the trigger */}
-          <div className="tooltip-arrow"></div>
-        </div>
-      )}
-
-
+        )}
     </>
   );
-}; 
+};

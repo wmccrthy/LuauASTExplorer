@@ -1,7 +1,8 @@
 import React from "react";
-import { TypeTooltip } from "./components/TypeTooltip";
+import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
+import { getTypeString, getType, unpackArrayType } from "./utils/astTypeHelpers";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -10,6 +11,7 @@ interface TreeNodeProps {
   expanded: boolean;
   onToggle: () => void;
   searchTerm?: string;
+  parentInferredType?: string | string[];
   isDiffMode?: boolean;
   diffStatus?:
     | "added"
@@ -32,6 +34,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   onToggle,
   searchTerm = "",
   isDiffMode = false,
+  parentInferredType,
   diffStatus = "unchanged",
   beforeValue,
   afterValue,
@@ -41,26 +44,34 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const baseIndent = "  ".repeat(level);
   const indent = baseIndent;
 
+  // get all this metadata at tree node level; pass to TypeTooltip
+  const [type, kind] = React.useMemo(() => {
+    return getTypeString(value, nodeKey, parentInferredType);
+  }, [value, nodeKey, parentInferredType]);
+
+  const [typeDefinition, arrayType] = React.useMemo(() => {
+    if (type) {
+      return getType(type);
+    }
+    return [undefined, false];
+  }, [type]);
+
   const renderTypeAnnotations = React.useCallback(() => {
-    if (value._astType) {
+    if (type) {
       return (
-        <span className="ast-annotations">
-          {" ("}
-          <TypeTooltip key="type" typeName={value._astType} kind={value.kind}>
-            <span className="type-annotation">
-              type: {value._astType}
-              {value.kind ? ` (${value.kind})` : ""}
-            </span>
-          </TypeTooltip>
-          {")"}
-        </span>
+        <TypeAnnotation
+          typeName={type}
+          typeDefinition={typeDefinition}
+          isArrayType={arrayType}
+          kind={kind}
+        ></TypeAnnotation>
       );
     }
     return null;
-  }, [value]);
+  }, [type, arrayType, typeDefinition, kind]);
 
   // Get diff-specific styling
-  const getDiffClassName = () => {
+  const getDiffClassName = React.useCallback(() => {
     if (!isDiffMode) return "";
 
     switch (diffStatus) {
@@ -75,7 +86,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       default:
         return "";
     }
-  };
+  }, [isDiffMode, diffStatus]);
 
   const getChildDiffProps = React.useCallback(
     (value: any, key: string | number, child: any) => {
@@ -267,6 +278,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       );
     }
 
+    // check if node is an array of a Punctuated type (TO-DO: add more robust check than this)
+    const punctuatedType = typeDefinition?.properties?.find(
+      (item) => item.name === ""
+    );
+
     return (
       <div className={diffClassName}>
         <div style={{ cursor: "pointer" }} onClick={onToggle}>
@@ -283,6 +299,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 nodeKey={`[${index}]`}
                 value={item}
                 level={level + 1}
+                parentInferredType={
+                  punctuatedType
+                    ? unpackArrayType(punctuatedType.type as string)
+                    : undefined
+                }
                 searchTerm={searchTerm}
                 {...childDiffProps}
                 hiddenNodes={hiddenNodes}
@@ -327,6 +348,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           // Pass through diff props for child nodes if they have diff annotations
           const childValue = value[key];
           const childDiffProps = getChildDiffProps(value, key, childValue);
+          const childPropertyDefinition = typeDefinition?.properties?.find(
+            (prop) => prop.name === key
+          );
+          const parentInferredType = childPropertyDefinition?.generic
+            ? childPropertyDefinition.generic
+            : childPropertyDefinition?.type;
 
           return (
             <TreeNodeContainer
@@ -334,6 +361,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               nodeKey={key}
               value={childValue}
               level={level + 1}
+              parentInferredType={parentInferredType}
               searchTerm={searchTerm}
               hiddenNodes={hiddenNodes}
               {...childDiffProps}
@@ -350,6 +378,7 @@ interface TreeNodeContainerProps {
   value: any;
   level: number;
   searchTerm?: string;
+  parentInferredType?: string | string[];
   isDiffMode?: boolean;
   diffStatus?:
     | "added"
