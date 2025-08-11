@@ -1,0 +1,1 @@
+Better diff styling display
