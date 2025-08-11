@@ -2,7 +2,11 @@ import React from "react";
 import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
-import { getTypeString, getType, unpackArrayType } from "./utils/astTypeHelpers";
+import {
+  getTypeString,
+  getType,
+  unpackArrayType,
+} from "./utils/astTypeHelpers";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -82,11 +86,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       case "updated":
         return "diff-updated";
       case "contains-changes":
-        return "diff-contains-changes";
+      case "contains-nested-changes":
+      case "nested-add":
+        return expanded ? "" : "diff-contains-changes";
       default:
         return "";
     }
-  }, [isDiffMode, diffStatus]);
+  }, [isDiffMode, diffStatus, expanded]);
 
   const getChildDiffProps = React.useCallback(
     (value: any, key: string | number, child: any) => {
@@ -161,11 +167,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       case "updated":
         return <span className="diff-indicator diff-updated-indicator">~</span>;
       case "contains-changes":
-        return <span className="diff-indicator diff-updated-indicator">○</span>;
+      case "contains-nested-changes":
+      case "nested-add":
+        return expanded ? (
+          ""
+        ) : (
+          <span className="diff-indicator diff-updated-indicator">○</span>
+        );
       default:
         return <span className="diff-indicator"></span>;
     }
-  }, [isDiffMode, diffStatus]);
+  }, [isDiffMode, diffStatus, expanded]);
 
   // Render value with diff information
   const renderValueWithDiff = React.useCallback(
