@@ -92,6 +92,7 @@ const DiffAnalyzer = ({
               level={0}
               isDiffMode={true}
               hiddenNodes={hiddenNodes}
+              vscodeApi={vscodeApi}
             />
           </div>
         ) : (

@@ -12,9 +12,11 @@ import {
   VSCodeAPI,
   WindowMode,
   DiffASTNode,
+  PrintCodeResultMessage,
 } from "./typesAndInterfaces";
 import LiveEditor from "./LiveEditor";
 import DiffAnalyzer from "./DiffAnalyzer";
+import { useCodeTooltip } from './hooks/useCodeTooltip';
 
 const App: React.FC = () => {
   // Get all available node keys and start with none hidden (all visible)
@@ -64,41 +66,45 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Add the code tooltip hook at the app level
+  const { handlePrintCodeResult } = useCodeTooltip(vscodeApi);
+
   // Set up VSCode API and message listener
   useEffect(() => {
     if (window.acquireVsCodeApi) {
       const api = window.acquireVsCodeApi();
       setVscodeApi(api);
 
-      // Set up message listener for responses from extension
-      const messageListener = (event: MessageEvent) => {
-        const message = event.data;
 
-        if (message.command === "parseResult") {
-          handleParseResult(
-            message as ParseResultMessage,
-            setIsParsing,
-            setParseError,
-            setAstTree
-          );
-        } else if (message.command === "parseDiffResult") {
-          handleParseDiffResult(
-            message as ParseDiffResultMessage,
-            setIsParsingDiff,
-            setParseDiffError,
-            setDiffTree
-          );
-        }
-      };
+    const messageListener = (event: MessageEvent) => {
+      const message = event.data;
+      
+      if (message.command === "parseResult") {
+        handleParseResult(
+          message as ParseResultMessage,
+          setIsParsing,
+          setParseError,
+          setAstTree
+        );
+      } else if (message.command === "parseDiffResult") {
+        handleParseDiffResult(
+          message as ParseDiffResultMessage,
+          setIsParsingDiff,
+          setParseDiffError,
+          setDiffTree
+        );
+      } else if (message.command === "printCodeResult") {
+        // Handle code tooltip responses
+        handlePrintCodeResult(message as PrintCodeResultMessage);
+      }
+    };
 
-      window.addEventListener("message", messageListener);
+    window.addEventListener("message", messageListener);
 
-      // Cleanup listener on unmount
-      return () => {
-        window.removeEventListener("message", messageListener);
-      };
-    }
-  }, []);
+
+    return () => window.removeEventListener("message", messageListener);
+  }
+  }, [handlePrintCodeResult]);
 
   // Search functionality
   const performSearch = (term: string) => {

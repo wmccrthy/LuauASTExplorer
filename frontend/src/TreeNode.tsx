@@ -7,6 +7,8 @@ import {
   getType,
   unpackArrayType,
 } from "./utils/astTypeHelpers";
+import { useCodeTooltip } from './hooks/useCodeTooltip';
+import { VSCodeAPI } from './typesAndInterfaces';
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -29,6 +31,7 @@ interface TreeNodeProps {
   beforeValue?: any;
   afterValue?: any;
   hiddenNodes?: string[];
+  vscodeApi?: VSCodeAPI | null;
 }
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
@@ -45,6 +48,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   beforeValue,
   afterValue,
   hiddenNodes = [],
+  vscodeApi = null,
 }) => {
   // Always reserve space for diff indicator to maintain consistent indentation
   const baseIndent = "  ".repeat(level);
@@ -258,10 +262,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     [arrow, indent, renderDiffIndicator, renderTypeAnnotations]
   );
 
+  // Add the code tooltip hook
+  const { getTooltipContent } = useCodeTooltip(vscodeApi);
+
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div className={diffClassName} title={path}>
+      <div className={diffClassName} title={getTooltipContent(value, nodeKey, path)}>
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -272,7 +279,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName} title={path}>
+      <div className={diffClassName} title={getTooltipContent(value, nodeKey, path)}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -299,7 +306,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
     return (
       <div className={diffClassName}>
-        <div style={{ cursor: "pointer" }} onClick={onToggle} title={path}>
+        <div style={{ cursor: "pointer" }} onClick={onToggle} title={getTooltipContent(value, nodeKey, path)}>
           {getRenderedContent(true, highlightText(nodeKey), true, true)}
         </div>
         {expanded &&
@@ -321,6 +328,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 searchTerm={searchTerm}
                 path={`${path}.${index}`}
                 hiddenNodes={hiddenNodes}
+                vscodeApi={vscodeApi}
                 {...childDiffProps}
               />
             );
@@ -355,7 +363,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   return (
     <div className={diffClassName}>
-      <div style={{ cursor: "pointer" }} onClick={onToggle} title={path}>
+      <div style={{ cursor: "pointer" }} onClick={onToggle} title={getTooltipContent(value, nodeKey, path)}>
         {getRenderedContent(true, highlightText(nodeKey), true)}
       </div>
       {expanded &&
@@ -380,6 +388,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               searchTerm={searchTerm}
               hiddenNodes={hiddenNodes}
               path={`${path}.${key}`}
+              vscodeApi={vscodeApi}
               {...childDiffProps}
             />
           );
@@ -408,6 +417,7 @@ interface TreeNodeContainerProps {
   beforeValue?: any;
   afterValue?: any;
   hiddenNodes?: string[];
+  vscodeApi?: VSCodeAPI | null;
 }
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
