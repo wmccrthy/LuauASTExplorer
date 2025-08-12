@@ -26,12 +26,6 @@ export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
       // Don't request if already requested/loading or cached
       if (requestedNodes.current.has(nodeId) || codeTooltips[nodeId]) return;
 
-      console.log(
-        "Frontend requesting code for nodeId:",
-        nodeId,
-        "nodeKey:",
-        nodeKey
-      );
       requestedNodes.current.add(nodeId);
 
       const message: PrintCodeMessage = {
@@ -46,12 +40,11 @@ export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
   );
 
   const handlePrintCodeResult = useCallback((message: any) => {
-    console.log("Frontend received printCodeResult:", message);
     if (message.command === "printCodeResult") {
       const { nodeId, status, code, error } = message;
 
       if (status === "success" && code) {
-        console.log("Setting code tooltip for nodeId:", nodeId, "code:", code);
+        console.log("Success! Setting code tooltip for nodeId:", nodeId);
         setCodeTooltips((prev) => ({
           ...prev,
           [nodeId]: code.trim(),
