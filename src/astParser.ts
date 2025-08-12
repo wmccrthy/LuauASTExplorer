@@ -7,7 +7,7 @@ import * as os from "os";
 
 const execAsync = promisify(exec);
 
-export class ASTParser {
+export class ASTParserAndPrinter {
   private luteExecutable: string;
   private extensionPath: string;
 
@@ -71,14 +71,77 @@ export class ASTParser {
     }
   }
 
+  async printCode(nodeJson: string): Promise<string> {
+    return this.runLutePrinter(nodeJson);
+  }
+
+  private async runLutePrinter(nodeJson: string): Promise<string> {
+    try {
+      // First, check if Lute is available
+      await this.checkLuteAvailability();
+
+      // Create a temporary file with the source code (to avoid command line escaping issues)
+      const tempFilePath = await this.createTempFile(nodeJson, "json");
+
+      try {
+        // Use the permanent AST parser script from extension directory
+        console.log("ASTPrinter: printing selected ast node:", nodeJson);
+        const astPrinterPath = path.join(
+          this.extensionPath,
+          "lua_helpers",
+          "ast_json_to_code.luau"
+        );
+
+        // Run the parser script with temp file path as argument
+        const command = `${this.luteExecutable} run ${astPrinterPath} ${tempFilePath}`;
+        console.log(`ASTPrinter: Running command: ${command}`);
+
+        // Get the workspace root directory for foreman.toml
+        const workspaceRoot =
+          vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
+        console.log(`ASTPrinter: Using working directory: ${workspaceRoot}`);
+
+        const { stdout, stderr } = await execAsync(command, {
+          timeout: 10000, // 10 second timeout
+          maxBuffer: 1024 * 1024, // 1MB buffer
+          cwd: workspaceRoot, // Set working directory to workspace root
+        });
+
+        console.log("ASTPrinter output:", stdout);
+
+        if (stderr && !stdout) {
+          throw new Error(`Lute error: ${stderr}`);
+        }
+
+        return stdout || this.createErrorAST("No output from Lute");
+      } finally {
+        // Clean up the temporary source file
+        await this.deleteTempFile(tempFilePath);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        if (
+          error.message.includes("command not found") ||
+          error.message.includes("not recognized")
+        ) {
+          throw new Error(
+            `Lute executable not found at: ${this.luteExecutable}. Please install Lute using foreman or ensure it's in your PATH.`
+          );
+        }
+        throw new Error(`Lute execution failed: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+
   private isLuauCode(languageId: string): boolean {
     const supportedLanguages = ["lua", "luau"];
     return supportedLanguages.includes(languageId.toLowerCase());
   }
 
-  private async createTempFile(code: string): Promise<string> {
+  private async createTempFile(code: string, fileExt: string = "luau"): Promise<string> {
     const tempDir = os.tmpdir();
-    const tempFileName = `to_parse_${Date.now()}.luau`;
+    const tempFileName = `to_parse_${Date.now()}.${fileExt}`;
     const tempFilePath = path.join(tempDir, tempFileName);
 
     await fs.promises.writeFile(tempFilePath, code, "utf8");

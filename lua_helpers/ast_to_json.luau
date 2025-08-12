@@ -8,7 +8,7 @@ local annotateWithType = require("./type_annotations").annotateWithType
 local args = { ... }
 
 if #args < 1 then
-	error("Usage: lute run ast_parser.luau <source_file_path>")
+	error("Usage: lute run ast_to_json.luau <source_file_path>")
 end
 
 local sourceFilePath = args[2]
