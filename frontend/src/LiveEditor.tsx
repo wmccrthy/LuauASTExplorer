@@ -15,6 +15,9 @@ interface LiverEditorProps {
   parseError: string;
   astTree: ASTNode;
   searchTerm: string;
+  codeTooltips: Record<string, string>;
+  requestCodeTooltip: (nodeValue: any, nodeKey: string) => void;
+  generateNodeId: (nodeValue: any, nodeKey: string) => string;
 }
 
 const LiveEditor = ({
@@ -28,6 +31,9 @@ const LiveEditor = ({
   parseError,
   astTree,
   searchTerm,
+  codeTooltips,
+  requestCodeTooltip,
+  generateNodeId,
 }: LiverEditorProps) => {
   return (
     <div className="live-editor-layout">
@@ -70,6 +76,9 @@ const LiveEditor = ({
                 searchTerm={searchTerm}
                 hiddenNodes={hiddenNodes}
                 vscodeApi={vscodeApi}
+                codeTooltips={codeTooltips}
+                requestCodeTooltip={requestCodeTooltip}
+                generateNodeId={generateNodeId}
               />
             </div>
           ) : (

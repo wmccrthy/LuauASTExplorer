@@ -7,8 +7,8 @@ import {
   getType,
   unpackArrayType,
 } from "./utils/astTypeHelpers";
-import { useCodeTooltip } from './hooks/useCodeTooltip';
-import { VSCodeAPI } from './typesAndInterfaces';
+
+import { VSCodeAPI } from "./typesAndInterfaces";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -32,6 +32,9 @@ interface TreeNodeProps {
   afterValue?: any;
   hiddenNodes?: string[];
   vscodeApi?: VSCodeAPI | null;
+  codeTooltips?: Record<string, string>;
+  requestCodeTooltip?: (nodeValue: any, nodeKey: string) => void;
+  generateNodeId?: (nodeValue: any, nodeKey: string) => string;
 }
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
@@ -49,6 +52,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   afterValue,
   hiddenNodes = [],
   vscodeApi = null,
+  codeTooltips = {},
+  requestCodeTooltip,
+  generateNodeId,
 }) => {
   // Always reserve space for diff indicator to maintain consistent indentation
   const baseIndent = "  ".repeat(level);
@@ -262,13 +268,47 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     [arrow, indent, renderDiffIndicator, renderTypeAnnotations]
   );
 
-  // Add the code tooltip hook
-  const { getTooltipContent } = useCodeTooltip(vscodeApi);
+  // Compute current tooltip content based on cache passed from App-level useCodeTooltip
+  const currentTooltip = React.useMemo(() => {
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      value.tag &&
+      generateNodeId
+    ) {
+      const nodeId = generateNodeId(value, nodeKey);
+      return codeTooltips[nodeId] || path;
+    }
+    return path;
+  }, [value, nodeKey, path, codeTooltips, generateNodeId]);
+
+  // Handle hover to request code tooltip
+  const handleMouseEnter = React.useCallback(() => {
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      value.tag &&
+      generateNodeId &&
+      requestCodeTooltip
+    ) {
+      const nodeId = generateNodeId(value, nodeKey);
+      // Only request if we don't have cached content
+      if (!codeTooltips[nodeId]) {
+        requestCodeTooltip(value, nodeKey);
+      }
+    }
+  }, [value, nodeKey, requestCodeTooltip, codeTooltips, generateNodeId]);
 
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div className={diffClassName} title={getTooltipContent(value, nodeKey, path)}>
+      <div
+        className={diffClassName}
+        title={currentTooltip}
+        onMouseEnter={handleMouseEnter}
+      >
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -279,7 +319,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName} title={getTooltipContent(value, nodeKey, path)}>
+      <div
+        className={diffClassName}
+        title={currentTooltip}
+        onMouseEnter={handleMouseEnter}
+      >
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -306,7 +350,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
     return (
       <div className={diffClassName}>
-        <div style={{ cursor: "pointer" }} onClick={onToggle} title={getTooltipContent(value, nodeKey, path)}>
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={onToggle}
+          title={currentTooltip}
+          onMouseEnter={handleMouseEnter}
+        >
           {getRenderedContent(true, highlightText(nodeKey), true, true)}
         </div>
         {expanded &&
@@ -329,6 +378,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 path={`${path}.${index}`}
                 hiddenNodes={hiddenNodes}
                 vscodeApi={vscodeApi}
+                codeTooltips={codeTooltips}
+                requestCodeTooltip={requestCodeTooltip}
+                generateNodeId={generateNodeId}
                 {...childDiffProps}
               />
             );
@@ -363,7 +415,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   return (
     <div className={diffClassName}>
-      <div style={{ cursor: "pointer" }} onClick={onToggle} title={getTooltipContent(value, nodeKey, path)}>
+      <div
+        style={{ cursor: "pointer" }}
+        onClick={onToggle}
+        title={currentTooltip}
+        onMouseEnter={handleMouseEnter}
+      >
         {getRenderedContent(true, highlightText(nodeKey), true)}
       </div>
       {expanded &&
@@ -389,6 +446,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               hiddenNodes={hiddenNodes}
               path={`${path}.${key}`}
               vscodeApi={vscodeApi}
+              codeTooltips={codeTooltips}
+              requestCodeTooltip={requestCodeTooltip}
+              generateNodeId={generateNodeId}
               {...childDiffProps}
             />
           );
@@ -418,6 +478,9 @@ interface TreeNodeContainerProps {
   afterValue?: any;
   hiddenNodes?: string[];
   vscodeApi?: VSCodeAPI | null;
+  codeTooltips?: Record<string, string>;
+  requestCodeTooltip?: (nodeValue: any, nodeKey: string) => void;
+  generateNodeId?: (nodeValue: any, nodeKey: string) => string;
 }
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {

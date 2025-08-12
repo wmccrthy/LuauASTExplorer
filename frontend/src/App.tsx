@@ -16,7 +16,7 @@ import {
 } from "./typesAndInterfaces";
 import LiveEditor from "./LiveEditor";
 import DiffAnalyzer from "./DiffAnalyzer";
-import { useCodeTooltip } from './hooks/useCodeTooltip';
+import { useCodeTooltip } from "./hooks/useCodeTooltip";
 
 const App: React.FC = () => {
   // Get all available node keys and start with none hidden (all visible)
@@ -66,8 +66,13 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Add the code tooltip hook at the app level
-  const { handlePrintCodeResult } = useCodeTooltip(vscodeApi);
+  // Add the code tooltip hook at the app level (single instance for entire app)
+  const {
+    handlePrintCodeResult,
+    codeTooltips,
+    requestCodeTooltip,
+    generateNodeId,
+  } = useCodeTooltip(vscodeApi);
 
   // Set up VSCode API and message listener
   useEffect(() => {
@@ -75,35 +80,33 @@ const App: React.FC = () => {
       const api = window.acquireVsCodeApi();
       setVscodeApi(api);
 
+      const messageListener = (event: MessageEvent) => {
+        const message = event.data;
 
-    const messageListener = (event: MessageEvent) => {
-      const message = event.data;
-      
-      if (message.command === "parseResult") {
-        handleParseResult(
-          message as ParseResultMessage,
-          setIsParsing,
-          setParseError,
-          setAstTree
-        );
-      } else if (message.command === "parseDiffResult") {
-        handleParseDiffResult(
-          message as ParseDiffResultMessage,
-          setIsParsingDiff,
-          setParseDiffError,
-          setDiffTree
-        );
-      } else if (message.command === "printCodeResult") {
-        // Handle code tooltip responses
-        handlePrintCodeResult(message as PrintCodeResultMessage);
-      }
-    };
+        if (message.command === "parseResult") {
+          handleParseResult(
+            message as ParseResultMessage,
+            setIsParsing,
+            setParseError,
+            setAstTree
+          );
+        } else if (message.command === "parseDiffResult") {
+          handleParseDiffResult(
+            message as ParseDiffResultMessage,
+            setIsParsingDiff,
+            setParseDiffError,
+            setDiffTree
+          );
+        } else if (message.command === "printCodeResult") {
+          // Handle code tooltip responses
+          handlePrintCodeResult(message as PrintCodeResultMessage);
+        }
+      };
 
-    window.addEventListener("message", messageListener);
+      window.addEventListener("message", messageListener);
 
-
-    return () => window.removeEventListener("message", messageListener);
-  }
+      return () => window.removeEventListener("message", messageListener);
+    }
   }, [handlePrintCodeResult]);
 
   // Search functionality
@@ -148,6 +151,9 @@ const App: React.FC = () => {
             parseError={parseError || ""}
             astTree={astTree!}
             searchTerm={searchTerm}
+            codeTooltips={codeTooltips}
+            requestCodeTooltip={requestCodeTooltip}
+            generateNodeId={generateNodeId}
           />
         );
 
@@ -166,6 +172,9 @@ const App: React.FC = () => {
             diffTree={diffTree!}
             hiddenNodes={hiddenNodes}
             setHiddenNodes={setHiddenNodes}
+            codeTooltips={codeTooltips}
+            requestCodeTooltip={requestCodeTooltip}
+            generateNodeId={generateNodeId}
           />
         );
 

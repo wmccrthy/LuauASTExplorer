@@ -17,6 +17,8 @@ local sourceCode = fs.readfiletostring(sourceFilePath)
 local astNode = json.decode(sourceCode)
 
 local code
+-- once printStatement functionality is added, this will work even better
+-- we can just try printstatement, if fail, try printexpr and it will catch many more cases
 if astNode.tag == "block" then
     code = printer.print(astNode)
 else
