@@ -60,6 +60,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const baseIndent = "  ".repeat(level);
   const indent = baseIndent;
 
+  const nodeId = React.useMemo(() => {
+    return generateNodeId ? generateNodeId(value, nodeKey) : "";
+  }, [value, nodeKey]);
+
   // get all this metadata at tree node level; pass to TypeTooltip
   const [type, kind] = React.useMemo(() => {
     return getTypeString(value, nodeKey, parentInferredType);
@@ -276,7 +280,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       !Array.isArray(value) &&
       generateNodeId
     ) {
-      const nodeId = generateNodeId(value, nodeKey);
       return codeTooltips[nodeId] || path;
     }
     return path;
@@ -291,7 +294,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       generateNodeId &&
       requestCodeTooltip
     ) {
-      const nodeId = generateNodeId(value, nodeKey);
       // Only request if we don't have cached content
       if (!codeTooltips[nodeId]) {
         requestCodeTooltip(value, nodeKey);
