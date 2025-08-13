@@ -1,94 +1,58 @@
-// Metadata - debugging/structural info, least visually important
-export const metadata = [
-  // Location and position information
-  "leadingTrivia",
-  "trailingTrivia",
-  "location",
-  "position",
-  "argLocation",
-  "indexLocation",
+import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
+import { unpackArrayType } from "./utils/astTypeHelpers";
 
-  // Structural metadata
-  "upvalue",
-  "self",
-  "blockDepth",
-  "quoteStyle",
+export const autoCollapseTypes = [
+  "Token",
+  "Whitespace",
+  "SingleLineComment",
+  "MultiLineComment",
+  "Location",
+  "Position",
 ];
 
-// Secondary - structural keywords and important syntax, medium importance
-export const secondary = [
-  // Language keywords
-  "functionKeyword",
-  "localKeyword",
-  "ifKeyword",
-  "thenKeyword",
-  "elseKeyword",
-  "elseifKeyword",
-  "endKeyword",
-  "whileKeyword",
-  "doKeyword",
-  "forKeyword",
-  "inKeyword",
-  "repeatKeyword",
-  "untilKeyword",
-  "returnKeyword",
-  "breakKeyword",
-  "continueKeyword",
-  "export",
-  "typeToken",
+// auto-collapse if type is:
+//   one of the autoCollapseTypes
+//   an array of autoCollapseTypes
+//   a union of autoCollapseTypes
+//   an extension of autoCollapseTypes
+export const shouldAutoCollapse = (
+  type: string | string[],
+  typeDefinition?: ASTTypeDefinition
+): boolean => {
+  if (type) {
+    if (typeof type == "string") {
+      if (autoCollapseTypes.includes(type)) return true;
 
-  // Block delimiters (more important than pure syntax)
-  "openBrace",
-  "closeBrace",
-  "openParens",
-  "closeParens",
-  "openParen",
-  "closeParen",
+      if (autoCollapseTypes.includes(unpackArrayType(type))) return true;
+    } else {
+      for (const t of type) {
+        if (shouldAutoCollapse(t)) {
+          return true;
+        }
+      }
+      autoCollapseTypes.forEach((type) => {
+        if (shouldAutoCollapse(type)) {
+          return true;
+        }
+      });
+    }
+  }
 
-  // Generic/type delimiters
-  "openGenerics",
-  "closeGenerics",
+  if (typeDefinition && typeDefinition.unionMembers) {
+    for (const member of typeDefinition.unionMembers) {
+      if (shouldAutoCollapse(member)) {
+        return true;
+      }
+    }
+  }
 
-  // Names and tokens (identifiers)
-  "name",
-  "token",
-];
+  if (
+    typeDefinition &&
+    typeDefinition.baseType &&
+    autoCollapseTypes.includes(typeDefinition.baseType)
+  ) {
+    return true;
+  }
 
-// Syntax - pure punctuation, operators, separators, least structurally important
-export const syntax = [
-  // Brackets and indexing
-  "openBrackets",
-  "closeBrackets",
-  "openBracket",
-  "closeBracket",
-
-  // Operators and assignment
-  "equals",
-  "operator",
-  "accessor",
-  "colon",
-
-  // Separators and punctuation
-  "comma",
-  "semicolon",
-  "ellipsis",
-];
-
-// Helper functions for categorizing nodes
-export const getNodeImportance = (
-  nodeKey: string
-): "metadata" | "secondary" | "syntax" | "primary" => {
-  if (metadata.includes(nodeKey)) return "metadata";
-  if (secondary.includes(nodeKey)) return "secondary";
-  if (syntax.includes(nodeKey)) return "syntax";
-  return "primary";
-};
-
-export const getNodeImportanceClass = (nodeKey: string): string => {
-  const importance = getNodeImportance(nodeKey);
-  return `node-${importance}`;
-};
-
-export const shouldAutoCollapse = (nodeKey: string): boolean => {
-  return getNodeImportance(nodeKey) !== "primary";
+  return false;
 };

@@ -7,6 +7,7 @@ import {
   getType,
   unpackArrayType,
 } from "./utils/astTypeHelpers";
+import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -14,6 +15,10 @@ interface TreeNodeProps {
   level: number;
   expanded: boolean;
   onToggle: () => void;
+  type: string;
+  typeDefinition: ASTTypeDefinition | undefined;
+  kind: string;
+  arrayType: boolean;
   searchTerm?: string;
   parentInferredType?: string | string[];
   isDiffMode?: boolean;
@@ -36,6 +41,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   level,
   expanded,
   onToggle,
+  type,
+  typeDefinition,
+  kind,
+  arrayType,
   searchTerm = "",
   isDiffMode = false,
   parentInferredType,
@@ -47,18 +56,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   // Always reserve space for diff indicator to maintain consistent indentation
   const baseIndent = "  ".repeat(level);
   const indent = baseIndent;
-
-  // get all this metadata at tree node level; pass to TypeTooltip
-  const [type, kind] = React.useMemo(() => {
-    return getTypeString(value, nodeKey, parentInferredType);
-  }, [value, nodeKey, parentInferredType]);
-
-  const [typeDefinition, arrayType] = React.useMemo(() => {
-    if (type) {
-      return getType(type);
-    }
-    return [undefined, false];
-  }, [type]);
 
   const renderTypeAnnotations = React.useCallback(() => {
     if (type) {
@@ -87,7 +84,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         return "diff-updated";
       case "contains-changes":
       case "contains-nested-changes":
-      case "nested-add":
         return expanded ? "" : "diff-contains-changes";
       default:
         return "";
@@ -168,7 +164,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         return <span className="diff-indicator diff-updated-indicator">~</span>;
       case "contains-changes":
       case "contains-nested-changes":
-      case "nested-add":
         return expanded ? (
           ""
         ) : (
@@ -406,9 +401,21 @@ interface TreeNodeContainerProps {
 }
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
+  // get all this metadata at tree node level; pass to TypeTooltip
+  const [type, kind] = React.useMemo(() => {
+    return getTypeString(props.value, props.nodeKey, props.parentInferredType);
+  }, [props.value, props.nodeKey, props.parentInferredType]);
+
+  const [typeDefinition, arrayType] = React.useMemo(() => {
+    if (type) {
+      return getType(type);
+    }
+    return [undefined, false];
+  }, [type]);
+
   const autoCollapse = props.isDiffMode
-    ? props.diffStatus === "unchanged"
-    : shouldAutoCollapse(props.nodeKey);
+    ? props.diffStatus === "unchanged" || shouldAutoCollapse(type, typeDefinition)
+    : shouldAutoCollapse(type, typeDefinition);
 
   const [expanded, setExpanded] = React.useState(!autoCollapse);
 
@@ -421,7 +428,17 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     return null;
   }
 
-  return <TreeNode {...props} expanded={expanded} onToggle={handleToggle} />;
+  return (
+    <TreeNode
+      {...props}
+      expanded={expanded}
+      onToggle={handleToggle}
+      type={type}
+      typeDefinition={typeDefinition}
+      kind={kind}
+      arrayType={arrayType}
+    />
+  );
 };
 
 export default TreeNodeContainer;
