@@ -47,7 +47,7 @@ export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
         console.log("Success! Setting code tooltip for nodeId:", nodeId);
         setCodeTooltips((prev) => ({
           ...prev,
-          [nodeId]: code.trim(),
+          [nodeId]: code,
         }));
       } else if (status === "loading") {
         setCodeTooltips((prev) => ({

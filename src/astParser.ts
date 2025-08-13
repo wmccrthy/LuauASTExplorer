@@ -106,8 +106,6 @@ export class ASTParserAndPrinter {
           cwd: workspaceRoot, // Set working directory to workspace root
         });
 
-        console.log("ASTPrinter:", stdout, stderr)
-
         if (stderr && !stdout) {
           throw new Error(`Lute error: ${stderr}`);
         }
