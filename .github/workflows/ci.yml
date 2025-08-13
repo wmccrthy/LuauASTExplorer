@@ -102,8 +102,7 @@ jobs:
             - name: Run frontend tests
               run: npm run test
 
-
-      build:
+    build:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
