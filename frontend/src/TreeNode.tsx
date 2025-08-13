@@ -84,7 +84,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         return "diff-updated";
       case "contains-changes":
       case "contains-nested-changes":
-      case "nested-add":
         return expanded ? "" : "diff-contains-changes";
       default:
         return "";
@@ -165,7 +164,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         return <span className="diff-indicator diff-updated-indicator">~</span>;
       case "contains-changes":
       case "contains-nested-changes":
-      case "nested-add":
         return expanded ? (
           ""
         ) : (
@@ -416,7 +414,7 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
   }, [type]);
 
   const autoCollapse = props.isDiffMode
-    ? props.diffStatus === "unchanged"
+    ? props.diffStatus === "unchanged" || shouldAutoCollapse(type, typeDefinition)
     : shouldAutoCollapse(type, typeDefinition);
 
   const [expanded, setExpanded] = React.useState(!autoCollapse);
