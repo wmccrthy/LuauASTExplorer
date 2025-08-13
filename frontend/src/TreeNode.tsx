@@ -274,7 +274,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       value &&
       typeof value === "object" &&
       !Array.isArray(value) &&
-      value.tag &&
       generateNodeId
     ) {
       const nodeId = generateNodeId(value, nodeKey);
@@ -289,7 +288,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       value &&
       typeof value === "object" &&
       !Array.isArray(value) &&
-      value.tag &&
       generateNodeId &&
       requestCodeTooltip
     ) {

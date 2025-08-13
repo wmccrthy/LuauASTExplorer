@@ -19,7 +19,7 @@ export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
 
   const requestCodeTooltip = useCallback(
     (nodeValue: any, nodeKey: string) => {
-      if (!vscodeApi || !nodeValue?.tag) return;
+      if (!vscodeApi) return;
 
       const nodeId = generateNodeId(nodeValue, nodeKey);
 

@@ -85,7 +85,6 @@ export class ASTParserAndPrinter {
 
       try {
         // Use the permanent AST parser script from extension directory
-        console.log("ASTPrinter: printing selected ast node:", nodeJson);
         const astPrinterPath = path.join(
           this.extensionPath,
           "lua_helpers",
@@ -106,6 +105,8 @@ export class ASTParserAndPrinter {
           maxBuffer: 1024 * 1024, // 1MB buffer
           cwd: workspaceRoot, // Set working directory to workspace root
         });
+
+        console.log("ASTPrinter:", stdout, stderr)
 
         if (stderr && !stdout) {
           throw new Error(`Lute error: ${stderr}`);
@@ -137,7 +138,10 @@ export class ASTParserAndPrinter {
     return supportedLanguages.includes(languageId.toLowerCase());
   }
 
-  private async createTempFile(code: string, fileExt: string = "luau"): Promise<string> {
+  private async createTempFile(
+    code: string,
+    fileExt: string = "luau"
+  ): Promise<string> {
     const tempDir = os.tmpdir();
     const tempFileName = `to_parse_${Date.now()}.${fileExt}`;
     const tempFilePath = path.join(tempDir, tempFileName);
