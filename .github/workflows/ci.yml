@@ -78,7 +78,7 @@ jobs:
               
               echo "Created changelog file: $CHANGELOG_FILE"
 
-    test_and_build:
+    test:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -90,6 +90,31 @@ jobs:
                 cd frontend && npm install
                 cd ..
 
-            - name: Run tests
-              run: npm run test:compile
+            - name: Set up foreman
+              uses: Roblox/setup-foreman@v3
+              with:
+                token: ${{ secrets.GITHUB_TOKEN }}
+                allow-external-github-orgs: true
+
+            - name: Run Luau tests
+              run: |
+                lute lua_tests/runner.luau
+
+            - name: Run frontend tests
+              run: npm run test
+
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Install dependencies
+              run: |
+                npm install
+                cd frontend && npm install
+                cd ..
+
+            - name: Build
+              run: npm run compile
               

@@ -4,7 +4,7 @@ local visitor = require("@std/syntax/visitor")
 local annotateWithType = type_annotations.annotateWithType
 local resolveAmbiguousTags, resolveAmbiguousKeys =
 	type_annotations.resolveAmbiguousTags, type_annotations.resolveAmbiguousKeys
-local typeAnnotationHelpers = require("./helpers/typeAnnotationHelpers")
+local typeAnnotationHelpers = require("./helpers/typeAnnotationTestHelpers")
 
 local function annotateWithType_test()
 	-- parse and annotate src code snippet (with large coverage of syntax constructs)
@@ -36,8 +36,8 @@ local function resolveAmbiguousKeys_test()
 	end
 end
 
-return {
-	annotateWithType_test = annotateWithType_test,
-	resolveAmbiguousTags_test = resolveAmbiguousTags_test,
-	resolveAmbiguousKeys_test = resolveAmbiguousKeys_test,
-}
+return function()
+	resolveAmbiguousKeys_test()
+	resolveAmbiguousTags_test()
+	annotateWithType_test()
+end
