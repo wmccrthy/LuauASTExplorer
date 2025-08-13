@@ -29,8 +29,8 @@ local function verifyOutput(
 )
 	if not node._astType then -- avoid failing on nodes that don't have a type
 		print(`Node has no type: {node}, in: {visitorFunction}`)
-        -- printTable(" ", node)
-        -- print("\n")
+		-- printTable(" ", node)
+		-- print("\n")
 		return
 	end
 	assert(
@@ -351,47 +351,47 @@ local testSrc = [[
 ]]
 
 local ambiguousTagTestCases = {
-    -- {nodeTable, expectedType, description}
-    {{ tag = "conditional", endKeyword = {} }, "AstStatIf", "if statement"},
-    {{ tag = "conditional" }, "AstExprIfElse", "if expression"},
-    {{ tag = "function", returnArrow = {} }, "AstTypeFunction", "type function"},
-    {{ tag = "function", name = {} }, "AstStatFunction", "function statement"},
-    {{ tag = "function" }, "AstExprAnonymousFunction", "anonymous function"},
-    {{ tag = "group", expression = {} }, "AstExprGroup", "expression group"},
-    {{ tag = "group", type = {} }, "AstTypeGroup", "type group"},
-    {{ tag = "local", token = {}, upvalue = false }, "AstExprLocal", "local expression"},
-    {{ tag = "local", localKeyword = {}, variables = {} }, "AstStatLocal", "local statement"},
-    {{ tag = "generic", ellipsis = {} }, "AstTypePackGeneric", "generic type pack"},
-    {{ tag = "generic" }, "AstGenericType", "generic type"},
+	-- {nodeTable, expectedType, description}
+	{ { tag = "conditional", endKeyword = {} }, "AstStatIf", "if statement" },
+	{ { tag = "conditional" }, "AstExprIfElse", "if expression" },
+	{ { tag = "function", returnArrow = {} }, "AstTypeFunction", "type function" },
+	{ { tag = "function", name = {} }, "AstStatFunction", "function statement" },
+	{ { tag = "function" }, "AstExprAnonymousFunction", "anonymous function" },
+	{ { tag = "group", expression = {} }, "AstExprGroup", "expression group" },
+	{ { tag = "group", type = {} }, "AstTypeGroup", "type group" },
+	{ { tag = "local", token = {}, upvalue = false }, "AstExprLocal", "local expression" },
+	{ { tag = "local", localKeyword = {}, variables = {} }, "AstStatLocal", "local statement" },
+	{ { tag = "generic", ellipsis = {} }, "AstTypePackGeneric", "generic type pack" },
+	{ { tag = "generic" }, "AstGenericType", "generic type" },
 }
 
 local ambiguousKeyTestCases = {
-    -- {key, node, parent, expectedType, description}
-    {"body", {statements={}, openParens={}}, {}, "AstFunctionBody", "function body"},
-    {"body", {statements={}}, {tag="if"}, "AstStatBlock", "if body"},
-    {"operand", {tag="call"}, {operator={}}, "AstExpr", "unary operand"},
-    {"self", {}, {}, "AstLocal", "self parameter"},
-    {"self", {}, {tag={}}, "boolean", "no self parameter"},
-    {"condition", {tag="binary"}, {}, "AstExpr", "condition expression"},
-    {"expression", {tag="call"}, {}, "AstExpr", "expression"},
-    {"func", {tag="function"}, {}, "AstExpr", "function expression"},
-    {"key", {}, {kind="record"}, "Token", "record key"},
-    {"key", {}, {kind="indexer"}, "AstType", "indexer key"},
-    {"key", {}, {kind="general"}, "AstExpr", "general key"},
-    -- we should focus on the most ambiguous case
-    {"value", {}, {colon={}}, "AstType", "type value"},
-    {"value", {}, {kind="general"}, "AstExpr", "expression value"},
-    {"value", {}, {tag="boolean"}, "boolean", "boolean value"},
-    {"value", {}, {tag="number"}, "number", "number value"},
-    {"name", {text="x"}, {}, "Token", "token name"},
-    {"name", {name={}}, {}, "AstLocal", "local name"},
-    {"name", {}, {}, "AstExpr", "expr name"},
+	-- {key, node, parent, expectedType, description}
+	{ "body", { statements = {}, openParens = {} }, {}, "AstFunctionBody", "function body" },
+	{ "body", { statements = {} }, { tag = "if" }, "AstStatBlock", "if body" },
+	{ "operand", { tag = "call" }, { operator = {} }, "AstExpr", "unary operand" },
+	{ "self", {}, {}, "AstLocal", "self parameter" },
+	{ "self", {}, { tag = {} }, "boolean", "no self parameter" },
+	{ "condition", { tag = "binary" }, {}, "AstExpr", "condition expression" },
+	{ "expression", { tag = "call" }, {}, "AstExpr", "expression" },
+	{ "func", { tag = "function" }, {}, "AstExpr", "function expression" },
+	{ "key", {}, { kind = "record" }, "Token", "record key" },
+	{ "key", {}, { kind = "indexer" }, "AstType", "indexer key" },
+	{ "key", {}, { kind = "general" }, "AstExpr", "general key" },
+	-- we should focus on the most ambiguous case
+	{ "value", {}, { colon = {} }, "AstType", "type value" },
+	{ "value", {}, { kind = "general" }, "AstExpr", "expression value" },
+	{ "value", {}, { tag = "boolean" }, "boolean", "boolean value" },
+	{ "value", {}, { tag = "number" }, "number", "number value" },
+	{ "name", { text = "x" }, {}, "Token", "token name" },
+	{ "name", { name = {} }, {}, "AstLocal", "local name" },
+	{ "name", {}, {}, "AstExpr", "expr name" },
 }
 
 return {
 	typeAnnotationVisitor = typeAnnotationVisitor,
 	testSrc = testSrc,
 	printTable = printTable,
-    ambiguousTagTestCases = ambiguousTagTestCases,
-    ambiguousKeyTestCases = ambiguousKeyTestCases,
+	ambiguousTagTestCases = ambiguousTagTestCases,
+	ambiguousKeyTestCases = ambiguousKeyTestCases,
 }
