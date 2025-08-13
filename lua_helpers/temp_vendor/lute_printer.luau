@@ -15,15 +15,19 @@ local function printTrivia(trivia: luau.Trivia): string
 end
 
 local function printTriviaList(trivia: { luau.Trivia })
+	-- print("DEBUG, passed trivia to printTriviaList with val:", trivia)
 	local result = ""
 	for _, trivia in trivia do
-		result ..= printTrivia(trivia)
+		-- print("checking trivia of val:", trivia)
+		result ..= printTrivia(trivia) or ""
 	end
-	return result
+	return result or ""
 end
 
 local function printToken(token: luau.Token): string
-	return printTriviaList(token.leadingTrivia) .. token.text .. printTriviaList(token.trailingTrivia)
+	-- print("Printing Token:")
+	-- printTable(" ", token)
+	return printTriviaList(token.leadingTrivia or {}) .. token.text .. printTriviaList(token.trailingTrivia or {})
 end
 
 local function printString(expr: luau.AstExprConstantString): string
@@ -123,10 +127,42 @@ local function printVisitor()
 	return printer
 end
 
+local function localVisitor(printer)
+	local auxVisitor = visitor.createVisitor()
+	auxVisitor.visitLocal = function(node: luau.AstLocal)
+		if node.name then
+			printer.visitToken(node.name)
+		end
+		if node.colon then
+			printer.visitToken(node.colon)
+		end
+		if node.annotation then
+			visitor.visitExpression(node.annotation, printer)
+		end
+		return false
+	end
+	return auxVisitor
+end
+
 --- Returns a string representation of an AstExpr
 function printExpr(block: luau.AstExpr): string
 	local printer = printVisitor()
 	visitor.visitExpression(block, printer)
+	return buffer.readstring(printer.result, 0, printer.cursor)
+end
+
+function printLocal(node: luau.AstLocal): string
+	local printer = printVisitor()
+	local localVisitor = localVisitor(printer)
+	localVisitor.visitLocal(node)
+	return buffer.readstring(printer.result, 0, printer.cursor)
+end
+
+function printtoken(token: luau.Token): string
+	local printer = printVisitor()
+	if token then
+		printer.visitToken(token)
+	end
 	return buffer.readstring(printer.result, 0, printer.cursor)
 end
 
@@ -145,6 +181,8 @@ function printFile(result: { root: luau.AstStatBlock, eof: luau.Eof }): string
 end
 
 return {
+	printtoken = printtoken,
+	printlocal = printLocal,
 	printexpr = printExpr,
 	printstatement = printStatement,
 	printfile = printFile,

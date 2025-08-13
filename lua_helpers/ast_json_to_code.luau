@@ -26,7 +26,18 @@ if not success then
 		return printer.printexpr(astNode)
 	end)
 end
--- want to have nicely formatted code, so output to tmp file, run stylua on it, then output formatted contents
+if not success then
+	if string.find(astNode._astType, "Token") then
+		success, code = pcall(function()
+			return printer.printtoken(astNode)
+		end)
+	else
+		success, code = pcall(function()
+			return printer.printlocal(astNode)
+		end)
+	end
+end
+
 if success then
 	-- stylua it
 	fs.writestringtofile(sourceFilePath, code)
