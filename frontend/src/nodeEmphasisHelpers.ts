@@ -7,7 +7,8 @@ export const autoCollapseTypes = [
   "SingleLineComment",
   "MultiLineComment",
   "Trivia",
-  "Location"
+  "Location",
+  "Position"
 ];
 
 // auto-collapse if type is:
