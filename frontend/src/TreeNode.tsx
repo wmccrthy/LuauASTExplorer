@@ -7,6 +7,7 @@ import {
   getType,
   unpackArrayType,
 } from "./utils/astTypeHelpers";
+import { CodeTooltip } from "./components/CodeTooltip";
 
 import { VSCodeAPI } from "./typesAndInterfaces";
 import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
@@ -71,7 +72,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   const nodeId = React.useMemo(() => {
     return generateNodeId ? generateNodeId(value, nodeKey) : "";
-  }, [value, nodeKey]);
+  }, [value, nodeKey, generateNodeId]);
 
   const renderTypeAnnotations = React.useCallback(() => {
     if (type) {
@@ -264,21 +265,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         </React.Fragment>
       );
     },
-    [arrow, indent, renderDiffIndicator, renderTypeAnnotations]
+    [
+      arrow,
+      indent,
+      renderDiffIndicator,
+      renderTypeAnnotations,
+    ]
   );
-
-  // Compute current tooltip content based on cache passed from App-level useCodeTooltip
-  const currentTooltip = React.useMemo(() => {
-    if (
-      value &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      generateNodeId
-    ) {
-      return codeTooltips[nodeId] || path;
-    }
-    return path;
-  }, [value, nodeKey, path, codeTooltips, generateNodeId]);
 
   // Handle hover to request code tooltip
   const handleMouseEnter = React.useCallback(() => {
@@ -294,16 +287,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         requestCodeTooltip(value, nodeKey);
       }
     }
-  }, [value, nodeKey, requestCodeTooltip, codeTooltips, generateNodeId]);
+  }, [value, nodeKey, requestCodeTooltip, codeTooltips, generateNodeId, nodeId]);
 
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div
-        className={diffClassName}
-        title={currentTooltip}
-        onMouseEnter={handleMouseEnter}
-      >
+      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -314,11 +303,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div
-        className={diffClassName}
-        title={currentTooltip}
-        onMouseEnter={handleMouseEnter}
-      >
+      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -348,10 +333,19 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         <div
           style={{ cursor: "pointer" }}
           onClick={onToggle}
-          title={currentTooltip}
           onMouseEnter={handleMouseEnter}
         >
-          {getRenderedContent(true, highlightText(nodeKey), true, true)}
+          {getRenderedContent(
+            true,
+            <CodeTooltip
+              isCode={codeTooltips[nodeId] !== undefined}
+              text={codeTooltips[nodeId] || path}
+            >
+              <span>{highlightText(nodeKey)}</span>
+            </CodeTooltip>,
+            true,
+            true
+          )}
         </div>
         {expanded &&
           value.map((item, index) => {
@@ -413,10 +407,18 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       <div
         style={{ cursor: "pointer" }}
         onClick={onToggle}
-        title={currentTooltip}
         onMouseEnter={handleMouseEnter}
       >
-        {getRenderedContent(true, highlightText(nodeKey), true)}
+        {getRenderedContent(
+          true,
+          <CodeTooltip
+            isCode={codeTooltips[nodeId] !== undefined}
+            text={codeTooltips[nodeId] || path}
+          >
+            <span>{highlightText(nodeKey)}</span>
+          </CodeTooltip>,
+          true
+        )}
       </div>
       {expanded &&
         keys.map((key) => {
@@ -492,7 +494,8 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
   }, [type]);
 
   const autoCollapse = props.isDiffMode
-    ? props.diffStatus === "unchanged" || shouldAutoCollapse(type, typeDefinition)
+    ? props.diffStatus === "unchanged" ||
+      shouldAutoCollapse(type, typeDefinition)
     : shouldAutoCollapse(type, typeDefinition);
 
   const [expanded, setExpanded] = React.useState(!autoCollapse);
