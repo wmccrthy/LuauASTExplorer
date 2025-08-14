@@ -1,13 +1,13 @@
 import { createContext, useContext } from "react";
 
-interface CodeTranslationContext {
+interface CodeTranslation {
   codeTooltips: Record<string, string>;
   requestCodeTooltip: (nodeValue: string, nodeKey: string) => void;
   generateNodeId: (nodeValue: string, nodeKey: string) => string;
 }
 
 export const CodeTranslationContext =
-  createContext<CodeTranslationContext | null>(null);
+  createContext<CodeTranslation | null>(null);
 
 export const useCodeTranslationContext = () => {
   const context = useContext(CodeTranslationContext);

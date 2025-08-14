@@ -271,14 +271,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         requestCodeTooltip(value, nodeKey);
       }
     }
-  }, [
-    value,
-    nodeKey,
-    requestCodeTooltip,
-    codeTooltips,
-    generateNodeId,
-    nodeId,
-  ]);
+  }, [value, nodeKey, requestCodeTooltip, codeTooltips, nodeId]);
 
   // Render primitive values
   if (value === null || value === undefined) {
