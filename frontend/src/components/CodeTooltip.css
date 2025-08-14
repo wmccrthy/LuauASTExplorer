@@ -1,0 +1,71 @@
+.code-tooltip {
+  position: fixed;
+  background: var(--vscode-quickInput-background);
+  border: 1px solid var(--vscode-quickInput-border, var(--vscode-contrastBorder));
+  border-radius: 4px;
+  box-shadow: 0 4px 12px var(--vscode-widget-shadow);
+  z-index: 1000;
+  max-width: 850px; /* ~100 chars at 13px font + padding (100 * 8.5px ≈ 850px) */
+  max-height: 300px;
+  overflow: auto;
+  transform: translateY(-100%); /* Remove X centering, align to left edge */
+  font-family: var(--vscode-editor-font-family);
+  animation: tooltip-appear 0.15s ease-out;
+}
+
+@keyframes tooltip-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-100%) scale(1);
+  }
+}
+
+.code-tooltip-content {
+  padding: 8px 12px;
+}
+
+
+
+/* .path-text {
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  line-height: 1.4;
+  word-break: break-all;
+} */
+
+/* Scrollbar styling */
+.code-tooltip::-webkit-scrollbar {
+  width: 8px;
+}
+
+.code-tooltip::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.code-tooltip::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  border-radius: 4px;
+}
+
+.code-tooltip::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
+/* Basic code block styling - let highlight.js handle syntax colors */
+.code-block {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  margin: 0;
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size, 13px);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: transparent; /* Use CodeTooltip background */
+}
+
