@@ -42,8 +42,8 @@ export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
   const handlePrintCodeResult = useCallback((message: any) => {
     if (message.command === "printCodeResult") {
       const { nodeId, status, code, error } = message;
-
-      if (status === "success" && code) {
+      const emptyCode = code && code.trim() === "";
+      if (status === "success" && !emptyCode) {
         console.log("Success! Setting code tooltip for nodeId:", nodeId);
         setCodeTooltips((prev) => ({
           ...prev,
@@ -54,7 +54,7 @@ export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
           ...prev,
           [nodeId]: "Loading...",
         }));
-      } else if (status === "error") {
+      } else if (status === "error" || emptyCode) {
         console.log("Error for nodeId:", nodeId, "error:", error);
         // remove nodeId from from codeTooltips
         setCodeTooltips((prev) => {
@@ -73,4 +73,3 @@ export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
     generateNodeId,
   };
 };
-
