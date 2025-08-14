@@ -46,7 +46,7 @@ try {
     mediaQuery.addEventListener("change", refreshHighlightTheme);
   }
 } catch (error) {
-  console.log("Failed to add window event listeners:", error);
+  console.log("Failed to add window event listeners");
 }
 
 /**
