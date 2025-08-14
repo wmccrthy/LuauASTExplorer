@@ -17,6 +17,7 @@ import {
 import LiveEditor from "./LiveEditor";
 import DiffAnalyzer from "./DiffAnalyzer";
 import { useCodeTranslation } from "./hooks/useCodeTranslation";
+import { CodeTranslationContext } from "./context/codeTranslationContext";
 
 const App: React.FC = () => {
   // Get all available node keys and start with none hidden (all visible)
@@ -151,9 +152,6 @@ const App: React.FC = () => {
             parseError={parseError || ""}
             astTree={astTree!}
             searchTerm={searchTerm}
-            codeTooltips={codeTooltips}
-            requestCodeTooltip={requestCodeTooltip}
-            generateNodeId={generateNodeId}
           />
         );
 
@@ -172,9 +170,6 @@ const App: React.FC = () => {
             diffTree={diffTree!}
             hiddenNodes={hiddenNodes}
             setHiddenNodes={setHiddenNodes}
-            codeTooltips={codeTooltips}
-            requestCodeTooltip={requestCodeTooltip}
-            generateNodeId={generateNodeId}
           />
         );
 
@@ -238,7 +233,15 @@ const App: React.FC = () => {
         )}
       </div>
 
-      {renderWindowContent()}
+      <CodeTranslationContext.Provider
+        value={{
+          codeTooltips: codeTooltips,
+          requestCodeTooltip: requestCodeTooltip,
+          generateNodeId: generateNodeId,
+        }}
+      >
+        {renderWindowContent()}
+      </CodeTranslationContext.Provider>
     </div>
   );
 };

@@ -16,9 +16,6 @@ interface DiffAnalyzerProps {
   diffTree: ASTNode;
   hiddenNodes: string[];
   setHiddenNodes: (hiddenNodes: string[]) => void;
-  codeTooltips: Record<string, string>;
-  requestCodeTooltip: (nodeValue: any, nodeKey: string) => void;
-  generateNodeId: (nodeValue: any, nodeKey: string) => string;
 }
 
 const DiffAnalyzer = ({
@@ -33,9 +30,6 @@ const DiffAnalyzer = ({
   diffTree,
   hiddenNodes,
   setHiddenNodes,
-  codeTooltips,
-  requestCodeTooltip,
-  generateNodeId,
 }: DiffAnalyzerProps) => {
   return (
     <div className="diff-analyzer-layout">
@@ -99,9 +93,6 @@ const DiffAnalyzer = ({
               isDiffMode={true}
               hiddenNodes={hiddenNodes}
               vscodeApi={vscodeApi}
-              codeTooltips={codeTooltips}
-              requestCodeTooltip={requestCodeTooltip}
-              generateNodeId={generateNodeId}
             />
           </div>
         ) : (
