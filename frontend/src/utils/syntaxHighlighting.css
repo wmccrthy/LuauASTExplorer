@@ -75,30 +75,30 @@
     font-weight: bold;
 }
 
-/* LIGHT THEME COLORS - Atom One Light theme with proper selectors */
+/* LIGHT THEME COLORS - Darker Atom One Light theme with proper selectors */
 .light .hljs {
-    color: #383a42;
+    color: #2c2d30;
     background: transparent;
 }
 
 /* Comments */
 .light .hljs-comment,
 .light .hljs-quote {
-    color: #a0a1a7;
+    color: #7d7e84;
     font-style: italic;
 }
 
 /* Keywords - Purple */
 .light .hljs-keyword,
 .light .hljs-selector-tag {
-    color: #a626a4;
+    color: #8b1a89;
     font-weight: 500;
 }
 
 /* Function titles and sections - Blue */
 .light .hljs-title,
 .light .hljs-section {
-    color: #4078f2;
+    color: #2c5cc5;
 }
 
 /* Strings and symbols - Green */
@@ -106,7 +106,7 @@
 .light .hljs-symbol,
 .light .hljs-bullet,
 .light .hljs-addition {
-    color: #50a14f;
+    color: #3d8b40;
 }
 
 /* Numbers, built-ins, literals, types, params - Orange */
@@ -117,12 +117,12 @@
 .light .hljs-params,
 .light .hljs-meta,
 .light .hljs-link {
-    color: #986801;
+    color: #7a5500;
 }
 
 /* Attributes - Orange */
 .light .hljs-attribute {
-    color: #986801;
+    color: #7a5500;
 }
 
 /* Variables, template variables, tags, names, selectors - Red */
@@ -134,13 +134,13 @@
 .light .hljs-selector-class,
 .light .hljs-regexp,
 .light .hljs-deletion {
-    color: #e45649;
+    color: #c4374a;
 }
 
 /* Types and class titles - Yellow */
 .light .hljs-title.class_,
 .light .hljs-class .hljs-title {
-    color: #c18401;
+    color: #a06f00;
 }
 
 /* Emphasis */
