@@ -137,7 +137,7 @@ local function localVisitor(printer)
 			printer.visitToken(node.colon)
 		end
 		if node.annotation then
-			visitor.visitExpression(node.annotation, printer)
+			visitor.visitType(node.annotation, printer)
 		end
 		return false
 	end

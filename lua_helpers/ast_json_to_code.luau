@@ -27,7 +27,7 @@ if not success then
 	end)
 end
 if not success then
-	if string.find(astNode._astType, "Token") then
+	if astNode._astType and string.find(astNode._astType, "Token") then
 		success, code = pcall(function()
 			return printer.printtoken(astNode)
 		end)
