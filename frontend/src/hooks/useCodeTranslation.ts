@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { VSCodeAPI, PrintCodeMessage } from "../typesAndInterfaces";
 
-export const useCodeTooltip = (vscodeApi: VSCodeAPI | null) => {
+export const useCodeTranslation = (vscodeApi: VSCodeAPI | null) => {
   const [codeTooltips, setCodeTooltips] = useState<Record<string, string>>({});
   const requestedNodes = useRef<Set<string>>(new Set());
 
