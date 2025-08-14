@@ -1,11 +1,11 @@
 import hljs from 'highlight.js/lib/core';
+import lua from "highlight.js/lib/languages/lua"
 // @ts-ignore - Package has no type definitions
-import luau from 'highlightjs-luau';
 // Import our custom CSS with both light and dark themes
 import './syntaxHighlighting.css';
 
 // Register the Luau language
-hljs.registerLanguage('luau', luau);
+hljs.registerLanguage('lua', lua);
 
 /**
  * Applies the appropriate highlight.js theme class based on VS Code theme
@@ -117,7 +117,7 @@ function escapeHtml(text: string): string {
  */
 export function highlightLuauCode(code: string): string {
   try {
-    const result = hljs.highlight(code, { language: 'luau' });
+    const result = hljs.highlight(code, { language: 'lua' });
     return result.value;
   } catch (error) {
     try {

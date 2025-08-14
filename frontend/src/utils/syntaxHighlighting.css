@@ -1,0 +1,153 @@
+/* DARK THEME COLORS - Atom One Dark theme with proper selectors */
+.dark .hljs {
+    color: #abb2bf;
+    background: transparent;
+}
+
+/* Comments */
+.dark .hljs-comment,
+.dark .hljs-quote {
+    color: #5c6370;
+    font-style: italic;
+}
+
+/* Keywords - Purple */
+.dark .hljs-keyword,
+.dark .hljs-selector-tag {
+    color: #c678dd;
+    font-weight: 500;
+}
+
+/* Function titles and sections - Blue */
+.dark .hljs-title,
+.dark .hljs-section {
+    color: #61aeee;
+}
+
+/* Strings and symbols - Green */
+.dark .hljs-string,
+.dark .hljs-symbol,
+.dark .hljs-bullet,
+.dark .hljs-addition {
+    color: #98c379;
+}
+
+/* Numbers, built-ins, literals, types, params - Orange */
+.dark .hljs-number,
+.dark .hljs-built_in,
+.dark .hljs-literal,
+.dark .hljs-type,
+.dark .hljs-params,
+.dark .hljs-meta,
+.dark .hljs-link {
+    color: #d19a66;
+}
+
+/* Attributes - Orange */
+.dark .hljs-attribute {
+    color: #d19a66;
+}
+
+/* Variables, template variables, tags, names, selectors - Red */
+.dark .hljs-variable,
+.dark .hljs-template-variable,
+.dark .hljs-tag,
+.dark .hljs-name,
+.dark .hljs-selector-id,
+.dark .hljs-selector-class,
+.dark .hljs-regexp,
+.dark .hljs-deletion {
+    color: #e06c75;
+}
+
+/* Types and class titles - Yellow */
+.dark .hljs-title.class_,
+.dark .hljs-class .hljs-title {
+    color: #e6c07b;
+}
+
+/* Emphasis */
+.dark .hljs-emphasis {
+    font-style: italic;
+}
+
+.dark .hljs-strong {
+    font-weight: bold;
+}
+
+/* LIGHT THEME COLORS - Atom One Light theme with proper selectors */
+.light .hljs {
+    color: #383a42;
+    background: transparent;
+}
+
+/* Comments */
+.light .hljs-comment,
+.light .hljs-quote {
+    color: #a0a1a7;
+    font-style: italic;
+}
+
+/* Keywords - Purple */
+.light .hljs-keyword,
+.light .hljs-selector-tag {
+    color: #a626a4;
+    font-weight: 500;
+}
+
+/* Function titles and sections - Blue */
+.light .hljs-title,
+.light .hljs-section {
+    color: #4078f2;
+}
+
+/* Strings and symbols - Green */
+.light .hljs-string,
+.light .hljs-symbol,
+.light .hljs-bullet,
+.light .hljs-addition {
+    color: #50a14f;
+}
+
+/* Numbers, built-ins, literals, types, params - Orange */
+.light .hljs-number,
+.light .hljs-built_in,
+.light .hljs-literal,
+.light .hljs-type,
+.light .hljs-params,
+.light .hljs-meta,
+.light .hljs-link {
+    color: #986801;
+}
+
+/* Attributes - Orange */
+.light .hljs-attribute {
+    color: #986801;
+}
+
+/* Variables, template variables, tags, names, selectors - Red */
+.light .hljs-variable,
+.light .hljs-template-variable,
+.light .hljs-tag,
+.light .hljs-name,
+.light .hljs-selector-id,
+.light .hljs-selector-class,
+.light .hljs-regexp,
+.light .hljs-deletion {
+    color: #e45649;
+}
+
+/* Types and class titles - Yellow */
+.light .hljs-title.class_,
+.light .hljs-class .hljs-title {
+    color: #c18401;
+}
+
+/* Emphasis */
+.light .hljs-emphasis {
+    font-style: italic;
+}
+
+.light .hljs-strong {
+    font-weight: bold;
+}
