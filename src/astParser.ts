@@ -167,7 +167,9 @@ export class ASTParserAndPrinter {
 
       try {
         // Use the permanent AST parser script from extension directory
-        console.log("ASTParser: parsing selected code:", srcCode);
+
+        // console.log("ASTParser: parsing selected code:", srcCode);
+        
         const astParserPath = path.join(
           this.extensionPath,
           "lua_helpers",
