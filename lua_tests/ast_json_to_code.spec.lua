@@ -19,7 +19,6 @@ end
 
 local function ast_json_to_code_test()
     local tmpFilePath = "tmpastJsonPath.lua"
-	-- No need to create empty file, fs.writestringtofile will create it
 	for _, code in pairs(e2eCases) do
 		fs.writestringtofile(tmpFilePath, code)
 		process.run({'stylua', tmpFilePath})
