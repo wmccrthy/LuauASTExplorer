@@ -22,14 +22,14 @@ local function ast_json_to_code_test()
 	-- No need to create empty file, fs.writestringtofile will create it
 	for _, code in pairs(e2eCases) do
 		fs.writestringtofile(tmpFilePath, code)
-		process.run(`stylua {tmpFilePath}`, { shell = true })
+		process.run({'stylua', tmpFilePath})
 		local formattedCode = trim(fs.readfiletostring(tmpFilePath))
 		local ast = parser.parse(fs.readfiletostring(tmpFilePath))
 		local astJson = json.encode(ast)
 		fs.writestringtofile(tmpFilePath, astJson)
 		local cmd = process.run({ "lute", `{process.cwd()}/lua_helpers/ast_json_to_code.luau`, tmpFilePath })
 		local formattedResult = trim(cmd.stdout)
-		process.run(`rm {tmpFilePath}`, { shell = true })
+		process.run({'rm', tmpFilePath})
 		assert(
 			formattedResult == formattedCode,
 			"Incorrectly parsed:\n" .. formattedCode .. "\n as:\n" .. formattedResult
