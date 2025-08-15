@@ -27,7 +27,7 @@ local function ast_json_to_code_test()
 		local ast = parser.parse(fs.readfiletostring(tmpFilePath))
 		local astJson = json.encode(ast)
 		fs.writestringtofile(tmpFilePath, astJson)
-		local cmd = process.run({ "lute", `{process.cwd()}/lua_helpers/ast_json_to_code.luau`, tmpFilePath })
+		local cmd = process.run({ "lute", `lua_helpers/ast_json_to_code.luau`, tmpFilePath })
 		local formattedResult = trim(cmd.stdout)
 		process.run({'rm', tmpFilePath})
 		assert(

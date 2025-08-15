@@ -48,7 +48,7 @@ end
 if success then
 	-- stylua it
 	fs.writestringtofile(sourceFilePath, code)
-	process.run(`stylua {sourceFilePath}`, { shell = true })
+	process.run({'stylua', sourceFilePath})
 	code = fs.readfiletostring(sourceFilePath)
 end
 print(code)
