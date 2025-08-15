@@ -101,7 +101,8 @@ jobs:
                 lute lua_tests/runner.luau
 
             - name: Run frontend tests
-              run: npm run test
+              run: |
+                cd frontend && npm test
 
     build:
         runs-on: ubuntu-latest

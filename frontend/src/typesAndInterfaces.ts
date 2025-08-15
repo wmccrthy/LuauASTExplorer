@@ -73,6 +73,20 @@ export interface JsonDiffChange {
   changes?: JsonDiffChange[]; // For nested changes
 }
 
+export interface PrintCodeMessage {
+  command: "printCode";
+  nodeJson: string;
+  nodeId: string;
+}
+
+export interface PrintCodeResultMessage {
+  command: "printCodeResult";
+  status: "loading" | "success" | "error";
+  nodeId: string;
+  code?: string;
+  error?: string;
+}
+
 export enum WindowMode {
   Explorer = "explorer", // Current AST viewer (default)
   LiveEditor = "live-editor", // Window 1: Live code editor + AST

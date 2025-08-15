@@ -64,6 +64,7 @@ const LiveEditor = ({
             <div className="ast-content tree-view">
               <TreeNodeContainer
                 nodeKey="root"
+                path="root"
                 value={astTree}
                 level={0}
                 searchTerm={searchTerm}

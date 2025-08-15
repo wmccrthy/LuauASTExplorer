@@ -1,0 +1,95 @@
+.code-tooltip {
+  position: fixed;
+  background: var(--vscode-quickInput-background);
+  border: 1px solid var(--vscode-quickInput-border, var(--vscode-contrastBorder));
+  border-radius: 4px;
+  box-shadow: 0 4px 12px var(--vscode-widget-shadow);
+  z-index: 1000;
+  /* Width is set dynamically via JavaScript based on viewport */
+  max-height: 300px;
+  transform: translateY(-100%); /* Remove X centering, align to left edge */
+  font-family: var(--vscode-editor-font-family);
+  animation: tooltip-appear 0.15s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes tooltip-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-100%) scale(1);
+  }
+}
+
+.code-tooltip-header {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  background: var(--vscode-editorGroupHeader-tabsBackground, var(--vscode-quickInput-background));
+  border-bottom: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+  flex-shrink: 0; /* Keep header fixed */
+  border-radius: 4px 4px 0 0;
+}
+
+.code-tooltip-content {
+  padding: 8px 12px;
+  overflow: auto; /* Make content scrollable */
+  flex: 1; /* Take remaining space */
+}
+
+/* Scrollbar styling for tooltip content */
+.code-tooltip-content::-webkit-scrollbar,
+.code-block::-webkit-scrollbar,
+.path-text::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.code-tooltip-content::-webkit-scrollbar-track,
+.code-block::-webkit-scrollbar-track,
+.path-text::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.code-tooltip-content::-webkit-scrollbar-thumb,
+.code-block::-webkit-scrollbar-thumb,
+.path-text::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  border-radius: 4px;
+}
+
+.code-tooltip-content::-webkit-scrollbar-thumb:hover,
+.code-block::-webkit-scrollbar-thumb:hover,
+.path-text::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
+/* Basic code block styling - let highlight.js handle syntax colors */
+.code-block {
+  display: block;
+  overflow: auto;
+  padding: 0.5em;
+  margin: 0;
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size, 13px);
+  line-height: 1.4;
+  white-space: pre; /* Prevent line wrapping */
+  background: transparent; /* Use CodeTooltip background */
+  min-width: 0; /* Allow shrinking */
+  tab-size: 4; /* Set tab width to 4 spaces */
+}
+
+.path-text {
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  line-height: 1.4;
+  overflow-x: auto;
+  white-space: nowrap; /* Prevent wrapping for paths */
+  word-break: normal;
+}
+

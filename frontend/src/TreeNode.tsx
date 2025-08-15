@@ -7,7 +7,10 @@ import {
   getType,
   unpackArrayType,
 } from "./utils/astTypeHelpers";
+import { CodeTooltip } from "./components/CodeTooltip";
+
 import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
+import { useCodeTranslationContext } from "./context/codeTranslationContext";
 
 interface TreeNodeProps {
   nodeKey: string;
@@ -15,12 +18,12 @@ interface TreeNodeProps {
   level: number;
   expanded: boolean;
   onToggle: () => void;
+  path: string;
   type: string;
   typeDefinition: ASTTypeDefinition | undefined;
   kind: string;
   arrayType: boolean;
   searchTerm?: string;
-  parentInferredType?: string | string[];
   isDiffMode?: boolean;
   diffStatus?:
     | "added"
@@ -40,6 +43,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   value,
   level,
   expanded,
+  path,
   onToggle,
   type,
   typeDefinition,
@@ -47,7 +51,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   arrayType,
   searchTerm = "",
   isDiffMode = false,
-  parentInferredType,
   diffStatus = "unchanged",
   beforeValue,
   afterValue,
@@ -56,6 +59,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   // Always reserve space for diff indicator to maintain consistent indentation
   const baseIndent = "  ".repeat(level);
   const indent = baseIndent;
+  const { codeTooltips, requestCodeTooltip, generateNodeId } =
+    useCodeTranslationContext();
+
+  const nodeId = React.useMemo(() => {
+    return generateNodeId ? generateNodeId(value, nodeKey) : "";
+  }, [value, nodeKey, generateNodeId]);
 
   const renderTypeAnnotations = React.useCallback(() => {
     if (type) {
@@ -251,10 +260,20 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     [arrow, indent, renderDiffIndicator, renderTypeAnnotations]
   );
 
+  // Handle hover to request code tooltip
+  const handleMouseEnter = React.useCallback(() => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      // Only request if we don't have cached content
+      if (!codeTooltips[nodeId]) {
+        requestCodeTooltip(value, nodeKey);
+      }
+    }
+  }, [value, nodeKey, requestCodeTooltip, codeTooltips, nodeId]);
+
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -265,7 +284,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -292,8 +311,22 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
     return (
       <div className={diffClassName}>
-        <div style={{ cursor: "pointer" }} onClick={onToggle}>
-          {getRenderedContent(true, highlightText(nodeKey), true, true)}
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={onToggle}
+          onMouseEnter={handleMouseEnter}
+        >
+          {getRenderedContent(
+            true,
+            <CodeTooltip
+              isCode={codeTooltips[nodeId] !== undefined}
+              text={codeTooltips[nodeId] || path}
+            >
+              <span>{highlightText(nodeKey)}</span>
+            </CodeTooltip>,
+            true,
+            true
+          )}
         </div>
         {expanded &&
           value.map((item, index) => {
@@ -312,8 +345,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                     : undefined
                 }
                 searchTerm={searchTerm}
-                {...childDiffProps}
+                path={`${path}.${index}`}
                 hiddenNodes={hiddenNodes}
+                {...childDiffProps}
               />
             );
           })}
@@ -347,8 +381,21 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   return (
     <div className={diffClassName}>
-      <div style={{ cursor: "pointer" }} onClick={onToggle}>
-        {getRenderedContent(true, highlightText(nodeKey), true)}
+      <div
+        style={{ cursor: "pointer" }}
+        onClick={onToggle}
+        onMouseEnter={handleMouseEnter}
+      >
+        {getRenderedContent(
+          true,
+          <CodeTooltip
+            isCode={codeTooltips[nodeId] !== undefined}
+            text={codeTooltips[nodeId] || path}
+          >
+            <span>{highlightText(nodeKey)}</span>
+          </CodeTooltip>,
+          true
+        )}
       </div>
       {expanded &&
         keys.map((key) => {
@@ -371,6 +418,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               parentInferredType={parentInferredType}
               searchTerm={searchTerm}
               hiddenNodes={hiddenNodes}
+              path={`${path}.${key}`}
               {...childDiffProps}
             />
           );
@@ -384,6 +432,7 @@ interface TreeNodeContainerProps {
   nodeKey: string;
   value: any;
   level: number;
+  path: string;
   searchTerm?: string;
   parentInferredType?: string | string[];
   isDiffMode?: boolean;
@@ -414,7 +463,8 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
   }, [type]);
 
   const autoCollapse = props.isDiffMode
-    ? props.diffStatus === "unchanged" || shouldAutoCollapse(type, typeDefinition)
+    ? props.diffStatus === "unchanged" ||
+      shouldAutoCollapse(type, typeDefinition)
     : shouldAutoCollapse(type, typeDefinition);
 
   const [expanded, setExpanded] = React.useState(!autoCollapse);

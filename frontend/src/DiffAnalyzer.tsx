@@ -87,6 +87,7 @@ const DiffAnalyzer = ({
           <div className="ast-content tree-view">
             <TreeNodeContainer
               nodeKey="root"
+              path="root"
               value={diffTree}
               level={0}
               isDiffMode={true}

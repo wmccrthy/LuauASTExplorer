@@ -140,9 +140,6 @@ export const getTypeString = (
       nodeKey === "entries" ? value : undefined
     );
   }
-  if (parentInferredType !== type) {
-    console.log("type:", type, "vs. parentInferredType:", parentInferredType);
-  }
   type = !type ? parentInferredType : type; // if type is null, fallback to parentInferredType (this should handle Punctuated well)
   return [type, kind];
 };

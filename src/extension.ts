@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
-import { ASTParser } from "./astParser";
+import { ASTParserAndPrinter } from "./astParser";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Luau AST Explorer is now active!");
 
   // Create AST parser instance with extension context
-  const astParser = new ASTParser(context);
+  const astParser = new ASTParserAndPrinter(context);
 
   // Register the command to show AST
   let disposable = vscode.commands.registerCommand(
@@ -102,6 +102,9 @@ async function showASTResult(
             message.afterCode,
             context
           );
+          break;
+        case "printCode":
+          await handlePrintCode(panel, message.nodeJson, message.nodeId, context);
           break;
         default:
           console.warn("Unknown message command:", message.command);
@@ -271,7 +274,7 @@ async function handleParseAST(
     });
 
     // Parse the code using existing ASTParser
-    const astParser = new ASTParser(context);
+    const astParser = new ASTParserAndPrinter(context);
     const astResult = await astParser.parseCode(code, "luau");
 
     // Send success result to webview
@@ -304,7 +307,7 @@ async function handleParseDiff(
     });
 
     // Parse both code snippets using existing ASTParser
-    const astParser = new ASTParser(context);
+    const astParser = new ASTParserAndPrinter(context);
 
     // Parse before and after code separately
     const beforeAST = await astParser.parseCode(beforeCode, "luau");
@@ -322,6 +325,41 @@ async function handleParseDiff(
     panel.webview.postMessage({
       command: "parseDiffResult",
       status: "error",
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function handlePrintCode(
+  panel: vscode.WebviewPanel,
+  nodeJson: string,
+  nodeId: string,
+  context: vscode.ExtensionContext
+) {
+  try {
+    // Send loading state to webview
+    panel.webview.postMessage({
+      command: "printCodeResult",
+      status: "loading",
+      nodeId: nodeId,
+    });
+
+    const astPrinter = new ASTParserAndPrinter(context);
+    const code = await astPrinter.printCode(nodeJson);
+
+    // Send success result to webview
+    panel.webview.postMessage({
+      command: "printCodeResult",
+      status: "success",
+      nodeId: nodeId,
+      code: code,
+    });
+  } catch (error) {
+    // Send error result to webview
+    panel.webview.postMessage({
+      command: "printCodeResult",
+      status: "error",
+      nodeId: nodeId,
       error: error instanceof Error ? error.message : String(error),
     });
   }

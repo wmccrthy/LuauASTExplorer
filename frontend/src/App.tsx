@@ -12,9 +12,12 @@ import {
   VSCodeAPI,
   WindowMode,
   DiffASTNode,
+  PrintCodeResultMessage,
 } from "./typesAndInterfaces";
 import LiveEditor from "./LiveEditor";
 import DiffAnalyzer from "./DiffAnalyzer";
+import { useCodeTranslation } from "./hooks/useCodeTranslation";
+import { CodeTranslationContext } from "./context/codeTranslationContext";
 
 const App: React.FC = () => {
   // Get all available node keys and start with none hidden (all visible)
@@ -64,13 +67,20 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Add the code tooltip hook at the app level (single instance for entire app)
+  const {
+    handlePrintCodeResult,
+    codeTooltips,
+    requestCodeTooltip,
+    generateNodeId,
+  } = useCodeTranslation(vscodeApi);
+
   // Set up VSCode API and message listener
   useEffect(() => {
     if (window.acquireVsCodeApi) {
       const api = window.acquireVsCodeApi();
       setVscodeApi(api);
 
-      // Set up message listener for responses from extension
       const messageListener = (event: MessageEvent) => {
         const message = event.data;
 
@@ -88,17 +98,17 @@ const App: React.FC = () => {
             setParseDiffError,
             setDiffTree
           );
+        } else if (message.command === "printCodeResult") {
+          // Handle code tooltip responses
+          handlePrintCodeResult(message as PrintCodeResultMessage);
         }
       };
 
       window.addEventListener("message", messageListener);
 
-      // Cleanup listener on unmount
-      return () => {
-        window.removeEventListener("message", messageListener);
-      };
+      return () => window.removeEventListener("message", messageListener);
     }
-  }, []);
+  }, [handlePrintCodeResult]);
 
   // Search functionality
   const performSearch = (term: string) => {
@@ -223,7 +233,15 @@ const App: React.FC = () => {
         )}
       </div>
 
-      {renderWindowContent()}
+      <CodeTranslationContext.Provider
+        value={{
+          codeTooltips: codeTooltips,
+          requestCodeTooltip: requestCodeTooltip,
+          generateNodeId: generateNodeId,
+        }}
+      >
+        {renderWindowContent()}
+      </CodeTranslationContext.Provider>
     </div>
   );
 };

@@ -77,8 +77,8 @@
     "watch": "tsc -watch -p ./",
     "dev": "npm run build:frontend && npm run watch",
     "package": "vsce package",
-    "test:compile": "jest && npm run compile",
-    "test": "jest",
+    "test:compile": "cd frontend && npm test && npm run compile",
+    "test": "cd frontend && npm test",
     "process-changelog": "npx ts-node ci_scripts/read_changelog.ts"
   },
   "devDependencies": {

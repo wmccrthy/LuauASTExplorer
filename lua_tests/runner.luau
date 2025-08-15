@@ -13,6 +13,7 @@ for m, file in fs.listdir(test_path) do
 	local filePath = "./" .. trim_luau_ext(file.name)
 	local test = require(filePath)
 	assert(typeof(test) == "function", "Test suite is not a function")
+	print(`\n======= Running {file.name} =======\n`)
 	test()
 	print(`\n======= ✓ {file.name} passed =======\n`)
 end
