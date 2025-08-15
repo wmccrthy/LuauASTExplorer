@@ -18,7 +18,8 @@ function trim(s)
 end
 
 local function ast_json_to_code_test()
-    local tmpFilePath = "/tmp/tmpastJsonPath.lua"
+    local tmpFilePath = "tmpastJsonPath.lua"
+    process.run("touch tmp.txt", { shell = true })
 	process.run(`touch {tmpFilePath}`, { shell = true })
 	for _, code in pairs(e2eCases) do
 		fs.writestringtofile(tmpFilePath, code)
