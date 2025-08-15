@@ -69,7 +69,6 @@ const LiveEditor = ({
                 level={0}
                 searchTerm={searchTerm}
                 hiddenNodes={hiddenNodes}
-                vscodeApi={vscodeApi}
               />
             </div>
           ) : (

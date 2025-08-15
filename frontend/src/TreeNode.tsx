@@ -9,7 +9,6 @@ import {
 } from "./utils/astTypeHelpers";
 import { CodeTooltip } from "./components/CodeTooltip";
 
-import { VSCodeAPI } from "./typesAndInterfaces";
 import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
 import { useCodeTranslationContext } from "./context/codeTranslationContext";
 
@@ -37,7 +36,6 @@ interface TreeNodeProps {
   beforeValue?: any;
   afterValue?: any;
   hiddenNodes?: string[];
-  vscodeApi?: VSCodeAPI | null;
 }
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
@@ -57,7 +55,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   beforeValue,
   afterValue,
   hiddenNodes = [],
-  vscodeApi = null,
 }) => {
   // Always reserve space for diff indicator to maintain consistent indentation
   const baseIndent = "  ".repeat(level);
@@ -350,7 +347,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 searchTerm={searchTerm}
                 path={`${path}.${index}`}
                 hiddenNodes={hiddenNodes}
-                vscodeApi={vscodeApi}
                 {...childDiffProps}
               />
             );
@@ -423,7 +419,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               searchTerm={searchTerm}
               hiddenNodes={hiddenNodes}
               path={`${path}.${key}`}
-              vscodeApi={vscodeApi}
               {...childDiffProps}
             />
           );
@@ -452,7 +447,6 @@ interface TreeNodeContainerProps {
   beforeValue?: any;
   afterValue?: any;
   hiddenNodes?: string[];
-  vscodeApi?: VSCodeAPI | null;
 }
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
