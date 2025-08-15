@@ -26,21 +26,18 @@
 }
 
 .code-tooltip-header {
-  padding: 8px 12px 6px 12px;
+  padding: 8px 12px;
   font-size: 12px;
   font-weight: 600;
   color: var(--vscode-descriptionForeground);
-  background: var(--vscode-quickInput-background);
+  background: var(--vscode-editorGroupHeader-tabsBackground, var(--vscode-quickInput-background));
+  border-bottom: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
   flex-shrink: 0; /* Keep header fixed */
   border-radius: 4px 4px 0 0;
 }
 
 .code-tooltip-divider {
-  height: 1px;
-  background: var(--vscode-panel-border, #464647);
-  margin: 0;
-  flex-shrink: 0; /* Keep divider fixed */
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: none; /* Remove separate divider since header has border-bottom */
 }
 
 .code-tooltip-content {
