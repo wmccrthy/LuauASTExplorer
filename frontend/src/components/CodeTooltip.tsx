@@ -130,6 +130,10 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
         >
+          <div className="code-tooltip-header">
+            {isCode ? "Node's Translated Code" : "Node Path"}
+          </div>
+          <div className="code-tooltip-divider"></div>
           <div className="code-tooltip-content">
             {isCode ? (
               <pre 
