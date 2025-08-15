@@ -89,6 +89,7 @@
   white-space: pre; /* Prevent line wrapping */
   background: transparent; /* Use CodeTooltip background */
   min-width: 0; /* Allow shrinking */
+  tab-size: 4; /* Set tab width to 2 spaces */
 }
 
 .path-text {
