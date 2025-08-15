@@ -11,7 +11,7 @@ export const useCodeTranslation = (vscodeApi: VSCodeAPI | null) => {
       const content = JSON.stringify(nodeValue);
       const hash =
         content.length.toString() +
-        content.substring(0, 20).replace(/[^a-zA-Z0-9]/g, "");
+        content.substring(0, 25).replace(/[^a-zA-Z0-9]/g, "");
       return `${nodeKey}_${hash}`;
     },
     []

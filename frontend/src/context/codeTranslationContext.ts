@@ -2,8 +2,8 @@ import { createContext, useContext } from "react";
 
 interface CodeTranslation {
   codeTooltips: Record<string, string>;
-  requestCodeTooltip: (nodeValue: string, nodeKey: string) => void;
-  generateNodeId: (nodeValue: string, nodeKey: string) => string;
+  requestCodeTooltip: (nodeValue: any, nodeKey: string) => void;
+  generateNodeId: (nodeValue: any, nodeKey: string) => string;
 }
 
 export const CodeTranslationContext =
@@ -12,7 +12,7 @@ export const CodeTranslationContext =
 export const useCodeTranslationContext = () => {
   const context = useContext(CodeTranslationContext);
   if (!context) {
-    throw new Error("useCache must be used within a CacheProvider");
+    throw new Error("useCodeTranslationContext must be used within a CodeTranslationProvider");
   }
   return context;
 };

@@ -5,7 +5,7 @@
   border-radius: 4px;
   box-shadow: 0 4px 12px var(--vscode-widget-shadow);
   z-index: 1000;
-  max-width: 850px; /* ~100 chars at 13px font + padding (100 * 8.5px ≈ 850px) */
+  /* Width is set dynamically via JavaScript based on viewport */
   max-height: 300px;
   transform: translateY(-100%); /* Remove X centering, align to left edge */
   font-family: var(--vscode-editor-font-family);
@@ -36,18 +36,11 @@
   border-radius: 4px 4px 0 0;
 }
 
-.code-tooltip-divider {
-  display: none; /* Remove separate divider since header has border-bottom */
-}
-
 .code-tooltip-content {
   padding: 8px 12px;
   overflow: auto; /* Make content scrollable */
   flex: 1; /* Take remaining space */
 }
-
-
-
 
 /* Scrollbar styling for tooltip content */
 .code-tooltip-content::-webkit-scrollbar,
@@ -79,8 +72,7 @@
 /* Basic code block styling - let highlight.js handle syntax colors */
 .code-block {
   display: block;
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto;
   padding: 0.5em;
   margin: 0;
   font-family: var(--vscode-editor-font-family);
@@ -89,7 +81,7 @@
   white-space: pre; /* Prevent line wrapping */
   background: transparent; /* Use CodeTooltip background */
   min-width: 0; /* Allow shrinking */
-  tab-size: 4; /* Set tab width to 2 spaces */
+  tab-size: 4; /* Set tab width to 4 spaces */
 }
 
 .path-text {

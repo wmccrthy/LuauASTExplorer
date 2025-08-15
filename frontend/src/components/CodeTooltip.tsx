@@ -10,6 +10,11 @@ interface CodeTooltipProps {
   delay?: number;
 }
 
+// Constants
+const TOOLTIP_MAX_WIDTH_RATIO = 0.8; // 90% of viewport width
+const TOOLTIP_MIN_WIDTH = 300; // Minimum tooltip width
+const HIDE_DELAY = 100;
+
 export const CodeTooltip: React.FC<CodeTooltipProps> = ({
   isCode,
   text,
@@ -17,7 +22,7 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
   delay = 20,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0, width: 0 });
   const timeoutRef = useRef<NodeJS.Timeout>(null);
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -36,17 +41,22 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
     timeoutRef.current = setTimeout(() => {
       try {
         const rect = target.getBoundingClientRect();
-        const tooltipWidth = 850; // updated max-width for ~100 characters
+
+        // Calculate responsive tooltip width
+        const maxTooltipWidth = Math.max(
+          TOOLTIP_MIN_WIDTH,
+          window.innerWidth * TOOLTIP_MAX_WIDTH_RATIO
+        );
 
         // Align to left edge of target, clamp only if it would go off-screen
         let x = rect.left;
-        const rightBound = x + tooltipWidth;
-        
+        const rightBound = x + maxTooltipWidth;
+
         // Only adjust if tooltip would go off the right edge
         if (rightBound > window.innerWidth) {
-          x = window.innerWidth - tooltipWidth;
+          x = window.innerWidth - maxTooltipWidth;
         }
-        
+
         // Ensure tooltip doesn't go off the left edge
         if (x < 0) {
           x = 0;
@@ -55,6 +65,7 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
         const newPosition = {
           x,
           y: rect.top - 5,
+          width: maxTooltipWidth,
         };
 
         setPosition(newPosition);
@@ -72,7 +83,7 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
     // Add a small delay before hiding to allow moving to tooltip
     timeoutRef.current = setTimeout(() => {
       setIsVisible(false);
-    }, 100);
+    }, HIDE_DELAY);
   };
 
   const handleTooltipMouseEnter = () => {
@@ -114,11 +125,11 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
         ref={triggerRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        style={{ display: 'inline' }}
+        style={{ display: "inline" }}
       >
         {children}
       </span>
-      
+
       {isVisible && (
         <div
           ref={tooltipRef}
@@ -126,6 +137,7 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
           style={{
             left: position.x,
             top: position.y,
+            width: position.width,
           }}
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
@@ -133,10 +145,9 @@ export const CodeTooltip: React.FC<CodeTooltipProps> = ({
           <div className="code-tooltip-header">
             {isCode ? "Node's Translated Code" : "Node Path"}
           </div>
-          <div className="code-tooltip-divider"></div>
           <div className="code-tooltip-content">
             {isCode ? (
-              <pre 
+              <pre
                 className="code-block"
                 dangerouslySetInnerHTML={{ __html: highlightLuauCode(text) }}
               />
