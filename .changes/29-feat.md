@@ -1,1 +1,0 @@
-Smarter diff highlight styling

@@ -1,6 +1,20 @@
 
 # Changelog
 
+## [0.1.4] - 2025-08-15
+
+### Features
+
+- Revamp type annotation system; add more comprehensive type definitions, support generics and array types, better styling on the TypeTooltip, and more. [#28](https://github.com/wmccrthy/LuauASTExplorer/pull/28)
+- Smarter diff highlight styling [#29](https://github.com/wmccrthy/LuauASTExplorer/pull/29)
+- Add informative tooltip to TreeNodes on hover. If node cannot be translated (not directly parseable from AST -> code), display path. Otherwise, display corresponding code. [#30](https://github.com/wmccrthy/LuauASTExplorer/pull/30)
+- Smarter auto-collapse based off node type [#31](https://github.com/wmccrthy/LuauASTExplorer/pull/31)
+
+### Fixes
+
+- Fix `diffUtils` inconsistencies that enforce redundant logic in `TreeNode` and remove the redundant logic. [#25](https://github.com/wmccrthy/LuauASTExplorer/pull/25)
+
+
 ## [0.1.3] - 2025-08-03
 
 ### Features
