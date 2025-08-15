@@ -19,6 +19,7 @@ end
 
 local function ast_json_to_code_test()
 	local tmpFilePath = process.cwd() .. "/lua_tests/helpers/tmpastJsonPath.lua"
+    print("tmp file path:", tmpFilePath)
 	process.run(`touch {tmpFilePath}`, { shell = true })
 	for _, code in pairs(e2eCases) do
 		fs.writestringtofile(tmpFilePath, code)
