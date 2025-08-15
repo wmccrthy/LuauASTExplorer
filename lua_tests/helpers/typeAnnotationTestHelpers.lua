@@ -3,6 +3,8 @@ local visitor = require("@std/syntax/visitor")
 
 local typeAnnotationVisitor = visitor.createVisitor()
 
+local e2ecases = require("./ast_json_to_code_test_cases").e2eCases
+
 --[[
     In writing these tests, I realized we could have just used visitor to annotate types in the first place... (perhaps revisit later)
 ]]
@@ -28,7 +30,7 @@ local function verifyOutput(
 	verifier: ((node: luau.AstNode) -> boolean) | boolean
 )
 	if not node._astType then -- avoid failing on nodes that don't have a type
-		print(`Node has no type: {node}, in: {visitorFunction}`)
+		-- print(`Node has no type: {node}, in: {visitorFunction}`)
 		-- printTable(" ", node)
 		-- print("\n")
 		return
@@ -37,7 +39,7 @@ local function verifyOutput(
 		if type(verifier) == "function" then verifier(node) else verifier,
 		`Incorrectly annotated node as {node._astType} in {visitorFunction}`
 	)
-	print(`✓ Correctly annotated node as {node._astType} in {visitorFunction}`)
+	-- print(`✓ Correctly annotated node as {node._astType} in {visitorFunction}`)
 end
 
 typeAnnotationVisitor.visitToken = function(token: luau.Token)
@@ -314,41 +316,7 @@ function printTable(indent, tbl)
 	end
 end
 
-local testSrc = [[
-    local x = 1
-    x += 1
-    x = 2
-    if x == 1 then print(1) end
-    if x == 1 then print(1) else print(2) end
-    local function f(x: number) return x + 1 end
-    f(1)
-    local y = { a = 1, b = 2, ['a'] = 3 }
-    if y.a then print(y[a]) end
-    for i=1, 10 do continue end
-    type z = { a: number, b: string?, [string]: number }
-    function f(x: number) return x + 1 end
-    type t = z & { c: number }
-    type t2 = t | z
-    for k, v in pairs(y) do print(k, v) end
-    while x > 0 do x -= 1 end
-    repeat x += 1 until x > 10
-    type fn = (x: number, ...string) -> number
-    type optional = string?
-    type singleton = "literal" | true | false
-    local g = function(x, y) return x + y end
-    local h = if x > 0 then "positive" else "zero or negative"
-    local tbl = { [1] = "one", two = 2, "three" }
-    local idx = tbl[1] + tbl.two
-    local unary = -x + not false
-    local binary = x and y or false
-    local cast = x :: number
-    local group = (x + y) * 2
-    local vararg = ...
-    export type MyType = { value: number }
-    type Generic<T> = { data: T }
-    local nil_val = nil
-    return
-]]
+local testSrc = table.concat(e2ecases, "\n")
 
 local ambiguousTagTestCases = {
 	-- {nodeTable, expectedType, description}
