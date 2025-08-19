@@ -246,7 +246,10 @@ function printASTNode(astNode: any): string | nil
 			end)
 		end
 	end
-	return if success then code else nil
+	if not success then
+		error(`Failed to print {astNode} with error message: {code}`)
+	end
+	return code
 end
 
 return {
