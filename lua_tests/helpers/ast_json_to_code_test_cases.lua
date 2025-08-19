@@ -84,6 +84,7 @@ return {
 		"local vararg = ...",
 		"export type MyType = { value: number }",
 		"type Generic<T> = { data: T }",
+		"type Props = { titleText: string, avatarThumbnail: string, avatarThumbnailDisplayHeight: number, bodyText: string?, primaryButtonText: string, onPrimaryButtonActivated: () -> ()?, secondaryButtonText: string?, onSecondaryButtonActivated: () -> ()?, closeCentralOverlayThunk: () -> any? }",
 		"local nil_val = nil",
 		"return",
 	},
