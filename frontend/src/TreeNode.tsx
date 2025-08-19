@@ -262,7 +262,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   // Handle hover to request code tooltip
   const handleMouseEnter = React.useCallback(() => {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
+    if (value && (typeof value === "object" || Array.isArray(value))) {
       // Only request if we don't have cached content
       if (!codeTooltips[nodeId]) {
         requestCodeTooltip(value, nodeKey);
