@@ -11,6 +11,7 @@ local function getNodePosition(node)
 	-- recursively find first descendant and best location occurence of position on node
 	if not nodeLine and not nodeCol and typeof(node) == "table" then
 		for _, child in node do
+			if typeof(child) ~= "table" then continue end
 			local childLine, childCol = getNodePosition(child)
 			if childLine and childCol then
 				if nodeLine and nodeCol then
