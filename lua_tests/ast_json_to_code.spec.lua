@@ -2,7 +2,7 @@ local fs = require("@lute/fs")
 local json = require("../lua_helpers/json")
 local parser = require("@std/syntax/parser")
 local process = require("@lute/process")
-local helpers = require("./helpers/ast_json_to_code_test_cases")
+local helpers = require("./helpers/ast_json_to_code_helpers")
 local e2eCases = helpers.testCases.e2eCases
 
 function trim(s)

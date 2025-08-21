@@ -1,6 +1,6 @@
 local printer = require("../lua_helpers/temp_vendor/lute_printer")
 local parser = require("@std/syntax/parser")
-local helpers = require("./helpers/ast_json_to_code_test_cases")
+local helpers = require("./helpers/ast_json_to_code_helpers")
 local printLocalCases = helpers.testCases.printLocalCases
 local createMockToken, createMockPunctuatedArray = helpers.createMockToken, helpers.createMockPunctuatedArray
 
@@ -63,18 +63,7 @@ local function test_real_ast_integration()
 	print("Testing integration with real AST nodes...")
 
 	-- Test with valid Luau code that produces various AST structures
-	local validCases = {
-		"local x = 1",
-		"function f() return ... end", -- varargs in function
-		"function g() return end", -- bare return in function
-		"while true do break end", -- break in loop
-		"for i = 1, 10 do continue end", -- continue in loop
-		"local t = {}",
-		"local a = { x = 1 }",
-		"type T = string",
-		"export type E = number",
-	}
-
+	local validCases = helpers.testCases.e2eCases
 	for _, code in ipairs(validCases) do
 		local parseSuccess, ast = pcall(function()
 			return parser.parse(code)
