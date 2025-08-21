@@ -1,6 +1,7 @@
 --!strict
 local luau = require("@lute/luau")
 local visitor = require("@std/syntax/visitor")
+local getSortedChildren = require("../sort_by_position_table")
 
 local function exhaustiveMatch(value: never): never
 	error(`Unknown value in exhaustive match: {value}`)
@@ -28,6 +29,31 @@ local function printToken(token: luau.Token): string
 	-- print("Printing Token:")
 	-- printTable(" ", token)
 	return printTriviaList(token.leadingTrivia or {}) .. token.text .. printTriviaList(token.trailingTrivia or {})
+end
+
+local function printFallback(node: any): string
+	--[[
+		Function to serve as fallback when nodes are not printable with printstatement, printexpr, printtype, printlocal, printtoken
+		Catches array nodes and other unique cases (nodes without tag that aren't tokens);
+		if array node: iteratively call printASTNode (tries to printstatement, printexpr, printtype, printlocal, printtoken on a node) on children
+		if non-array node: sort children by position, iteratively try to print children (same way as above)
+	]]
+	local nodeSrcStr = ""
+	if node[1] then -- handle arrays
+		for i = 1, #node do
+			nodeSrcStr ..= printASTNode(node[i]) or ""
+		end
+	else
+		local sortedChildren = getSortedChildren(node)
+		for key, child in sortedChildren do
+			-- print("printing child", key, child)
+			nodeSrcStr ..= printASTNode(child) or ""
+		end
+	end
+	if nodeSrcStr == "" then
+		error("Node is empty")
+	end
+	return nodeSrcStr
 end
 
 local function printString(expr: luau.AstExprConstantString): string
@@ -105,7 +131,12 @@ local function printVisitor()
 	end
 
 	printer.visitToken = function(node: luau.Token)
-		write(printToken(node))
+		if node.text then
+			write(printToken(node))
+		else -- if we get to this point, node has not been printable by any other functions, so we fallback to this exhaustive function
+			-- print("attempting fallback print")
+			write(printFallback(node))
+		end
 		return false
 	end
 
@@ -167,7 +198,7 @@ function printtoken(token: luau.Token): string
 end
 
 --- Returns a string representation of an AstStat
-local function printStatement(statement: luau.AstStat): string
+function printStatement(statement: luau.AstStat): string
 	local printer = printVisitor()
 	visitor.visitStatement(statement, printer)
 	return buffer.readstring(printer.result, 0, printer.cursor)
@@ -180,10 +211,51 @@ function printFile(result: { root: luau.AstStatBlock, eof: luau.Eof }): string
 	return buffer.readstring(printer.result, 0, printer.cursor)
 end
 
+function printType(node: luau.AstType): string
+	local printer = printVisitor()
+	visitor.visitType(node, printer)
+	return buffer.readstring(printer.result, 0, printer.cursor)
+end
+
+function printASTNode(astNode: any): string | nil
+	local code, success
+	success, code = pcall(function()
+		return printStatement(astNode)
+	end)
+	if not success then
+		success, code = pcall(function()
+			return printExpr(astNode)
+		end)
+	end
+	if not success then
+		success, code = pcall(function()
+			return printType(astNode)
+		end)
+	end
+	if not success then
+		if astNode.name and not (astNode.tag or astNode.type) then -- has to be AstLocal if this cond is true
+			success, code = pcall(function()
+				return printLocal(astNode)
+			end)
+		else
+			success, code = pcall(function()
+				return printtoken(astNode)
+			end)
+		end
+	end
+	if not success then
+		error(`Failed to print {astNode} with error message: {code}`)
+	end
+	return code
+end
+
 return {
+	printfallback = printFallback,
 	printtoken = printtoken,
 	printlocal = printLocal,
 	printexpr = printExpr,
+	printtype = printType,
 	printstatement = printStatement,
 	printfile = printFile,
+	printASTNode = printASTNode,
 }

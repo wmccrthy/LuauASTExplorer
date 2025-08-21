@@ -17,31 +17,12 @@ local sourceCode = fs.readfiletostring(sourceFilePath)
 
 local astNode = json.decode(sourceCode)
 
-local code, success
-success, code = pcall(function()
-	return printer.printstatement(astNode)
-end)
-if not success then
-	success, code = pcall(function()
-		return printer.printexpr(astNode)
-	end)
-end
-if not success then
-	if astNode._astType and string.find(astNode._astType, "Token") then
-		success, code = pcall(function()
-			return printer.printtoken(astNode)
-		end)
-	else
-		success, code = pcall(function()
-			return printer.printlocal(astNode)
-		end)
-	end
-end
+local code, success = printer.printASTNode(astNode)
 
 if success then
-	-- stylua it
+	-- stylua src code for readable output
 	fs.writestringtofile(sourceFilePath, code)
-	process.run({'stylua', sourceFilePath})
+	process.run({ "stylua", sourceFilePath })
 	code = fs.readfiletostring(sourceFilePath)
 end
 print(code)
