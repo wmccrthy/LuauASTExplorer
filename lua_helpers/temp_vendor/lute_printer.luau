@@ -34,7 +34,7 @@ end
 local function printFallback(node: any): string
 	--[[
 		Function to serve as fallback when nodes are not printable with printstatement, printexpr, printtype, printlocal, printtoken
-		Catches array nodes and other unique cases;
+		Catches array nodes and other unique cases (nodes without tag that aren't tokens);
 		if array node: iteratively call printASTNode (tries to printstatement, printexpr, printtype, printlocal, printtoken on a node) on children
 		if non-array node: sort children by position, iteratively try to print children (same way as above)
 		This can lead to recursive printFallback calls if the children are unprintable;
@@ -47,13 +47,9 @@ local function printFallback(node: any): string
 		end
 	else
 		local sortedChildren = getSortedChildren(node)
-		nodeSrcStr = ""
 		for key, child in sortedChildren do
 			-- print("printing child", key, child)
-			local childSrc = printASTNode(child)
-			if childSrc then
-				nodeSrcStr ..= childSrc
-			end
+			nodeSrcStr ..= printASTNode(child) or ""
 		end
 	end
 	return nodeSrcStr
