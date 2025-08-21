@@ -39,6 +39,9 @@ local function getSortedChildren(node: any)
 	local sorted = {}
 	-- print("Sorting", node, "by position")
 	for key, child in node do
+		if key == "beforeValue" or key == "afterValue" then -- filter out diff metadata
+			continue
+		end
 		local nodeLine, nodeCol = getNodePosition(child)
 		if nodeLine and nodeCol then
 			-- print("inserting", key, "for sorting")
