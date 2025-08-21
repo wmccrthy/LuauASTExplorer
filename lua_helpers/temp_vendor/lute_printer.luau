@@ -37,8 +37,6 @@ local function printFallback(node: any): string
 		Catches array nodes and other unique cases (nodes without tag that aren't tokens);
 		if array node: iteratively call printASTNode (tries to printstatement, printexpr, printtype, printlocal, printtoken on a node) on children
 		if non-array node: sort children by position, iteratively try to print children (same way as above)
-		This can lead to recursive printFallback calls if the children are unprintable;
-		This procedure has shown rly positive results in my empirical testing
 	]]
 	local nodeSrcStr = ""
 	if node[1] then -- handle arrays
