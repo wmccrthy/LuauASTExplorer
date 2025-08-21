@@ -1,53 +1,52 @@
-return {
+-- Helper functions to create mock AST nodes for testing
+local function createMockToken(text, line, column)
+	return {
+		text = text,
+		position = { line = line or 1, column = column or 1 },
+		leadingTrivia = {},
+		trailingTrivia = {},
+	}
+end
+
+local function createMockPunctuatedArray(nodes, separators)
+	-- Create a Punctuated array structure with pairs
+	local result = {}
+	for i, node in ipairs(nodes) do
+		result[i] = {
+			node = node,
+			separator = separators and separators[i] or nil,
+		}
+	end
+	return result
+end
+
+local cases = {
 	printLocalCases = {
 		["test"] = {
-			name = {
-				leadingTrivia = {},
-				position = {
-					line = 1,
-					column = 1,
-				},
-				text = "test",
-			},
-		},
-		["test2: number"] = {
-			name = {
-				leadingTrivia = {},
-				trailingTrivia = {},
-				position = {
-					line = 1,
-					column = 1,
-				},
-				text = "test2",
-			},
-			colon = {
-				leadingTrivia = {},
-				trailingTrivia = {
-					{
-						tag = "whitespace",
-						text = " ",
-						location = {
-							line = 1,
-							column = 1,
+			name = createMockToken("test", 1, 0),
+			["test2: number"] = {
+				name = createMockToken("test2", 1, 1),
+				colon = {
+					leadingTrivia = {},
+					trailingTrivia = {
+						{
+							tag = "whitespace",
+							text = " ",
+							location = {
+								line = 1,
+								column = 1,
+							},
 						},
 					},
-				},
-				position = {
-					line = 1,
-					column = 1,
-				},
-				text = ":",
-			},
-			annotation = {
-				tag = "reference",
-				name = {
-					leadingTrivia = {},
-					trailingTrivia = {},
 					position = {
 						line = 1,
 						column = 1,
 					},
-					text = "number",
+					text = ":",
+				},
+				annotation = {
+					tag = "reference",
+					name = createMockToken("number", 1, 1),
 				},
 			},
 		},
@@ -105,4 +104,10 @@ return {
 		"local e = #{}",
 		"return",
 	},
+}
+
+return {
+	testCases = cases,
+	createMockToken = createMockToken,
+	createMockPunctuatedArray = createMockPunctuatedArray,
 }

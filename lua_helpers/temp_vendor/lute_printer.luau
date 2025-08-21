@@ -249,6 +249,7 @@ function printASTNode(astNode: any): string | nil
 end
 
 return {
+	printfallback = printFallback,
 	printtoken = printtoken,
 	printlocal = printLocal,
 	printexpr = printExpr,

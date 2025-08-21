@@ -1,17 +1,9 @@
 local fs = require("@lute/fs")
-local printer = require("../lua_helpers/temp_vendor/lute_printer") -- temp vendoring printer until my updates to support printStatement are released
 local json = require("../lua_helpers/json")
 local parser = require("@std/syntax/parser")
 local process = require("@lute/process")
-local testCases = require("./helpers/ast_json_to_code_test_cases")
-local printLocalCases, e2eCases = testCases.printLocalCases, testCases.e2eCases
-
-local function printer_printlocal_test()
-	for expectedOutput, testCase in printLocalCases do
-		local result = printer.printlocal(testCase)
-		assert(result == expectedOutput, "Failed printlocal on node for src code: " .. expectedOutput)
-	end
-end
+local helpers = require("./helpers/ast_json_to_code_test_cases")
+local e2eCases = helpers.testCases.e2eCases
 
 function trim(s)
 	return s:gsub("^%s*(.-)%s*$", "%1")
@@ -37,6 +29,5 @@ local function ast_json_to_code_test()
 end
 
 return function()
-	printer_printlocal_test()
 	ast_json_to_code_test()
 end

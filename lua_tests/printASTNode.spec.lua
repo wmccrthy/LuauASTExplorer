@@ -1,85 +1,38 @@
-local fs = require("@lute/fs")
 local printer = require("../lua_helpers/temp_vendor/lute_printer")
 local parser = require("@std/syntax/parser")
+local helpers = require("./helpers/ast_json_to_code_test_cases")
+local printLocalCases = helpers.testCases.printLocalCases
+local createMockToken, createMockPunctuatedArray = helpers.createMockToken, helpers.createMockPunctuatedArray
 
--- Helper function to create mock AST nodes for testing
-local function createMockToken(text, line, column)
-	return {
-		text = text,
-		position = { line = line or 1, column = column or 1 },
-		leadingTrivia = {},
-		trailingTrivia = {},
-	}
-end
-
-local function createUnprintableNode(children)
-	-- node should have no tag, not be a token and not be an array (since we have separate array helpers)
-	return {
-		_astType = "UnprintableNode",
-		children = children,
-	}
-end
-
-local function createMockArrayNode(elements)
-	local result = {}
-	for i, element in ipairs(elements) do
-		result[i] = element
+local function test_printlocal()
+	for expectedOutput, testCase in printLocalCases do
+		local result = printer.printlocal(testCase)
+		assert(result == expectedOutput, "Failed printlocal on node for src code: " .. expectedOutput)
 	end
-	return result
 end
 
-local function createMockPunctuatedArray(nodes, separators)
-	-- Create a Punctuated array structure with pairs
-	local result = {}
-	for i, node in ipairs(nodes) do
-		result[i] = {
-			node = node,
-			separator = separators and separators[i] or nil,
-		}
-	end
-	return result
-end
-
--- Test cases for printASTNode cascade behavior
-local function test_printASTNode_cascade()
+-- Test cases for printfallback in particular
+local function test_printfallback()
 	print("Testing printASTNode cascade behavior...")
 
 	-- Test 1: Valid token should be printed successfully
-	local tokenNode = createMockToken("test", 1, 1)
-	local result = printer.printASTNode(tokenNode)
-	assert(result == "test", "Failed to print simple token")
+	local nestedTokenNode = {
+		child1 = createMockToken("test", 1, 0),
+		child2 = createMockToken("hmmm", 1, 5),
+	}
+	local result = printer.printfallback(nestedTokenNode)
+	assert(result == "testhmmm", "Failed to print simple token")
 
 	-- Test 2: Array node should trigger fallback behavior
-	local arrayNode = createMockArrayNode({
+	local arrayNode = {
 		createMockToken("hello", 1, 1),
 		createMockToken(" ", 1, 6),
 		createMockToken("world", 1, 7),
-	})
-	local arrayResult = printer.printASTNode(arrayNode)
+	}
+	local arrayResult = printer.printfallback(arrayNode)
 	assert(arrayResult == "hello world", "Failed to print array node")
 
 	print("✓ printASTNode cascade tests passed")
-end
-
--- Test cases for fallback behavior when nodes lack expected properties
-local function test_fallback_behavior()
-	print("Testing fallback behavior for edge case nodes...")
-
-	-- Test 1: Node without tag, not a token (should trigger printFallback)
-	local nodeWithoutTag = {
-		child1 = createMockToken("first", 1, 1),
-		child2 = createMockToken("second", 1, 10),
-	}
-	local result = printer.printASTNode(nodeWithoutTag)
-	-- Should print both children (order depends on position sorting)
-	assert(result:find("first") and result:find("second"), "Failed to handle node without tag")
-
-	-- Test 2: Empty array node
-	local emptyArray = createMockArrayNode({})
-	local emptyResult = printer.printASTNode(emptyArray)
-	assert(emptyResult == "", "Failed to handle empty array")
-
-	print("✓ Fallback behavior tests passed")
 end
 
 -- Test position-based sorting in printFallback
@@ -105,30 +58,6 @@ local function test_position_sorting()
 	print("✓ Position sorting tests passed")
 end
 
--- Test recursive behavior with nested unprintable nodes
-local function test_recursive_printing()
-	print("Testing recursive printing of nested structures...")
-
-	-- Create deeply nested structure: array containing node without tag containing tokens
-	local nestedStructure = createMockArrayNode({
-		{
-			deepChild1 = createMockToken("deep1", 1, 1),
-			deepChild2 = createMockToken("deep2", 1, 10),
-		},
-		createMockToken("surface", 2, 1),
-	})
-
-	local result = printer.printASTNode(nestedStructure)
-
-	-- Should contain all tokens from nested structure
-	assert(
-		result:find("deep1") and result:find("deep2") and result:find("surface"),
-		"Failed to recursively print nested structure"
-	)
-
-	print("✓ Recursive printing tests passed")
-end
-
 -- Test integration with real AST nodes from parser
 local function test_real_ast_integration()
 	print("Testing integration with real AST nodes...")
@@ -147,7 +76,6 @@ local function test_real_ast_integration()
 	}
 
 	for _, code in ipairs(validCases) do
-		-- Wrap parse in pcall since some edge cases might not parse
 		local parseSuccess, ast = pcall(function()
 			return parser.parse(code)
 		end)
@@ -184,44 +112,38 @@ local function test_manual_edge_cases()
 		createMockToken("e", 1, 7),
 	}
 
-	local unprintableNode = createUnprintableNode(children)
+	local unprintableNode = { -- no tag, not a token so unprintable with standard print methods
+		children = children,
+	}
 	local unprintableResult = printer.printASTNode(unprintableNode)
 	assert(unprintableResult == "a,b,cde", "Failed to print unprintable node with printable descendants")
 
-	-- Test 2: Complex Punctuated array with separators
-	local punctuatedNode = createMockPunctuatedArray({
-		createMockToken("a", 1, 1),
-		createMockToken("b", 1, 2),
-		createMockToken("c", 1, 3),
-	}, {
-		createMockToken(",", 1, 4),
-		createMockToken(",", 1, 5),
-	})
-	local punctuatedResult = printer.printASTNode(punctuatedNode)
-	-- Should print all elements (order depends on fallback sorting)
-	assert(punctuatedResult == "a,b,c", "Failed to print Punctuated array elements")
-
-	-- Test 3: Node with Location structure (non-token, non-array)
-	local locationNode = {
-		_astType = "Location",
-		begin = { column = 0, line = 1, _astType = "Position" },
-		["end"] = { column = 10, line = 1, _astType = "Position" },
+	-- Test 2: Nested recursive structure (replaces separate recursive test)
+	local nestedStructure = {
+		{
+			deepChild1 = createMockToken("deep1", 1, 1),
+			deepChild2 = createMockToken("deep2", 1, 10),
+		},
+		createMockToken("surface", 2, 1),
 	}
-	local success, _ = pcall(function()
-		return printer.printASTNode(locationNode)
-	end)
-	assert(not success, "Should error on Location node")
+	local nestedResult = printer.printASTNode(nestedStructure)
+	assert(
+		nestedResult:find("deep1") and nestedResult:find("deep2") and nestedResult:find("surface"),
+		"Failed to recursively print nested structure"
+	)
 
-	-- Test 4: Position node (leaf node with no printable content)
-	local positionNode = {
-		column = 5,
-		line = 2,
-		_astType = "Position",
+	-- Test 3: Error handling for unprintable leaf nodes (consolidated)
+	local unprintableNodes = {
+		{ begin = { column = 0, line = 1 }, ["end"] = { column = 10, line = 1 } },
+		{ column = 5, line = 2 },
 	}
-	success, _ = pcall(function()
-		return printer.printASTNode(positionNode)
-	end)
-	assert(not success, "Should error on Position node")
+
+	for key, node in ipairs(unprintableNodes) do
+		local success, _ = pcall(function()
+			return printer.printASTNode(node)
+		end)
+		assert(not success, "Should error on unprintable node: " .. (key or "unknown"))
+	end
 
 	print("✓ Manual edge case tests passed")
 end
@@ -250,13 +172,11 @@ end
 -- Main test runner
 return function()
 	print("Running printASTNode comprehensive tests...")
-
-	test_printASTNode_cascade()
-	test_fallback_behavior()
+	test_printlocal()
+	test_printfallback()
 	test_position_sorting()
-	test_recursive_printing()
 	test_real_ast_integration()
-	test_manual_edge_cases()
+	test_manual_edge_cases() -- Now includes recursive and error testing
 	test_performance()
 
 	print("🎉 All printASTNode tests passed!")

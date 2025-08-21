@@ -3,7 +3,7 @@ local visitor = require("@std/syntax/visitor")
 
 local typeAnnotationVisitor = visitor.createVisitor()
 
-local e2ecases = require("./ast_json_to_code_test_cases").e2eCases
+local e2ecases = require("./ast_json_to_code_test_cases").testCases.e2eCases
 
 --[[
     In writing these tests, I realized we could have just used visitor to annotate types in the first place... (perhaps revisit later)
