@@ -52,6 +52,9 @@ local function printFallback(node: any): string
 			nodeSrcStr ..= printASTNode(child) or ""
 		end
 	end
+	if nodeSrcStr == "" then
+		error("Node is empty")
+	end
 	return nodeSrcStr
 end
 

@@ -1,6 +1,7 @@
 local printer = require("../lua_helpers/temp_vendor/lute_printer")
 local parser = require("@std/syntax/parser")
 local helpers = require("./helpers/ast_json_to_code_helpers")
+local getSortedChildren = require("../lua_helpers/sort_by_position_table")
 local printLocalCases = helpers.testCases.printLocalCases
 local createMockToken, createMockPunctuatedArray = helpers.createMockToken, helpers.createMockPunctuatedArray
 
@@ -46,6 +47,10 @@ local function test_position_sorting()
 		middleChild = createMockToken("middle", 1, 10), -- line 1, col 10
 	}
 
+	local sortedNode = getSortedChildren(unsortedNode)
+	local isSorted = sortedNode[1].text == "first" and sortedNode[2].text == "middle" and sortedNode[3].text == "second"
+	assert(isSorted, "getSortedChildren failed to order elements based on line and column")
+
 	local result = printer.printASTNode(unsortedNode)
 
 	-- Result should be sorted by position: line 1 col 1, line 1 col 10, line 2 col 1
@@ -87,7 +92,7 @@ end
 local function test_manual_edge_cases()
 	print("Testing manually constructed edge case nodes...")
 
-	-- Test 1: Test unprintable node with printable descendants
+	-- Test 1: Test unprintable node with printable descendants (nested and unnested to test recursive)
 	local children = {
 		createMockPunctuatedArray({
 			createMockToken("a", 1, 1),
@@ -105,30 +110,16 @@ local function test_manual_edge_cases()
 		children = children,
 	}
 	local unprintableResult = printer.printASTNode(unprintableNode)
-	assert(unprintableResult == "a,b,cde", "Failed to print unprintable node with printable descendants")
+	assert(unprintableResult == "a,b,cde", "Failed to print node with printable descendants")
 
-	-- Test 2: Nested recursive structure (replaces separate recursive test)
-	local nestedStructure = {
-		{
-			deepChild1 = createMockToken("deep1", 1, 1),
-			deepChild2 = createMockToken("deep2", 1, 10),
-		},
-		createMockToken("surface", 2, 1),
-	}
-	local nestedResult = printer.printASTNode(nestedStructure)
-	assert(
-		nestedResult:find("deep1") and nestedResult:find("deep2") and nestedResult:find("surface"),
-		"Failed to recursively print nested structure"
-	)
-
-	-- Test 3: Error handling for unprintable leaf nodes (consolidated)
+	-- Test 2: Error handling for unprintable leaf nodes (consolidated)
 	local unprintableNodes = {
 		{ begin = { column = 0, line = 1 }, ["end"] = { column = 10, line = 1 } },
 		{ column = 5, line = 2 },
 	}
 
 	for key, node in ipairs(unprintableNodes) do
-		local success, _ = pcall(function()
+		local success, _res = pcall(function()
 			return printer.printASTNode(node)
 		end)
 		assert(not success, "Should error on unprintable node: " .. (key or "unknown"))
