@@ -188,7 +188,6 @@
   background-color: rgba(248, 81, 73, 0.2);
   border-left: 3px solid #dc3545;
   padding-left: 4px;
-  text-decoration: line-through;
 }
 
 .diff-updated {
