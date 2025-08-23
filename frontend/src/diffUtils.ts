@@ -7,11 +7,7 @@ export function annotateDiffTree(
 ): { diffTree: DiffASTNode; changes: JsonDiffChange[] } {
   // Generate diff using json-diff-ts
   const changes = diff(beforeAST, afterAST);
-
-  // Convert json-diff-ts format to our JsonDiffChange format (preserving nested structure)
-  const formattedChanges: JsonDiffChange[] = changes.map((change) =>
-    convertNestedChange(change)
-  );
+  const formattedChanges = changes as JsonDiffChange[];
 
   // Create a deep copy of the afterAST as our base tree
   const diffTree = deepClone(afterAST) as DiffASTNode;
@@ -30,28 +26,9 @@ export function annotateDiffTree(
 }
 
 /**
- * Converts a nested json-diff-ts change to our format
- */
-function convertNestedChange(change: any): JsonDiffChange {
-  const converted: JsonDiffChange = {
-    type: change.type as "ADD" | "REMOVE" | "UPDATE",
-    key: change.key,
-    value: change.value,
-    oldValue: change.oldValue,
-    embeddedKey: change.embeddedKey,
-  };
-
-  if (change.changes && Array.isArray(change.changes)) {
-    converted.changes = change.changes.map(convertNestedChange);
-  }
-
-  return converted;
-}
-
-/**
  * Builds a flat map of paths to changes from the nested structure
  */
-function buildChangeMap(
+export function buildChangeMap(
   changes: JsonDiffChange[],
   parentPath: string,
   changeMap: Map<string, JsonDiffChange>
@@ -75,7 +52,7 @@ function buildChangeMap(
  * Get direct child changes given a nodePath and changeMap
  * Returns filtered changeMap only containing changes in children of node at nodePath
  */
-function getDirectChildChanges(
+export function getDirectChildChanges(
   nodePath: string,
   changeMap: Map<string, JsonDiffChange>
 ): [string[], boolean] {
@@ -97,7 +74,7 @@ function getDirectChildChanges(
  * Set childChanges property given a node and array of changed children keys
  * (WIP) injects removed nodes on the fly
  */
-function setChildChanges(
+export function setChildChanges(
   node: DiffASTNode,
   nodePath: string,
   directChildChanges: string[],
@@ -128,7 +105,7 @@ function setChildChanges(
 /**
  * Recursively walks the tree and annotates nodes based on detected changes
  */
-function annotateDiffTreeRecursive(
+export function annotateDiffTreeRecursive(
   node: DiffASTNode,
   changeMap: Map<string, JsonDiffChange>,
   beforeNode: any,
@@ -159,7 +136,7 @@ function annotateDiffTreeRecursive(
             break;
           case "REMOVE":
             node.diffStatus = "removed";
-            node.beforeValue = directChange.oldValue;
+            node.beforeValue = directChange.value.beforeValue; // avoid circular referencing
             node.afterValue = undefined;
             break;
           case "UPDATE":
@@ -302,7 +279,7 @@ export function getChangeDescription(change: JsonDiffChange): string {
     case "ADD":
       return `Added: ${change.value}`;
     case "REMOVE":
-      return `Removed: ${change.oldValue}`;
+      return `Removed: ${change.value}`;
     case "UPDATE":
       return `Changed: ${change.oldValue} → ${change.value}`;
     default:
