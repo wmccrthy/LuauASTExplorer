@@ -2,7 +2,7 @@ import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
 import { unpackArrayType } from "./utils/astTypeHelpers";
 
 export const autoCollapseTypes = [
-  "Token",
+  // "Token",
   "Whitespace",
   "SingleLineComment",
   "MultiLineComment",

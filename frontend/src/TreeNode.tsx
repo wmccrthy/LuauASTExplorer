@@ -113,7 +113,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               beforeValue: child.beforeValue,
               afterValue: child.afterValue,
             }
-          : childChange // handles cases where child is primitive value
+          : childChange // handles cases where child is primitive value (since diffStatus wont exist on the child node itself)
           ? {
               isDiffMode,
               diffStatus:
@@ -174,7 +174,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       case "contains-changes":
       case "contains-nested-changes":
         return expanded ? (
-          ""
+          <span className="diff-indicator"></span>
         ) : (
           <span className="diff-indicator diff-updated-indicator">○</span>
         );
@@ -196,13 +196,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
       switch (diffStatus) {
         case "added":
-          return highlightText(`${nodeKey}: ${displayValue}`);
         case "removed":
-          const beforeDisplayValue =
-            typeof beforeValue === "string"
-              ? `"${beforeValue}"`
-              : String(beforeValue);
-          return highlightText(`${nodeKey}: ${beforeDisplayValue}`);
+          return highlightText(`${nodeKey}: ${displayValue}`);
         case "updated":
           const beforeDisplay =
             typeof beforeValue === "string"

@@ -69,7 +69,6 @@ export interface JsonDiffChange {
   key: string;
   value?: any;
   oldValue?: any;
-  embeddedKey?: string | any;
   changes?: JsonDiffChange[]; // For nested changes
 }
 
