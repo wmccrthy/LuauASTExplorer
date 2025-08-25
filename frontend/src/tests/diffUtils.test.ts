@@ -27,9 +27,7 @@ var obj1: astNode = {
   },
   unnestedText: "b",
   array: {
-    items: {
-      0: "a",
-    },
+    items: ["a"],
   },
   removedText: "bye",
 };
@@ -43,21 +41,14 @@ var obj2: astNode = {
   },
   unnestedText: "a",
   array: {
-    items: {},
+    items: [],
   },
   add: {
     nestedAdd: {
-      doubleNested: {}
+      doubleNested: {},
     },
   },
 };
-// const expectedChildChanges = new Map<string, any[]>(); // map path to [# of expected childChanges, childChange keys]
-// expectedChildChanges.set("", [2, "unnestedText", "removedText"]);
-// expectedChildChanges.set("value", [2, "value.text", "value.newText"]);
-// expectedChildChanges.set("value.doubleNest", [1, "value.doubleNest.a"]);
-// expectedChildChanges.set("array", [1, "array.0"]);
-// expectedChildChanges.set("unnestedText", [0]);
-// expectedChildChanges.set("removedText", [0]);
 
 const changeMap = getChangeMap(obj1, obj2);
 
@@ -83,16 +74,6 @@ describe("diffUtils test", () => {
   // we can test by manually constructing objects (ob1 -> obj2), getting diff, building changeMap. Then check that changeMap contains the paths we manually change in obj construction
   // essentially want to ensure that paths are correct,
   test("buildChangeMap", () => {
-    // expectedChildChanges.forEach((nodeChildChanges, nodePath) => {
-    //   if (nodeChildChanges[0] > 0) {
-    //     expect(changeMap.get(nodePath)).toBeUndefined();
-    //     nodeChildChanges.forEach((changePath) => {
-    //       if (typeof changePath === "string") {
-    //         expect(changeMap.get(changePath)).toBeDefined();
-    //       }
-    //     });
-    //   }
-    // });
     expect(changeMap.get("value.text")).toBeDefined();
     expect(changeMap.get("value.text")?.type).toEqual("UPDATE");
     expect(changeMap.get("value.doubleNest.a")).toBeDefined();
@@ -189,8 +170,35 @@ describe("diffUtils test", () => {
     expect(diffTree.value.diffStatus).toEqual("contains-changes");
     expect(diffTree.value.doubleNest.diffStatus).toEqual("contains-changes");
     expect(diffTree.array.diffStatus).toEqual("contains-nested-changes");
+    expect(diffTree.array.items.diffStatus).toEqual("contains-changes");
     expect(diffTree.add.diffStatus).toEqual("added");
     expect(diffTree.add.nestedAdd.diffStatus).toEqual("nested-add");
-    expect(diffTree.add.nestedAdd.doubleNested.diffStatus).toEqual("nested-add");
+    expect(diffTree.add.nestedAdd.doubleNested.diffStatus).toEqual(
+      "nested-add"
+    );
+  });
+
+  /**
+   * Test edge case: empty objects and arrays
+   */
+  test("empty object and array handling", () => {
+    const obj1 = {
+      emptyObj: {},
+      emptyArray: [],
+      data: { value: "test" },
+    };
+    const obj2 = {
+      emptyObj: { newProp: "added" },
+      emptyArray: ["newItem"],
+      data: {},
+    };
+
+    const result = annotateDiffTree(obj1, obj2);
+    const diffTree = result.diffTree;
+
+    expect(diffTree.diffStatus).toEqual("contains-nested-changes");
+    expect(diffTree.emptyObj.diffStatus).toEqual("contains-changes");
+    expect(diffTree.emptyArray.diffStatus).toEqual("contains-changes");
+    expect(diffTree.data.diffStatus).toEqual("contains-changes");
   });
 });
