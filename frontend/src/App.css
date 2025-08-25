@@ -181,25 +181,21 @@
 .diff-added {
   background-color: color-mix(in srgb, var(--vscode-gitDecoration-addedResourceForeground, #28a745) 20%, transparent);
   border-left: 3px solid var(--vscode-gitDecoration-addedResourceForeground, #28a745);
-  padding-left: 4px;
 }
 
 .diff-removed {
   background-color: color-mix(in srgb, var(--vscode-gitDecoration-deletedResourceForeground, #dc3545) 20%, transparent);
   border-left: 3px solid var(--vscode-gitDecoration-deletedResourceForeground, #dc3545);
-  padding-left: 4px;
 }
 
 .diff-updated {
   background-color: color-mix(in srgb, var(--vscode-gitDecoration-modifiedResourceForeground, #3490dc) 20%, transparent);
   border-left: 3px solid var(--vscode-gitDecoration-modifiedResourceForeground, #3490dc);
-  padding-left: 4px;
 }
 
 /* Styling for parent nodes that contain changes */
 .diff-contains-changes {
   border-left: 3px solid var(--vscode-gitDecoration-modifiedResourceForeground, #3490dc);
-  padding-left: 4px;
   background-color: color-mix(in srgb, var(--vscode-gitDecoration-modifiedResourceForeground, #3490dc) 5%, transparent);
 }
 
