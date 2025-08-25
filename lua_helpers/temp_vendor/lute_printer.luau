@@ -238,7 +238,7 @@ function filterNodeForPrinting(node: any)
 end
 
 function printASTNode(astNode: any): string | nil
-	-- filter invalid nodes that are lefover from diff annotations
+	-- filter nodes lefover from diff annotations that we DONT want to print
 	astNode = filterNodeForPrinting(astNode)
 	local code, success
 	success, code = pcall(function()
@@ -272,6 +272,7 @@ function printASTNode(astNode: any): string | nil
 end
 
 return {
+	filterNodeForPrinting = filterNodeForPrinting,
 	printfallback = printFallback,
 	printtoken = printtoken,
 	printlocal = printLocal,
