@@ -46,7 +46,9 @@ var obj2: astNode = {
     items: {},
   },
   add: {
-    nestedAdd: {},
+    nestedAdd: {
+      doubleNested: {}
+    },
   },
 };
 // const expectedChildChanges = new Map<string, any[]>(); // map path to [# of expected childChanges, childChange keys]
@@ -114,6 +116,7 @@ describe("diffUtils test", () => {
     testChildChanges("", true, 3, ["unnestedText", "removedText", "add"]);
     testChildChanges("array.items", false, 1, ["array.items.0"]);
     testChildChanges("unnestedText", false, 0, []);
+    testChildChanges("add", false, 0, []);
   });
 
   /**
@@ -188,5 +191,6 @@ describe("diffUtils test", () => {
     expect(diffTree.array.diffStatus).toEqual("contains-nested-changes");
     expect(diffTree.add.diffStatus).toEqual("added");
     expect(diffTree.add.nestedAdd.diffStatus).toEqual("nested-add");
+    expect(diffTree.add.nestedAdd.doubleNested.diffStatus).toEqual("nested-add");
   });
 });
