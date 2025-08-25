@@ -137,7 +137,6 @@ local typeDefinitions = {
 		["varargAnnotation"] = "AstTypePack",
 		["returnAnnotation"] = "AstTypePack",
 		["returnTypes"] = "AstTypePack",
-		["vararg"] = "AstTypePack",
 		["tailType"] = "AstTypePack",
 
 		-- Special properties
