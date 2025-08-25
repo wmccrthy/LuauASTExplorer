@@ -50,29 +50,30 @@ export function buildChangeMap(
 
 /**
  * Get direct child changes given a nodePath and changeMap
- * Returns filtered changeMap only containing changes in children of node at nodePath
+ * Returns filtered changeMap array containing child paths of nodePath
  */
 export function getDirectChildChanges(
   nodePath: string,
   changeMap: Map<string, JsonDiffChange>
 ): [string[], boolean] {
-  let anyDescendantChanges = false;
+  let nestedDescendantChanges = false;
   return [
     Array.from(changeMap.keys()).filter((path) => {
       const pathPrefix = nodePath ? `${nodePath}.` : "";
       if (!path.startsWith(pathPrefix)) return false;
-      const remainingPath = path.substring(nodePath.length + 1);
+      const remainingPath =
+        nodePath == "" ? path : path.substring(nodePath.length + 1);
       const isDirectChild = !remainingPath.includes("."); // No further dots = direct child
-      anyDescendantChanges = anyDescendantChanges || !isDirectChild;
+      nestedDescendantChanges = nestedDescendantChanges || !isDirectChild;
       return isDirectChild;
     }),
-    anyDescendantChanges,
+    nestedDescendantChanges,
   ];
 }
 
 /**
  * Set childChanges property given a node and array of changed children keys
- * (WIP) injects removed nodes on the fly
+ * Injects removed nodes on the fly
  */
 export function setChildChanges(
   node: DiffASTNode,
@@ -82,7 +83,8 @@ export function setChildChanges(
 ): void {
   (node as any).childChanges = directChildChanges.reduce((acc, changePath) => {
     const change = changeMap.get(changePath);
-    const childKey = changePath.substring(nodePath.length + 1);
+    const childKey =
+      nodePath == "" ? changePath : changePath.substring(nodePath.length + 1);
     if (change?.type == "REMOVE") {
       console.log("Injecting removal:", change);
       // inject removed child to node
@@ -120,7 +122,7 @@ export function annotateDiffTreeRecursive(
     const directChange = changeMap.get(currentPath);
 
     // Find immediate child and descendant changes
-    const [directChildChanges, anyDescendantChanges] = getDirectChildChanges(
+    const [directChildChanges, nestedDescendantChanges] = getDirectChildChanges(
       currentPath,
       changeMap
     );
@@ -156,7 +158,7 @@ export function annotateDiffTreeRecursive(
 
       // Store change information for child rendering with full path context
       setChildChanges(node, currentPath, directChildChanges, changeMap);
-    } else if (anyDescendantChanges) {
+    } else if (nestedDescendantChanges) {
       node.diffStatus = "contains-nested-changes";
     } else if (!directChange) {
       node.diffStatus = "unchanged";
