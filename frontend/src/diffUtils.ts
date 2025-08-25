@@ -128,7 +128,7 @@ export function annotateDiffTreeRecursive(
     );
 
     if (directChange) {
-      // This node itself has changed - annotate it if possible
+      // This node itself has changed - annotate it if possible (only occurs for primitive values, objects can only contain child/nested changes)
       if (typeof node === "object" && node !== null) {
         switch (directChange.type) {
           case "ADD":
@@ -222,7 +222,6 @@ export function annotateDiffTreeRecursive(
         // Handle arrays - use dot notation to match json-diff-ts format
         node[key].forEach((item: any, index: number) => {
           if (item && typeof item === "object") {
-            // console.log("Handling array item:", item, index);
             const arrayPath = `${childPath}.${index}`;
             annotateDiffTreeRecursive(
               item,
