@@ -62,7 +62,7 @@ export function getDirectChildChanges(
       const pathPrefix = nodePath ? `${nodePath}.` : "";
       if (!path.startsWith(pathPrefix)) return false;
       const remainingPath =
-        nodePath == "" ? path : path.substring(nodePath.length + 1);
+        nodePath === "" ? path : path.substring(nodePath.length + 1);
       const isDirectChild = !remainingPath.includes("."); // No further dots = direct child
       nestedDescendantChanges = nestedDescendantChanges || !isDirectChild;
       return isDirectChild;
@@ -84,8 +84,8 @@ export function setChildChanges(
   (node as any).childChanges = directChildChanges.reduce((acc, changePath) => {
     const change = changeMap.get(changePath);
     const childKey =
-      nodePath == "" ? changePath : changePath.substring(nodePath.length + 1);
-    if (change?.type == "REMOVE") {
+      nodePath === "" ? changePath : changePath.substring(nodePath.length + 1);
+    if (change?.type === "REMOVE") {
       console.log("Injecting removal:", change);
       // inject removed child to node
       node[childKey] = change.value;
