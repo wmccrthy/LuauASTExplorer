@@ -138,6 +138,7 @@ function annotateNodeWithChanges(
   changeMap: Map<string, JsonDiffChange>,
   hasAdd: boolean
 ): void {
+  // check if exact path has a change
   const directChange = changeMap.get(nodePath);
   if (directChange) {
     setDirectChange(node, directChange);
@@ -174,7 +175,6 @@ export function annotateDiffTreeRecursive(
     node.diffStatus = "nested-add";
   } // simple check and can bypass subsequent checks of directChange/childChanges
   else {
-    // Check if this exact path has a direct change
     annotateNodeWithChanges(node, currentPath, changeMap, hasAdd as boolean);
   }
 
@@ -193,34 +193,11 @@ export function annotateDiffTreeRecursive(
 
       const childPath = currentPath ? `${currentPath}.${key}` : key;
       const beforeChildNode = beforeNode?.[key];
-      if (Array.isArray(node[key])) {
-        const arrayHasAdd = node.diffStatus === "added" || hasAdd;
-
-        // Use helper function to reduce redundancy
-        annotateNodeWithChanges(
-          node[key],
-          childPath,
-          changeMap,
-          arrayHasAdd as boolean
-        );
-
-        // Handle arrays - use dot notation to match json-diff-ts format
-        node[key].forEach((item: any, index: number) => {
-          if (item && typeof item === "object") {
-            const itemPath = `${childPath}.${index}`;
-            annotateDiffTreeRecursive(
-              item,
-              changeMap,
-              beforeChildNode?.[index],
-              itemPath,
-              node[key].diffStatus === "added" ||
-                node[key].diffStatus === "nested-add" ||
-                hasAdd
-            );
-          }
-        });
-      } else if (node[key] && typeof node[key] === "object") {
-        // Handle nested objects
+      if (
+        node[key] &&
+        (typeof node[key] === "object" || Array.isArray(node[key]))
+      ) {
+        // Handle nested objects/arrays
         annotateDiffTreeRecursive(
           node[key],
           changeMap,
