@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
@@ -23,6 +23,10 @@ interface TreeNodeProps {
   typeDefinition: ASTTypeDefinition | undefined;
   kind: string;
   arrayType: boolean;
+  prevType: string;
+  prevTypeDefinition: ASTTypeDefinition | undefined;
+  prevKind: string;
+  prevArrayType: boolean;
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
@@ -49,6 +53,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   typeDefinition,
   kind,
   arrayType,
+  prevType,
+  prevTypeDefinition,
+  prevKind,
+  prevArrayType,
   searchTerm = "",
   isDiffMode = false,
   diffStatus = "unchanged",
@@ -68,14 +76,38 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   const renderTypeAnnotations = React.useCallback(() => {
     if (type) {
-      return (
+      const currentTypeAnnotation = (
         <TypeAnnotation
           typeName={type}
           typeDefinition={typeDefinition}
           isArrayType={arrayType}
           kind={kind}
+          hasPrevType={type !== prevType}
         ></TypeAnnotation>
       );
+
+      if (type !== prevType) {
+        // if type ~= prevType, display type before/after very similar to how we display value before/after...
+        return (
+          <React.Fragment>
+            <span className="diff-before">
+              {
+                <TypeAnnotation
+                  typeName={prevType}
+                  typeDefinition={prevTypeDefinition}
+                  isArrayType={prevArrayType}
+                  kind={prevKind}
+                ></TypeAnnotation>
+              }
+            </span>
+            <span className="diff-arrow"> → </span>
+            {/* want negative padding on bottom span */}
+            <span>{currentTypeAnnotation}</span>
+          </React.Fragment>
+        );
+      } else {
+        return currentTypeAnnotation;
+      }
     }
     return null;
   }, [type, arrayType, typeDefinition, kind]);
@@ -397,9 +429,28 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           // Pass through diff props for child nodes if they have diff annotations
           const childValue = value[key];
           const childDiffProps = getChildDiffProps(value, key, childValue);
-          const childPropertyDefinition = typeDefinition?.properties?.find(
+          let childPropertyDefinition = typeDefinition?.properties?.find(
             (prop) => prop.name === key
           );
+
+          // handle childPropertyDefinition differently when node is removed; since in object case, this implies a key no longer exists, it indicates the node type has changed
+          // so we need to ensure the childPropertyDefinition is adjusted appopriately given it was a child of the previous node value
+          if (
+            value.childChanges &&
+            value.childChanges[key] &&
+            value.childChanges[key].type === "REMOVE"
+          ) {
+            console.log(
+              "Setting type definition for removed node:",
+              key,
+              prevTypeDefinition,
+              prevType
+            );
+            childPropertyDefinition = prevTypeDefinition?.properties?.find(
+              (prop) => prop.name === key
+            );
+          }
+
           const parentInferredType = childPropertyDefinition?.generic
             ? childPropertyDefinition.generic
             : childPropertyDefinition?.type;
@@ -457,6 +508,27 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     return [undefined, false];
   }, [type]);
 
+  // do the above once each for old and new values on contains-changes nodes
+  const [prevType, prevKind] = React.useMemo(() => {
+    const childChanges = props.value.childChanges;
+    if (childChanges && (childChanges._astType || childChanges.kind)) {
+      const hackVal = {
+        _astType: childChanges._astType
+          ? childChanges._astType.oldValue
+          : undefined,
+        kind: childChanges.kind ? childChanges.kind.oldValue : undefined,
+      };
+      return getTypeString(hackVal, props.nodeKey, undefined); // don't want to use
+    }
+    return [type, kind]; // if type not in changes, return already computed (prevType is same as currentType)
+  }, [type, kind, props.value, props.nodeKey]);
+  const [prevTypeDefinition, prevArrayType] = React.useMemo(() => {
+    if (prevType) {
+      return getType(prevType);
+    }
+    return [undefined, false];
+  }, [prevType]);
+
   const autoCollapse = props.isDiffMode
     ? props.diffStatus === "unchanged" ||
       shouldAutoCollapse(type, typeDefinition)
@@ -482,6 +554,10 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
       typeDefinition={typeDefinition}
       kind={kind}
       arrayType={arrayType}
+      prevType={prevType}
+      prevTypeDefinition={prevTypeDefinition}
+      prevArrayType={prevArrayType}
+      prevKind={prevKind}
     />
   );
 };
