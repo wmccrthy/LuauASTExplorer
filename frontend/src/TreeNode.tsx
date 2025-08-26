@@ -512,6 +512,7 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
 
   const autoCollapse = props.isDiffMode
     ? props.diffStatus === "unchanged" ||
+      props.diffStatus === "removed" ||
       shouldAutoCollapse(type, typeDefinition)
     : shouldAutoCollapse(type, typeDefinition);
 
