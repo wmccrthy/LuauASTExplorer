@@ -7,6 +7,7 @@ export interface TypeAnnotationProps {
   typeDefinition?: ASTTypeDefinition;
   isArrayType: boolean;
   kind: string;
+  hasPrevType?: boolean;
 }
 
 export const TypeAnnotation: React.FC<TypeAnnotationProps> = ({
@@ -14,6 +15,7 @@ export const TypeAnnotation: React.FC<TypeAnnotationProps> = ({
   typeDefinition,
   isArrayType,
   kind,
+  hasPrevType = false
 }) => {
   return (
     <span className="ast-annotations">
@@ -24,7 +26,7 @@ export const TypeAnnotation: React.FC<TypeAnnotationProps> = ({
         arrayType={isArrayType}
         kind={kind}
       >
-        <span className="type-annotation"> (type: {typeName})</span>
+        <span className={`type-annotation ${hasPrevType ? "" : "prev-type"}`}>(type: {typeName})</span>
       </TypeTooltip>
     </span>
   );

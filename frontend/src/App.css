@@ -409,6 +409,10 @@
   transition: color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
 }
 
+.prev-type {
+  margin-left: 2%;
+}
+
 .type-annotation:hover,
 .type-annotation:focus-visible {
   color: var(--vscode-textLink-foreground, #007acc);
