@@ -6,10 +6,11 @@ import {
   getTypeString,
   getType,
   unpackArrayType,
+  getChildPropertyDefinition,
 } from "./utils/astTypeHelpers";
 import { CodeTooltip } from "./components/CodeTooltip";
 
-import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
+import { TypeMetadata } from "./utils/astTypeDefinitions";
 import { useCodeTranslationContext } from "./context/codeTranslationContext";
 
 interface TreeNodeProps {
@@ -19,14 +20,7 @@ interface TreeNodeProps {
   expanded: boolean;
   onToggle: () => void;
   path: string;
-  type: string;
-  typeDefinition: ASTTypeDefinition | undefined;
-  kind: string;
-  arrayType: boolean;
-  prevType: string;
-  prevTypeDefinition: ASTTypeDefinition | undefined;
-  prevKind: string;
-  prevArrayType: boolean;
+  typeMetadata: TypeMetadata;
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
@@ -49,14 +43,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   expanded,
   path,
   onToggle,
-  type,
-  typeDefinition,
-  kind,
-  arrayType,
-  prevType,
-  prevTypeDefinition,
-  prevKind,
-  prevArrayType,
+  typeMetadata,
   searchTerm = "",
   isDiffMode = false,
   diffStatus = "unchanged",
@@ -75,28 +62,29 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   }, [value, nodeKey, generateNodeId]);
 
   const renderTypeAnnotations = React.useCallback(() => {
-    if (type) {
+    if (typeMetadata.type) {
+      const changedType = typeMetadata.type !== typeMetadata.prevType;
       const currentTypeAnnotation = (
         <TypeAnnotation
-          typeName={type}
-          typeDefinition={typeDefinition}
-          isArrayType={arrayType}
-          kind={kind}
-          hasPrevType={type !== prevType}
+          typeName={typeMetadata.type}
+          typeDefinition={typeMetadata.typeDefinition}
+          isArrayType={typeMetadata.arrayType}
+          kind={typeMetadata.kind}
+          hasPrevType={changedType}
         ></TypeAnnotation>
       );
 
-      if (type !== prevType && prevType) {
+      if (changedType && typeMetadata.prevType) {
         // if type ~= prevType, display type before/after very similar to how we display value before/after...
         return (
           <React.Fragment>
             <span className="diff-before">
               {
                 <TypeAnnotation
-                  typeName={prevType}
-                  typeDefinition={prevTypeDefinition}
-                  isArrayType={prevArrayType}
-                  kind={prevKind}
+                  typeName={typeMetadata.prevType}
+                  typeDefinition={typeMetadata.prevTypeDefinition}
+                  isArrayType={typeMetadata.prevArrayType}
+                  kind={typeMetadata.prevKind}
                 ></TypeAnnotation>
               }
             </span>
@@ -110,16 +98,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       }
     }
     return null;
-  }, [
-    type,
-    arrayType,
-    typeDefinition,
-    kind,
-    prevType,
-    prevTypeDefinition,
-    prevArrayType,
-    prevKind,
-  ]);
+  }, [typeMetadata]);
 
   // Get diff-specific styling
   const getDiffClassName = React.useCallback(() => {
@@ -341,7 +320,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
 
     // check if node is an array of a Punctuated type (TO-DO: add more robust check than this)
-    const punctuatedType = typeDefinition?.properties?.find(
+    const punctuatedType = typeMetadata.typeDefinition?.properties?.find(
       (item) => item.name === ""
     );
 
@@ -438,21 +417,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           // Pass through diff props for child nodes if they have diff annotations
           const childValue = value[key];
           const childDiffProps = getChildDiffProps(value, key, childValue);
-          let childPropertyDefinition = typeDefinition?.properties?.find(
-            (prop) => prop.name === key
+          const childPropertyDefinition = getChildPropertyDefinition(
+            typeMetadata,
+            value.childChanges,
+            key
           );
-
-          // handle childPropertyDefinition differently when node is removed; since in object case, this implies a key no longer exists, it indicates the node type has changed
-          // so we need to ensure the childPropertyDefinition is adjusted appopriately given it was a child of the previous node value
-          if (
-            value.childChanges &&
-            value.childChanges[key] &&
-            value.childChanges[key].type === "REMOVE"
-          ) {
-            childPropertyDefinition = prevTypeDefinition?.properties?.find(
-              (prop) => prop.name === key
-            );
-          }
 
           const parentInferredType = childPropertyDefinition?.generic
             ? childPropertyDefinition.generic
@@ -530,6 +499,17 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     return [undefined, false];
   }, [prevType]);
 
+  const typeMetadata = {
+    type: type,
+    typeDefinition: typeDefinition,
+    arrayType: arrayType,
+    kind: kind,
+    prevType: prevType,
+    prevTypeDefinition: prevTypeDefinition,
+    prevArrayType: prevArrayType,
+    prevKind: prevKind,
+  };
+
   const autoCollapse = props.isDiffMode
     ? props.diffStatus === "unchanged" ||
       shouldAutoCollapse(type, typeDefinition)
@@ -551,14 +531,7 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
       {...props}
       expanded={expanded}
       onToggle={handleToggle}
-      type={type}
-      typeDefinition={typeDefinition}
-      kind={kind}
-      arrayType={arrayType}
-      prevType={prevType}
-      prevTypeDefinition={prevTypeDefinition}
-      prevArrayType={prevArrayType}
-      prevKind={prevKind}
+      typeMetadata={typeMetadata}
     />
   );
 };
