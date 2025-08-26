@@ -86,7 +86,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         ></TypeAnnotation>
       );
 
-      if (type !== prevType) {
+      if (type !== prevType && prevType) {
         // if type ~= prevType, display type before/after very similar to how we display value before/after...
         return (
           <React.Fragment>
@@ -449,12 +449,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             value.childChanges[key] &&
             value.childChanges[key].type === "REMOVE"
           ) {
-            console.log(
-              "Setting type definition for removed node:",
-              key,
-              prevTypeDefinition,
-              prevType
-            );
             childPropertyDefinition = prevTypeDefinition?.properties?.find(
               (prop) => prop.name === key
             );
@@ -522,14 +516,12 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     const childChanges = props.value.childChanges;
     if (childChanges && (childChanges._astType || childChanges.kind)) {
       const hackVal = {
-        _astType: childChanges._astType
-          ? childChanges._astType.oldValue
-          : undefined,
-        kind: childChanges.kind ? childChanges.kind.oldValue : undefined,
+        _astType: childChanges._astType ? childChanges._astType.oldValue : type, // might need to handle removed ast types here better; (generally scenarios other than UPDATE _astType)
+        kind: childChanges.kind ? childChanges.kind.oldValue : kind,
       };
-      return getTypeString(hackVal, props.nodeKey, undefined); // don't want to use
+      return getTypeString(hackVal, props.nodeKey, undefined);
     }
-    return [type, kind]; // if type not in changes, return already computed (prevType is same as currentType)
+    return [type, kind]; // if _astType not in changes, return already computed (prevType is same as currentType)
   }, [type, kind, props.value, props.nodeKey]);
   const [prevTypeDefinition, prevArrayType] = React.useMemo(() => {
     if (prevType) {
