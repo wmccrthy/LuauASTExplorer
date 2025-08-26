@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import { TypeAnnotation } from "./components/TypeAnnotation";
 import { shouldAutoCollapse } from "./nodeEmphasisHelpers";
 import { JSX } from "react/jsx-runtime";
