@@ -110,7 +110,16 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       }
     }
     return null;
-  }, [type, arrayType, typeDefinition, kind]);
+  }, [
+    type,
+    arrayType,
+    typeDefinition,
+    kind,
+    prevType,
+    prevTypeDefinition,
+    prevArrayType,
+    prevKind,
+  ]);
 
   // Get diff-specific styling
   const getDiffClassName = React.useCallback(() => {
