@@ -1,6 +1,17 @@
 
 # Changelog
 
+## [0.1.5] - 2025-08-27
+
+### Features
+
+- add type annotations for removed keys and node type before->after display [#38](https://github.com/wmccrthy/LuauASTExplorer/pull/38)
+
+### Fixes
+
+- Fix diffing module so removed nodes are included in diff-annotated output. Consolidate `diffUtils` redundancies and repeated logic into functions. [#36](https://github.com/wmccrthy/LuauASTExplorer/pull/36)
+
+
 ## [0.1.4] - 2025-08-21
 
 ### Features
