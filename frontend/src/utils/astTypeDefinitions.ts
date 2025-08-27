@@ -1032,8 +1032,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   _testType: {
     properties: [
       { name: "removedName", type: "Token", optional: true },
-      { name: "newName", type: "Token", optional: true },
-      { name: "text", type: "string", optional: true },
+      { name: "name", type: "Token", optional: true },
     ],
   }
 };

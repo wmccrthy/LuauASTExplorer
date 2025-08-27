@@ -25,10 +25,18 @@ const getQueryableNode = (nodePath: string, idPrefix: string = "node") => {
   return queryable;
 };
 
-const mockToken = (text: string, diffStatus?: string) => {
+const mockTrivia = () => {
+  return [{
+    tag: "",
+    location: "",
+    text: ""
+  }];
+}
+
+const mockTypelessToken = (text: string, diffStatus?: string) => {
   return {
-    leadingTrivia: {},
-    trailingTrivia: {},
+    leadingTrivia: mockTrivia(),
+    trailingTrivia: mockTrivia(),
     text: text,
     position: {},
     diffStatus: diffStatus,
@@ -265,15 +273,12 @@ describe("TreeNode", () => {
     test("correctly resolves types for removed keys", () => {
       const functionWithRemovedName = {
         _astType: "Token",
-        position: {},
-        leadingTrivia: {},
-        trailingTrivia: {},
-        text: "test",
-        removedName: mockToken("oldGlobalName", "removed"), // This was removed
+        ...mockTypelessToken("test"),
+        removedName: mockTypelessToken("oldGlobalName", "removed"), // This was removed
         childChanges: {
           removedName: {
             type: "REMOVE",
-            value: mockToken("oldGlobalName"),
+            value: mockTypelessToken("oldGlobalName"),
           },
           _astType: {
             type: "UPDATE",
@@ -309,4 +314,32 @@ describe("TreeNode", () => {
       expect(rootNodeHeader.getByText(/type: Token/)).toBeInTheDocument();
     });
   });
+
+  describe("parentInferredType logic", () => {
+    test("infers types for nodes without _astType using parent context", () => {
+      // Test actual type inference for nodes without _astType
+      // the LLM's tests are stupid; we should instead have a value that has nested elements with no _astType value; the root should have a type, so then we can test if the nested value's type is inferred appropriately based on the root's type
+      // we can use _testType for simplicity
+      const root = {
+        _astType: "_testType",
+        name: mockTypelessToken(""),
+      };
+
+      render(
+        <MockProvider>
+          <TreeNodeContainer
+            nodeKey="root"
+            value={root}
+            level={0}
+            path="root"
+          />
+        </MockProvider>
+      );
+      const nodeQuery = getQueryableNode("root.name", "nodeHeader");
+      expect(nodeQuery).toBeInTheDocument();
+      // Should infer from _testType that name property is of Token type
+      expect(nodeQuery.getByText(/type: Token/)).toBeInTheDocument();
+    });
+  });
+  
 });
