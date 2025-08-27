@@ -311,7 +311,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return (
-        <div className={diffClassName}>
+        <div className={diffClassName} data-testid={"node-" + path}>
           {/* include empty span to ensure indentation aligns with expandable nodes */}
           <span className="tree-arrow"></span>
           {getRenderedContent(false, renderValueWithDiff("[]"), false)}
@@ -325,11 +325,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     );
 
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} data-testid={"node-" + path}>
         <div
           style={{ cursor: "pointer" }}
           onClick={onToggle}
           onMouseEnter={handleMouseEnter}
+          data-testid={"nodeHeading-" + path}
         >
           {getRenderedContent(
             true,
@@ -384,7 +385,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   if (keys.length === 0) {
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} data-testid={"node-" + path}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {indent}
@@ -395,11 +396,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   }
 
   return (
-    <div className={diffClassName}>
+    <div className={diffClassName} data-testid={"node-" + path}>
       <div
         style={{ cursor: "pointer" }}
         onClick={onToggle}
         onMouseEnter={handleMouseEnter}
+        data-testid={"nodeHeading-" + path}
       >
         {getRenderedContent(
           true,
