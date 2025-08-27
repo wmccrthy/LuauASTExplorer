@@ -45,59 +45,45 @@ const mockTypelessToken = (text: string, diffStatus?: string) => {
   };
 };
 
+const defaultProps = {
+  level: 0,
+  searchTerm: "",
+  hiddenNodes: [],
+  nodeKey: "root",
+  path: "root",
+};
+
 describe("TreeNode", () => {
   test("renders primitive values correctly", () => {
     render(
       <MockProvider>
-        <TreeNodeContainer
-          nodeKey="test"
-          value="test value"
-          level={0}
-          path="test"
-          searchTerm=""
-          isDiffMode={false}
-          hiddenNodes={[]}
-        />
+        <TreeNodeContainer value="test value" {...defaultProps} />
       </MockProvider>
     );
 
-    const nodeQuery = getQueryableNode("test");
-    expect(nodeQuery.getByText(/test: "test value"/)).toBeInTheDocument();
+    const nodeQuery = getQueryableNode("root");
+    expect(nodeQuery.getByText(/root: "test value"/)).toBeInTheDocument();
   });
 
   test("renders empty arrays", () => {
     render(
       <MockProvider>
-        <TreeNodeContainer
-          level={0}
-          value={[]}
-          nodeKey="items"
-          path="items"
-          searchTerm=""
-          isDiffMode={false}
-          hiddenNodes={[]}
-        />
+        <TreeNodeContainer value={[]} {...defaultProps} />
       </MockProvider>
     );
 
-    const nodeQuery = getQueryableNode("items");
-    expect(nodeQuery.getByText(/items: \[\]/)).toBeInTheDocument();
+    const nodeQuery = getQueryableNode("root");
+    expect(nodeQuery.getByText(/root: \[\]/)).toBeInTheDocument();
   });
 
   test("renders empty objects", () => {
     render(
       <MockProvider>
-        <TreeNodeContainer
-          level={0}
-          value={{}}
-          nodeKey="obj"
-          path="obj"
-          searchTerm=""
-        />
+        <TreeNodeContainer value={{}} {...defaultProps} />
       </MockProvider>
     );
-    const nodeQuery = getQueryableNode("obj");
-    expect(nodeQuery.getByText(/obj: \{\}/)).toBeInTheDocument();
+    const nodeQuery = getQueryableNode("root");
+    expect(nodeQuery.getByText(/root: \{\}/)).toBeInTheDocument();
   });
 
   describe("expandable nodes", () => {
@@ -105,12 +91,7 @@ describe("TreeNode", () => {
       const arrayValue = ["item1", "item2"];
       render(
         <MockProvider>
-          <TreeNodeContainer
-            value={arrayValue}
-            nodeKey="root"
-            level={0}
-            path="root"
-          />
+          <TreeNodeContainer value={arrayValue} {...defaultProps} />
         </MockProvider>
       );
 
@@ -133,12 +114,7 @@ describe("TreeNode", () => {
       const objValue = { prop1: "value1", prop2: "value2" };
       render(
         <MockProvider>
-          <TreeNodeContainer
-            value={objValue}
-            nodeKey="root"
-            level={0}
-            path="root"
-          />
+          <TreeNodeContainer value={objValue} {...defaultProps} />
         </MockProvider>
       );
 
@@ -163,12 +139,10 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="root"
             value="new value"
-            level={0}
-            path="root"
             isDiffMode={true}
             diffStatus="added"
+            {...defaultProps}
           />
         </MockProvider>
       );
@@ -182,10 +156,8 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="root"
             value="old value"
-            level={0}
-            path="root"
+            {...defaultProps}
             isDiffMode={true}
             diffStatus="removed"
           />
@@ -200,9 +172,7 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="root"
-            level={0}
-            path="root"
+            {...defaultProps}
             isDiffMode={true}
             diffStatus="updated"
             value="new"
@@ -230,16 +200,11 @@ describe("TreeNode", () => {
 
       render(
         <MockProvider>
-          <TreeNodeContainer
-            value={astNode}
-            nodeKey="expr"
-            level={0}
-            path="expr"
-          />
+          <TreeNodeContainer value={astNode} {...defaultProps} />
         </MockProvider>
       );
 
-      const nodeQuery = getQueryableNode("expr");
+      const nodeQuery = getQueryableNode("root");
       expect(nodeQuery.getByText(/type: AstExpr/)).toBeInTheDocument();
       expect(() => nodeQuery.getByText('_astType: "AstExpr"')).toThrow(); // should filter out _astType
     });
@@ -262,10 +227,8 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="changedNode"
             value={nodeWithTypeChange}
-            level={0}
-            path="changedNode"
+            {...defaultProps}
             isDiffMode={true}
             diffStatus="contains-changes"
           />
@@ -273,7 +236,7 @@ describe("TreeNode", () => {
       );
 
       // Should show both old and new type annotations
-      const nodeQuery = getQueryableNode("changedNode", "nodeHeader");
+      const nodeQuery = getQueryableNode("root", "nodeHeader");
       expect(nodeQuery.getByText(/type: AstExpr/)).toBeInTheDocument(); // Previous type
       expect(nodeQuery.getByText(/type: AstLocal/)).toBeInTheDocument(); // Current type
       expect(nodeQuery.getByText("→")).toBeInTheDocument(); // Arrow between them
@@ -285,17 +248,15 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="search"
             value="test value"
-            level={0}
-            path="search"
-            searchTerm="search"
+            {...defaultProps}
+            searchTerm="root"
           />
         </MockProvider>
       );
 
-      const nodeQuery = getQueryableNode("search");
-      const highlighted = nodeQuery.getByText("search");
+      const nodeQuery = getQueryableNode("root");
+      const highlighted = nodeQuery.getByText("root");
       expect(highlighted).toHaveClass("search-match");
     });
   });
@@ -309,12 +270,7 @@ describe("TreeNode", () => {
 
       render(
         <MockProvider>
-          <TreeNodeContainer
-            nodeKey="root"
-            value={root}
-            level={0}
-            path="root"
-          />
+          <TreeNodeContainer value={root} {...defaultProps} />
         </MockProvider>
       );
       const nodeQuery = getQueryableNode("root.name", "nodeHeader");
@@ -332,20 +288,12 @@ describe("TreeNode", () => {
 
       render(
         <MockProvider>
-          <TreeNodeContainer
-            nodeKey="block"
-            value={blockWithStatements}
-            level={0}
-            path="block"
-          />
+          <TreeNodeContainer value={blockWithStatements} {...defaultProps} />
         </MockProvider>
       );
 
       // The statements array should get inferred type from AstStatBlock definition
-      const statementsQuery = getQueryableNode(
-        "block.statements",
-        "nodeHeader"
-      );
+      const statementsQuery = getQueryableNode("root.statements", "nodeHeader");
       expect(
         statementsQuery.getByText(/type: { AstStat }/)
       ).toBeInTheDocument();
@@ -363,29 +311,24 @@ describe("TreeNode", () => {
 
       render(
         <MockProvider>
-          <TreeNodeContainer
-            nodeKey="table"
-            value={tableWithEntries}
-            level={0}
-            path="table"
-          />
+          <TreeNodeContainer value={tableWithEntries} {...defaultProps} />
         </MockProvider>
       );
 
       // The entries array should get inferred type from AstExprTable definition
-      const entriesQuery = getQueryableNode("table.entries", "nodeHeader");
+      const entriesQuery = getQueryableNode("root.entries", "nodeHeader");
       expect(
         entriesQuery.getByText(/type: { AstExprTableItem }/)
       ).toBeInTheDocument();
 
       // First item should infer type from parent array definition
-      const item0Query = getQueryableNode("table.entries.0", "nodeHeader");
+      const item0Query = getQueryableNode("root.entries.0", "nodeHeader");
       expect(
         item0Query.getByText(/type: AstExprTableItem/)
       ).toBeInTheDocument();
 
       // Second item should use its explicit _astType
-      const item1Query = getQueryableNode("table.entries.1", "nodeHeader");
+      const item1Query = getQueryableNode("root.entries.1", "nodeHeader");
       expect(item1Query.getByText(/type: MySpecialType/)).toBeInTheDocument();
     });
   });
@@ -412,10 +355,8 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="root"
             value={functionWithRemovedName}
-            level={0}
-            path="root"
+            {...defaultProps}
             isDiffMode={true}
             diffStatus="contains-changes"
           />
@@ -453,17 +394,15 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="parent"
             value={nodeWithPrimitiveChanges}
-            level={0}
-            path="parent"
+            {...defaultProps}
             isDiffMode={true}
             diffStatus="contains-changes"
           />
         </MockProvider>
       );
 
-      const parentQuery = getQueryableNode("parent.name");
+      const parentQuery = getQueryableNode("root.name");
       expect(parentQuery.getByText("~")).toBeInTheDocument();
       expect(parentQuery.getByText('"oldValue"')).toBeInTheDocument();
       expect(parentQuery.getByText("→")).toBeInTheDocument();
@@ -488,10 +427,8 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="parent"
             value={nodeWithObjectChanges}
-            level={0}
-            path="parent"
+            {...defaultProps}
             isDiffMode={true}
             diffStatus="contains-changes"
           />
@@ -499,7 +436,7 @@ describe("TreeNode", () => {
       );
 
       // Child object should show added indicator
-      const childQuery = getQueryableNode("parent.expr");
+      const childQuery = getQueryableNode("root.expr");
       expect(childQuery.getByText("+")).toBeInTheDocument();
     });
   });
@@ -522,27 +459,16 @@ describe("TreeNode", () => {
 
       render(
         <MockProvider>
-          <TreeNodeContainer
-            nodeKey="funcBody"
-            value={punctuatedNode}
-            level={0}
-            path="funcBody"
-          />
+          <TreeNodeContainer value={punctuatedNode} {...defaultProps} />
         </MockProvider>
       );
 
       // Should handle punctuated structure correctly
-      const parametersNode = getQueryableNode(
-        "funcBody.parameters",
-        "nodeHeader"
-      );
+      const parametersNode = getQueryableNode("root.parameters", "nodeHeader");
       expect(
         parametersNode.getByText(/type: Punctuated<AstLocal>/)
       ).toBeInTheDocument();
-      const param1Node = getQueryableNode(
-        "funcBody.parameters.0",
-        "nodeHeader"
-      );
+      const param1Node = getQueryableNode("root.parameters.0", "nodeHeader");
       expect(param1Node.getByText(/type: Pair<AstLocal>/)).toBeInTheDocument();
     });
   });
@@ -559,18 +485,13 @@ describe("TreeNode", () => {
 
       render(
         <MockProvider>
-          <TreeNodeContainer
-            nodeKey="malformed"
-            value={malformedNode}
-            level={0}
-            path="malformed"
-          />
+          <TreeNodeContainer value={malformedNode} {...defaultProps} />
         </MockProvider>
       );
 
       // Should render without crashing
-      const nodeQuery = getQueryableNode("malformed");
-      expect(nodeQuery.getByText(/malformed/)).toBeInTheDocument();
+      const nodeQuery = getQueryableNode("root");
+      expect(nodeQuery.getByText(/root/)).toBeInTheDocument();
     });
 
     test("handles mixed array content", () => {
@@ -584,26 +505,21 @@ describe("TreeNode", () => {
 
       render(
         <MockProvider>
-          <TreeNodeContainer
-            nodeKey="mixed"
-            value={mixedArray}
-            level={0}
-            path="mixed"
-          />
+          <TreeNodeContainer value={mixedArray} {...defaultProps} />
         </MockProvider>
       );
 
       // Should handle all types gracefully - check items directly
-      const item0Query = getQueryableNode("mixed.0");
+      const item0Query = getQueryableNode("root.0");
       expect(item0Query.getByText(/\[0\]: "string item"/)).toBeInTheDocument();
 
-      const item1Query = getQueryableNode("mixed.1");
+      const item1Query = getQueryableNode("root.1");
       expect(item1Query.getByText(/\[1\]/)).toBeInTheDocument();
 
-      const item2Query = getQueryableNode("mixed.2");
+      const item2Query = getQueryableNode("root.2");
       expect(item2Query.getByText(/\[2\]: 123/)).toBeInTheDocument();
 
-      const item3Query = getQueryableNode("mixed.3");
+      const item3Query = getQueryableNode("root.3");
       expect(item3Query.getByText(/\[3\]: null/)).toBeInTheDocument();
     });
   });
@@ -620,17 +536,15 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="pos"
             value={positionNode}
-            level={0}
-            path="pos"
+            {...defaultProps}
             isDiffMode={false}
           />
         </MockProvider>
       );
 
       // Should be collapsed by default (Position auto-collapses)
-      const nodeQuery = getQueryableNode("pos", "nodeHeader");
+      const nodeQuery = getQueryableNode("root", "nodeHeader");
       expect(nodeQuery.getByText("▶")).toBeInTheDocument();
     });
 
@@ -651,10 +565,8 @@ describe("TreeNode", () => {
       render(
         <MockProvider>
           <TreeNodeContainer
-            nodeKey="changedPos"
             value={changedPositionNode}
-            level={0}
-            path="changedPos"
+            {...defaultProps}
             isDiffMode={true}
             diffStatus="contains-changes"
           />
@@ -664,7 +576,7 @@ describe("TreeNode", () => {
       // The actual test should verify that a Position node with changes shows ▶ because
       // it's STILL collapsed (but shows diff indicator). The override logic isn't working as expected.
       // Let's test what actually happens: Position nodes stay collapsed even with changes.
-      const nodeQuery = getQueryableNode("changedPos", "nodeHeader");
+      const nodeQuery = getQueryableNode("root", "nodeHeader");
       expect(nodeQuery.getByText("▶")).toBeInTheDocument(); // Position still auto-collapses
       expect(nodeQuery.getByText("○")).toBeInTheDocument(); // But shows diff indicator
     });
