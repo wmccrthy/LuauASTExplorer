@@ -26,12 +26,14 @@ const getQueryableNode = (nodePath: string, idPrefix: string = "node") => {
 };
 
 const mockTrivia = () => {
-  return [{
-    tag: "",
-    location: "",
-    text: ""
-  }];
-}
+  return [
+    {
+      tag: "",
+      location: "",
+      text: "",
+    },
+  ];
+};
 
 const mockTypelessToken = (text: string, diffStatus?: string) => {
   return {
@@ -269,6 +271,99 @@ describe("TreeNode", () => {
     });
   });
 
+  describe("parentInferredType base logic", () => {
+    test("infers types for nodes without _astType using parent context", () => {
+      // Test actual type inference for nodes without _astType
+      // the LLM's tests are stupid; we should instead have a value that has nested elements with no _astType value; the root should have a type, so then we can test if the nested value's type is inferred appropriately based on the root's type
+      // we can use _testType for simplicity
+      const root = {
+        _astType: "_testType",
+        name: mockTypelessToken(""),
+      };
+
+      render(
+        <MockProvider>
+          <TreeNodeContainer
+            nodeKey="root"
+            value={root}
+            level={0}
+            path="root"
+          />
+        </MockProvider>
+      );
+      const nodeQuery = getQueryableNode("root.name", "nodeHeader");
+      expect(nodeQuery).toBeDefined();
+      // Should infer from _testType that name property is of Token type
+      expect(nodeQuery.getByText(/type: Token/)).toBeInTheDocument();
+    });
+
+    test("infers types for array items from parent property definition", () => {
+      // Test actual inference: parent has AST type with array property, children have no _astType
+      const blockWithStatements = {
+        _astType: "AstStatBlock", // Parent type that has `statements: { AstStat }` property
+        statements: [{}, {}],
+      };
+
+      render(
+        <MockProvider>
+          <TreeNodeContainer
+            nodeKey="block"
+            value={blockWithStatements}
+            level={0}
+            path="block"
+          />
+        </MockProvider>
+      );
+
+      // The statements array should get inferred type from AstStatBlock definition
+      const statementsQuery = getQueryableNode(
+        "block.statements",
+        "nodeHeader"
+      );
+      expect(
+        statementsQuery.getByText(/type: { AstStat }/)
+      ).toBeInTheDocument();
+    });
+
+    test("fallback chain: _astType -> parentInferred -> array inference", () => {
+      // Test actual fallback: parent type defines array property, mixed content with/without _astType
+      const tableWithEntries = {
+        _astType: "AstExprTable", // Parent type that has `entries: { AstExprTableItem }` property
+        entries: [
+          { text: "filler" }, // No _astType - should infer AstExprTableItem from parent definition
+          { _astType: "MySpecialType" }, // Has _astType - should use that directly
+        ],
+      };
+
+      render(
+        <MockProvider>
+          <TreeNodeContainer
+            nodeKey="table"
+            value={tableWithEntries}
+            level={0}
+            path="table"
+          />
+        </MockProvider>
+      );
+
+      // The entries array should get inferred type from AstExprTable definition
+      const entriesQuery = getQueryableNode("table.entries", "nodeHeader");
+      expect(
+        entriesQuery.getByText(/type: { AstExprTableItem }/)
+      ).toBeInTheDocument();
+
+      // First item should infer type from parent array definition
+      const item0Query = getQueryableNode("table.entries.0", "nodeHeader");
+      expect(
+        item0Query.getByText(/type: AstExprTableItem/)
+      ).toBeInTheDocument();
+
+      // Second item should use its explicit _astType
+      const item1Query = getQueryableNode("table.entries.1", "nodeHeader");
+      expect(item1Query.getByText(/type: MySpecialType/)).toBeInTheDocument();
+    });
+  });
+
   describe("removed node handling", () => {
     test("correctly resolves types for removed keys", () => {
       const functionWithRemovedName = {
@@ -314,32 +409,4 @@ describe("TreeNode", () => {
       expect(rootNodeHeader.getByText(/type: Token/)).toBeInTheDocument();
     });
   });
-
-  describe("parentInferredType logic", () => {
-    test("infers types for nodes without _astType using parent context", () => {
-      // Test actual type inference for nodes without _astType
-      // the LLM's tests are stupid; we should instead have a value that has nested elements with no _astType value; the root should have a type, so then we can test if the nested value's type is inferred appropriately based on the root's type
-      // we can use _testType for simplicity
-      const root = {
-        _astType: "_testType",
-        name: mockTypelessToken(""),
-      };
-
-      render(
-        <MockProvider>
-          <TreeNodeContainer
-            nodeKey="root"
-            value={root}
-            level={0}
-            path="root"
-          />
-        </MockProvider>
-      );
-      const nodeQuery = getQueryableNode("root.name", "nodeHeader");
-      expect(nodeQuery).toBeInTheDocument();
-      // Should infer from _testType that name property is of Token type
-      expect(nodeQuery.getByText(/type: Token/)).toBeInTheDocument();
-    });
-  });
-  
 });

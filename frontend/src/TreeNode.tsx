@@ -358,6 +358,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 parentInferredType={
                   punctuatedType
                     ? unpackArrayType(punctuatedType.type as string)
+                    : typeMetadata.type
+                    ? unpackArrayType(typeMetadata.type)
                     : undefined
                 }
                 searchTerm={searchTerm}
