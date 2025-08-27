@@ -288,7 +288,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter} data-testid={"node-" + path}>
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -299,7 +299,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter} data-testid={"node-" + path}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -486,7 +486,7 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
 
   // do the above once each for old and new values on contains-changes nodes
   const [prevType, prevKind] = React.useMemo(() => {
-    const childChanges = props.value.childChanges;
+    const childChanges = props.value ? props.value.childChanges : undefined;
     if (childChanges && (childChanges._astType || childChanges.kind)) {
       const hackVal = {
         _astType: childChanges._astType ? childChanges._astType.oldValue : type, // might need to handle removed ast types here better; (generally scenarios other than UPDATE _astType)
