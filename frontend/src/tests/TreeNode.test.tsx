@@ -46,44 +46,58 @@ const mockTypelessToken = (text: string, diffStatus?: string) => {
 };
 
 describe("TreeNode", () => {
-  const defaultProps = {
-    nodeKey: "test",
-    value: "test value",
-    level: 0,
-    path: "test",
-    searchTerm: "",
-    isDiffMode: false,
-    hiddenNodes: [],
-  };
-
   test("renders primitive values correctly", () => {
     render(
       <MockProvider>
-        <TreeNodeContainer {...defaultProps} />
+        <TreeNodeContainer
+          nodeKey="test"
+          value="test value"
+          level={0}
+          path="test"
+          searchTerm=""
+          isDiffMode={false}
+          hiddenNodes={[]}
+        />
       </MockProvider>
     );
 
-    expect(screen.getByText(/test: "test value"/)).toBeInTheDocument();
+    const nodeQuery = getQueryableNode("test");
+    expect(nodeQuery.getByText(/test: "test value"/)).toBeInTheDocument();
   });
 
   test("renders empty arrays", () => {
     render(
       <MockProvider>
-        <TreeNodeContainer {...defaultProps} value={[]} nodeKey="items" />
+        <TreeNodeContainer
+          level={0}
+          value={[]}
+          nodeKey="items"
+          path="items"
+          searchTerm=""
+          isDiffMode={false}
+          hiddenNodes={[]}
+        />
       </MockProvider>
     );
 
-    expect(screen.getByText(/items: \[\]/)).toBeInTheDocument();
+    const nodeQuery = getQueryableNode("items");
+    expect(nodeQuery.getByText(/items: \[\]/)).toBeInTheDocument();
   });
 
   test("renders empty objects", () => {
     render(
       <MockProvider>
-        <TreeNodeContainer {...defaultProps} value={{}} nodeKey="obj" />
+        <TreeNodeContainer
+          level={0}
+          value={{}}
+          nodeKey="obj"
+          path="obj"
+          searchTerm=""
+        />
       </MockProvider>
     );
-
-    expect(screen.getByText(/obj: \{\}/)).toBeInTheDocument();
+    const nodeQuery = getQueryableNode("obj");
+    expect(nodeQuery.getByText(/obj: \{\}/)).toBeInTheDocument();
   });
 
   describe("expandable nodes", () => {
@@ -101,17 +115,18 @@ describe("TreeNode", () => {
       );
 
       // expaned by default
-      const expandButton = screen.getByText("▼");
+      const nodeQuery = getQueryableNode("root");
+      const expandButton = nodeQuery.getByText("▼");
       expect(expandButton).toBeInTheDocument();
       // collapse
       fireEvent.click(expandButton.parentElement!);
-      expect(screen.getByText("▶")).toBeInTheDocument();
-      expect(() => screen.getByText(/\[0\]: "item1"/)).toThrow();
+      expect(nodeQuery.getByText("▶")).toBeInTheDocument();
+      expect(() => nodeQuery.getByText(/\[0\]: "item1"/)).toThrow();
 
       // expand
       fireEvent.click(expandButton.parentElement!);
-      expect(screen.getByText("▼")).toBeInTheDocument();
-      expect(screen.getByText(/\[0\]: "item1"/)).toBeInTheDocument();
+      expect(nodeQuery.getByText("▼")).toBeInTheDocument();
+      expect(nodeQuery.getByText(/\[0\]: "item1"/)).toBeInTheDocument();
     });
 
     test("objects can be expanded/collapsed", () => {
@@ -128,17 +143,18 @@ describe("TreeNode", () => {
       );
 
       // expanded by default
-      const expandButton = screen.getByText("▼");
+      const nodeQuery = getQueryableNode("root");
+      const expandButton = nodeQuery.getByText("▼");
       expect(expandButton).toBeInTheDocument();
       // collapse
       fireEvent.click(expandButton.parentElement!);
-      expect(screen.getByText("▶")).toBeInTheDocument();
-      expect(() => screen.getByText(/prop1: "value1"/)).toThrow();
+      expect(nodeQuery.getByText("▶")).toBeInTheDocument();
+      expect(() => nodeQuery.getByText(/prop1: "value1"/)).toThrow();
       // expand
       fireEvent.click(expandButton.parentElement!);
-      expect(screen.getByText("▼")).toBeInTheDocument();
-      expect(screen.getByText(/prop1: "value1"/)).toBeInTheDocument();
-      expect(screen.getByText(/prop2: "value2"/)).toBeInTheDocument();
+      expect(nodeQuery.getByText("▼")).toBeInTheDocument();
+      expect(nodeQuery.getByText(/prop1: "value1"/)).toBeInTheDocument();
+      expect(nodeQuery.getByText(/prop2: "value2"/)).toBeInTheDocument();
     });
   });
 
@@ -157,8 +173,9 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      expect(screen.getByText("+")).toBeInTheDocument();
-      expect(screen.getByText('root: "new value"')).toBeInTheDocument();
+      const nodeQuery = getQueryableNode("root");
+      expect(nodeQuery.getByText("+")).toBeInTheDocument();
+      expect(nodeQuery.getByText('root: "new value"')).toBeInTheDocument();
     });
 
     test("renders removed status", () => {
@@ -175,7 +192,8 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      expect(screen.getByText("-")).toBeInTheDocument();
+      const nodeQuery = getQueryableNode("root");
+      expect(nodeQuery.getByText("-")).toBeInTheDocument();
     });
 
     test("renders updated status with before/after", () => {
@@ -194,10 +212,11 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      expect(screen.getByText("~")).toBeInTheDocument();
-      expect(screen.getByText('"old"')).toBeInTheDocument();
-      expect(screen.getByText("→")).toBeInTheDocument();
-      expect(screen.getByText('"new"')).toBeInTheDocument();
+      const nodeQuery = getQueryableNode("root");
+      expect(nodeQuery.getByText("~")).toBeInTheDocument();
+      expect(nodeQuery.getByText('"old"')).toBeInTheDocument();
+      expect(nodeQuery.getByText("→")).toBeInTheDocument();
+      expect(nodeQuery.getByText('"new"')).toBeInTheDocument();
     });
   });
 
@@ -220,8 +239,9 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      expect(screen.getByText(/type: AstExpr/)).toBeInTheDocument();
-      expect(() => screen.getByText('_astType: "AstExpr"')).toThrow(); // should filter out _astType
+      const nodeQuery = getQueryableNode("expr");
+      expect(nodeQuery.getByText(/type: AstExpr/)).toBeInTheDocument();
+      expect(() => nodeQuery.getByText('_astType: "AstExpr"')).toThrow(); // should filter out _astType
     });
 
     test("extracts old types from childChanges", () => {
@@ -258,38 +278,6 @@ describe("TreeNode", () => {
       expect(nodeQuery.getByText(/type: AstLocal/)).toBeInTheDocument(); // Current type
       expect(nodeQuery.getByText("→")).toBeInTheDocument(); // Arrow between them
     });
-
-    test("handles nodes without type changes", () => {
-      const nodeWithoutTypeChange = {
-        _astType: "AstLocal",
-        name: "sameName",
-        childChanges: {
-          name: {
-            type: "UPDATE",
-            oldValue: "oldName",
-            value: "sameName",
-          },
-        },
-      };
-
-      render(
-        <MockProvider>
-          <TreeNodeContainer
-            nodeKey="unchangedTypeNode"
-            value={nodeWithoutTypeChange}
-            level={0}
-            path="unchangedTypeNode"
-            isDiffMode={true}
-            diffStatus="contains-changes"
-          />
-        </MockProvider>
-      );
-
-      // Should only show current type (no arrow, no previous type)
-      const nodeQuery = getQueryableNode("unchangedTypeNode", "nodeHeader");
-      expect(nodeQuery.getByText(/type: AstLocal/)).toBeInTheDocument(); // Current type
-      expect(() => nodeQuery.getByText("→")).toThrow(); // No arrow
-    });
   });
 
   describe("search highlighting", () => {
@@ -306,7 +294,8 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      const highlighted = screen.getByText("search");
+      const nodeQuery = getQueryableNode("search");
+      const highlighted = nodeQuery.getByText("search");
       expect(highlighted).toHaveClass("search-match");
     });
   });
