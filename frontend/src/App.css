@@ -227,7 +227,6 @@
 .diff-arrow {
   color: var(--vscode-gitDecoration-modifiedResourceForeground, #3490dc);
   font-weight: bold;
-  margin: 0 4px;
 }
 
 .diff-after {
@@ -407,6 +406,15 @@
   border-bottom: 1px dotted transparent; /* subtle affordance without clutter */
   text-underline-offset: 2px;
   transition: color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.type-annotation.has-prev-type {
+  font-weight: bold;
+  color: var(--vscode-gitDecoration-addedResourceForeground, #28a745);
+}
+
+.unchanged {
+  margin-left: 2%;
 }
 
 .type-annotation:hover,

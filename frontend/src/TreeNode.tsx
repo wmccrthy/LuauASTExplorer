@@ -6,10 +6,11 @@ import {
   getTypeString,
   getType,
   unpackArrayType,
+  getChildPropertyDefinition,
 } from "./utils/astTypeHelpers";
 import { CodeTooltip } from "./components/CodeTooltip";
 
-import { ASTTypeDefinition } from "./utils/astTypeDefinitions";
+import { TypeMetadata } from "./utils/astTypeDefinitions";
 import { useCodeTranslationContext } from "./context/codeTranslationContext";
 
 interface TreeNodeProps {
@@ -19,10 +20,7 @@ interface TreeNodeProps {
   expanded: boolean;
   onToggle: () => void;
   path: string;
-  type: string;
-  typeDefinition: ASTTypeDefinition | undefined;
-  kind: string;
-  arrayType: boolean;
+  typeMetadata: TypeMetadata;
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
@@ -45,10 +43,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   expanded,
   path,
   onToggle,
-  type,
-  typeDefinition,
-  kind,
-  arrayType,
+  typeMetadata,
   searchTerm = "",
   isDiffMode = false,
   diffStatus = "unchanged",
@@ -67,18 +62,43 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   }, [value, nodeKey, generateNodeId]);
 
   const renderTypeAnnotations = React.useCallback(() => {
-    if (type) {
-      return (
+    if (typeMetadata.type) {
+      const changedType = typeMetadata.type !== typeMetadata.prevType;
+      const currentTypeAnnotation = (
         <TypeAnnotation
-          typeName={type}
-          typeDefinition={typeDefinition}
-          isArrayType={arrayType}
-          kind={kind}
+          typeName={typeMetadata.type}
+          typeDefinition={typeMetadata.typeDefinition}
+          isArrayType={typeMetadata.arrayType}
+          kind={typeMetadata.kind}
+          hasPrevType={changedType}
         ></TypeAnnotation>
       );
+
+      if (changedType && typeMetadata.prevType) {
+        // if type ~= prevType, display type before/after very similar to how we display value before/after...
+        return (
+          <React.Fragment>
+            <span className="diff-before">
+              {
+                <TypeAnnotation
+                  typeName={typeMetadata.prevType}
+                  typeDefinition={typeMetadata.prevTypeDefinition}
+                  isArrayType={typeMetadata.prevArrayType}
+                  kind={typeMetadata.prevKind}
+                ></TypeAnnotation>
+              }
+            </span>
+            <span className="diff-arrow"> → </span>
+            {/* want negative padding on bottom span */}
+            <span>{currentTypeAnnotation}</span>
+          </React.Fragment>
+        );
+      } else {
+        return currentTypeAnnotation;
+      }
     }
     return null;
-  }, [type, arrayType, typeDefinition, kind]);
+  }, [typeMetadata]);
 
   // Get diff-specific styling
   const getDiffClassName = React.useCallback(() => {
@@ -300,7 +320,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
 
     // check if node is an array of a Punctuated type (TO-DO: add more robust check than this)
-    const punctuatedType = typeDefinition?.properties?.find(
+    const punctuatedType = typeMetadata.typeDefinition?.properties?.find(
       (item) => item.name === ""
     );
 
@@ -397,9 +417,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           // Pass through diff props for child nodes if they have diff annotations
           const childValue = value[key];
           const childDiffProps = getChildDiffProps(value, key, childValue);
-          const childPropertyDefinition = typeDefinition?.properties?.find(
-            (prop) => prop.name === key
+          const childPropertyDefinition = getChildPropertyDefinition(
+            typeMetadata,
+            value.childChanges,
+            key
           );
+
           const parentInferredType = childPropertyDefinition?.generic
             ? childPropertyDefinition.generic
             : childPropertyDefinition?.type;
@@ -457,8 +480,39 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     return [undefined, false];
   }, [type]);
 
+  // do the above once each for old and new values on contains-changes nodes
+  const [prevType, prevKind] = React.useMemo(() => {
+    const childChanges = props.value.childChanges;
+    if (childChanges && (childChanges._astType || childChanges.kind)) {
+      const hackVal = {
+        _astType: childChanges._astType ? childChanges._astType.oldValue : type, // might need to handle removed ast types here better; (generally scenarios other than UPDATE _astType)
+        kind: childChanges.kind ? childChanges.kind.oldValue : kind,
+      };
+      return getTypeString(hackVal, props.nodeKey, undefined);
+    }
+    return [type, kind]; // if _astType not in changes, return already computed (prevType is same as currentType)
+  }, [type, kind, props.value, props.nodeKey]);
+  const [prevTypeDefinition, prevArrayType] = React.useMemo(() => {
+    if (prevType) {
+      return getType(prevType);
+    }
+    return [undefined, false];
+  }, [prevType]);
+
+  const typeMetadata = {
+    type: type,
+    typeDefinition: typeDefinition,
+    arrayType: arrayType,
+    kind: kind,
+    prevType: prevType,
+    prevTypeDefinition: prevTypeDefinition,
+    prevArrayType: prevArrayType,
+    prevKind: prevKind,
+  };
+
   const autoCollapse = props.isDiffMode
     ? props.diffStatus === "unchanged" ||
+      props.diffStatus === "removed" ||
       shouldAutoCollapse(type, typeDefinition)
     : shouldAutoCollapse(type, typeDefinition);
 
@@ -478,10 +532,7 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
       {...props}
       expanded={expanded}
       onToggle={handleToggle}
-      type={type}
-      typeDefinition={typeDefinition}
-      kind={kind}
-      arrayType={arrayType}
+      typeMetadata={typeMetadata}
     />
   );
 };

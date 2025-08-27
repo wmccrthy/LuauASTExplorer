@@ -1,6 +1,11 @@
 // Comprehensive Luau AST Type Definitions
 // Generated from official Luau type definitions for maximum accuracy
-import { ASTTypeDefinition, GenericTypeDefinition, astTypeDefinitions } from "./astTypeDefinitions";
+import {
+  ASTTypeDefinition,
+  GenericTypeDefinition,
+  astTypeDefinitions,
+  TypeMetadata,
+} from "./astTypeDefinitions";
 
 export function getTypeDefinition(
   typeName: string | GenericTypeDefinition
@@ -119,7 +124,9 @@ export const unpackArrayType = (type: string): string => {
 };
 
 // Parse generic types like "Pair<AstExpr>" -> { baseType: "Pair", genericType: "AstExpr" }
-export const parseGenericType = (type: string): GenericTypeDefinition | undefined => {
+export const parseGenericType = (
+  type: string
+): GenericTypeDefinition | undefined => {
   const match = type.match(/^(\w+)<(.+)>$/);
   if (match) {
     return { baseType: match[1], genericType: match[2] };
@@ -144,7 +151,9 @@ export const getTypeString = (
   return [type, kind];
 };
 
-export const getType = (type: string): [ASTTypeDefinition | undefined, boolean] => {
+export const getType = (
+  type: string
+): [ASTTypeDefinition | undefined, boolean] => {
   const genericTypeInfo = Array.isArray(type)
     ? undefined
     : parseGenericType(type);
@@ -155,4 +164,26 @@ export const getType = (type: string): [ASTTypeDefinition | undefined, boolean] 
     ? genericTypeInfo
     : type;
   return [getTypeDefinition(unpackedType), isArray];
+};
+
+export const getChildPropertyDefinition = (
+  typeMetadata: TypeMetadata,
+  childChanges: any,
+  childKey: string
+) => {
+  if (
+    childChanges &&
+    childChanges[childKey] &&
+    childChanges[childKey].type === "REMOVE"
+  ) {
+    // handle childPropertyDefinition differently when node is removed; since in object case, this implies a key no longer exists, it indicates the node type has changed
+    // so we need to ensure the childPropertyDefinition is adjusted appopriately given it was a child of the previous node value
+    return typeMetadata.prevTypeDefinition?.properties?.find(
+      (prop) => prop.name === childKey
+    );
+  } else {
+    return typeMetadata.typeDefinition?.properties?.find(
+      (prop) => prop.name === childKey
+    );
+  }
 };
