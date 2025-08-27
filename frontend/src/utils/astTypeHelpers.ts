@@ -4,7 +4,6 @@ import {
   ASTTypeDefinition,
   GenericTypeDefinition,
   astTypeDefinitions,
-  PropertyDefinition,
   TypeMetadata,
 } from "./astTypeDefinitions";
 
