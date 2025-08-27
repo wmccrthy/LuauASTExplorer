@@ -330,7 +330,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           style={{ cursor: "pointer" }}
           onClick={onToggle}
           onMouseEnter={handleMouseEnter}
-          data-testid={"nodeHeading-" + path}
+          data-testid={"nodeHeader-" + path}
         >
           {getRenderedContent(
             true,
@@ -401,7 +401,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         style={{ cursor: "pointer" }}
         onClick={onToggle}
         onMouseEnter={handleMouseEnter}
-        data-testid={"nodeHeading-" + path}
+        data-testid={"nodeHeader-" + path}
       >
         {getRenderedContent(
           true,
