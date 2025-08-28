@@ -288,7 +288,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter} data-testid={"node-" + path}>
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -299,7 +299,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter} data-testid={"node-" + path}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -311,7 +311,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return (
-        <div className={diffClassName}>
+        <div className={diffClassName} data-testid={"node-" + path}>
           {/* include empty span to ensure indentation aligns with expandable nodes */}
           <span className="tree-arrow"></span>
           {getRenderedContent(false, renderValueWithDiff("[]"), false)}
@@ -325,11 +325,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     );
 
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} data-testid={"node-" + path}>
         <div
           style={{ cursor: "pointer" }}
           onClick={onToggle}
           onMouseEnter={handleMouseEnter}
+          data-testid={"nodeHeader-" + path}
         >
           {getRenderedContent(
             true,
@@ -357,6 +358,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 parentInferredType={
                   punctuatedType
                     ? unpackArrayType(punctuatedType.type as string)
+                    : typeMetadata.type
+                    ? unpackArrayType(typeMetadata.type)
                     : undefined
                 }
                 searchTerm={searchTerm}
@@ -384,7 +387,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   if (keys.length === 0) {
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} data-testid={"node-" + path}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {indent}
@@ -395,11 +398,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   }
 
   return (
-    <div className={diffClassName}>
+    <div className={diffClassName} data-testid={"node-" + path}>
       <div
         style={{ cursor: "pointer" }}
         onClick={onToggle}
         onMouseEnter={handleMouseEnter}
+        data-testid={"nodeHeader-" + path}
       >
         {getRenderedContent(
           true,
@@ -482,7 +486,7 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
 
   // do the above once each for old and new values on contains-changes nodes
   const [prevType, prevKind] = React.useMemo(() => {
-    const childChanges = props.value.childChanges;
+    const childChanges = props.value ? props.value.childChanges : undefined;
     if (childChanges && (childChanges._astType || childChanges.kind)) {
       const hackVal = {
         _astType: childChanges._astType ? childChanges._astType.oldValue : type, // might need to handle removed ast types here better; (generally scenarios other than UPDATE _astType)

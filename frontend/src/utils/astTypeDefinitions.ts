@@ -1028,4 +1028,11 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       "AstTypePackVariadic",
     ],
   },
+
+  _testType: {
+    properties: [
+      { name: "removedName", type: "Token", optional: true },
+      { name: "name", type: "Token", optional: true },
+    ],
+  }
 };

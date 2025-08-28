@@ -139,8 +139,8 @@ export const getTypeString = (
   nodeKey: string,
   parentInferredType?: string | string[]
 ) => {
-  let type = value._astType;
-  let kind = value.kind || "";
+  let type = value ? value._astType : undefined;
+  let kind = value ? value.kind || "" : "";
   if (Array.isArray(value)) {
     [type, kind] = getArrayType(
       nodeKey,
