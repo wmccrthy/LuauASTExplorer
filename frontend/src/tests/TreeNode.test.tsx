@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import TreeNodeContainer from "../TreeNode";
+import TreeNodeContainer from "../components/TreeNode";
 import { CodeTranslationContext } from "../context/codeTranslationContext";
 
 // Mock the context to avoid needing the full setup

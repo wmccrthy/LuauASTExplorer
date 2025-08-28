@@ -3,10 +3,9 @@ import {
   setChildChanges,
   buildChangeMap,
   annotateDiffTree,
-} from "../diffUtils";
+} from "../utils/diffUtils";
 import { diff } from "json-diff-ts";
-import { JsonDiffChange } from "../typesAndInterfaces";
-import exp from "constants";
+import { JsonDiffChange } from "../types/typesAndInterfaces";
 
 const getChangeMap = (obj1: any, obj2: any): Map<string, JsonDiffChange> => {
   const changes = diff(obj1, obj2);
