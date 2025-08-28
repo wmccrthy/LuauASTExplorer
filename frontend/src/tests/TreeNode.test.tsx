@@ -366,7 +366,7 @@ describe("TreeNode", () => {
       // Should show removed indicator for the removed property
       const removedNode = getQueryableNode("root.removedName");
       expect(removedNode.getByText("-")).toBeInTheDocument();
-      // The removed property should still be rendered and get proper type tooltip
+      // The removed property should still be rendered and get proper type tooltip (inferred from parent of _testType)
       expect(removedNode.getByText(/removedName/)).toBeInTheDocument();
       expect(removedNode.getByText(/type: Token/)).toBeInTheDocument;
       // also want to verify that root has before->after type annotation display
@@ -562,7 +562,7 @@ describe("TreeNode", () => {
         },
       };
 
-      render(
+      const { unmount } = render(
         <MockProvider>
           <TreeNodeContainer
             value={changedPositionNode}
@@ -573,12 +573,138 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      // The actual test should verify that a Position node with changes shows ▶ because
-      // it's STILL collapsed (but shows diff indicator). The override logic isn't working as expected.
-      // Let's test what actually happens: Position nodes stay collapsed even with changes.
       const nodeQuery = getQueryableNode("root", "nodeHeader");
       expect(nodeQuery.getByText("▶")).toBeInTheDocument(); // Position still auto-collapses
-      expect(nodeQuery.getByText("○")).toBeInTheDocument(); // But shows diff indicator
+      expect(nodeQuery.getByText("○")).toBeInTheDocument(); // But shows diff indicator (bc in collapsed state)
+
+      // unmount first render
+      unmount();
+      const changedExpandedNode = mockTypelessToken("test", "contains-changes");
+      render(
+        <MockProvider>
+          <TreeNodeContainer value={changedExpandedNode} {...defaultProps} />
+        </MockProvider>
+      );
+      const expandedNode = getQueryableNode("root", "nodeHeader");
+      expect(expandedNode.getByText("▼")).toBeInTheDocument(); // Node expanded bc of updates
+    });
+  });
+
+  // Test that "unchanged" forces collapse even for normally expanded types
+  test("forces collapse for unchanged nodes in diff mode", () => {
+    const normallyExpandedNode = {
+      _astType: "AstExprTable", // Normally expands
+      entries: [{ item: "test" }],
+    };
+
+    render(
+      <MockProvider>
+        <TreeNodeContainer
+          value={normallyExpandedNode}
+          {...defaultProps}
+          isDiffMode={true}
+          diffStatus="unchanged" // Forces collapse
+        />
+      </MockProvider>
+    );
+
+    const nodeQuery = getQueryableNode("root", "nodeHeader");
+    expect(nodeQuery.getByText("▶")).toBeInTheDocument(); // Should be collapsed
+  });
+
+  // Test that "removed" forces collapse
+  test("forces collapse for removed nodes in diff mode", () => {
+    const normallyExpandedNode = {
+      _astType: "AstExprTable",
+      entries: [{ item: "test" }],
+    };
+
+    render(
+      <MockProvider>
+        <TreeNodeContainer
+          value={normallyExpandedNode}
+          {...defaultProps}
+          isDiffMode={true}
+          diffStatus="removed" // Forces collapse
+        />
+      </MockProvider>
+    );
+
+    const nodeQuery = getQueryableNode("root", "nodeHeader");
+    expect(nodeQuery.getByText("▶")).toBeInTheDocument();
+  });
+
+  // add tests for CodeTooltip logic; can provide simple mock (rather than just empty function) to use
+  // Enhanced mock provider with tooltip tracking
+  const createMockProviderWithTooltips = (initialTooltips = {}) => {
+    const mockRequestCodeTooltip = jest.fn();
+    const MockProviderWithTooltips: React.FC<{ children: React.ReactNode }> = ({
+      children,
+    }) => (
+      <CodeTranslationContext.Provider
+        value={{
+          codeTooltips: initialTooltips,
+          requestCodeTooltip: mockRequestCodeTooltip,
+          generateNodeId: (value, nodeKey) =>
+            `${nodeKey}-${JSON.stringify(value).substring(0, 10)}`,
+        }}
+      >
+        {children}
+      </CodeTranslationContext.Provider>
+    );
+    return { MockProviderWithTooltips, mockRequestCodeTooltip };
+  };
+
+  describe("CodeTooltip logic", () => {
+    test("requests tooltip on hover for objects/arrays", () => {
+      const { MockProviderWithTooltips, mockRequestCodeTooltip } =
+        createMockProviderWithTooltips();
+      const objValue = { prop: "value" };
+
+      render(
+        <MockProviderWithTooltips>
+          <TreeNodeContainer value={objValue} {...defaultProps} />
+        </MockProviderWithTooltips>
+      );
+
+      const nodeQuery = getQueryableNode("root", "node");
+      fireEvent.mouseEnter(nodeQuery.getByTestId("nodeHeader-root"));
+
+      expect(mockRequestCodeTooltip).toHaveBeenCalledWith(objValue, "root");
+    });
+
+    test("does not request tooltip for primitives", () => {
+      const { MockProviderWithTooltips, mockRequestCodeTooltip } =
+        createMockProviderWithTooltips();
+
+      render(
+        <MockProviderWithTooltips>
+          <TreeNodeContainer value="primitive" {...defaultProps} />
+        </MockProviderWithTooltips>
+      );
+
+      fireEvent.mouseEnter(screen.getByTestId("node-root"));
+
+      expect(mockRequestCodeTooltip).not.toHaveBeenCalled();
+    });
+
+    test("does not re-request cached tooltips", () => {
+      const objValue = { prop: "value" };
+      const nodeId = `root-${JSON.stringify(objValue).substring(0, 10)}`;
+      const { MockProviderWithTooltips, mockRequestCodeTooltip } =
+        createMockProviderWithTooltips({
+          [nodeId]: "cached tooltip content",
+        });
+
+      render(
+        <MockProviderWithTooltips>
+          <TreeNodeContainer value={objValue} {...defaultProps} />
+        </MockProviderWithTooltips>
+      );
+
+      fireEvent.mouseEnter(screen.getByTestId("nodeHeader-root"));
+
+      expect(mockRequestCodeTooltip).not.toHaveBeenCalled(); // Should use cache
     });
   });
 });
