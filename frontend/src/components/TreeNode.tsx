@@ -6,10 +6,11 @@ import {
   getTypeString,
   getType,
   unpackArrayType,
+  getChildPropertyDefinition,
 } from "../utils/astTypeHelpers";
 import { CodeTooltip } from "./CodeTooltip";
 
-import { ASTTypeDefinition } from "../utils/astTypeDefinitions";
+import { TypeMetadata } from "../utils/astTypeDefinitions";
 import { useCodeTranslationContext } from "../context/codeTranslationContext";
 
 interface TreeNodeProps {
@@ -19,10 +20,7 @@ interface TreeNodeProps {
   expanded: boolean;
   onToggle: () => void;
   path: string;
-  type: string;
-  typeDefinition: ASTTypeDefinition | undefined;
-  kind: string;
-  arrayType: boolean;
+  typeMetadata: TypeMetadata;
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
@@ -45,10 +43,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   expanded,
   path,
   onToggle,
-  type,
-  typeDefinition,
-  kind,
-  arrayType,
+  typeMetadata,
   searchTerm = "",
   isDiffMode = false,
   diffStatus = "unchanged",
@@ -67,18 +62,43 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   }, [value, nodeKey, generateNodeId]);
 
   const renderTypeAnnotations = React.useCallback(() => {
-    if (type) {
-      return (
+    if (typeMetadata.type) {
+      const changedType = typeMetadata.type !== typeMetadata.prevType;
+      const currentTypeAnnotation = (
         <TypeAnnotation
-          typeName={type}
-          typeDefinition={typeDefinition}
-          isArrayType={arrayType}
-          kind={kind}
+          typeName={typeMetadata.type}
+          typeDefinition={typeMetadata.typeDefinition}
+          isArrayType={typeMetadata.arrayType}
+          kind={typeMetadata.kind}
+          hasPrevType={changedType}
         ></TypeAnnotation>
       );
+
+      if (changedType && typeMetadata.prevType) {
+        // if type ~= prevType, display type before/after very similar to how we display value before/after...
+        return (
+          <React.Fragment>
+            <span className="diff-before">
+              {
+                <TypeAnnotation
+                  typeName={typeMetadata.prevType}
+                  typeDefinition={typeMetadata.prevTypeDefinition}
+                  isArrayType={typeMetadata.prevArrayType}
+                  kind={typeMetadata.prevKind}
+                ></TypeAnnotation>
+              }
+            </span>
+            <span className="diff-arrow"> → </span>
+            {/* want negative padding on bottom span */}
+            <span>{currentTypeAnnotation}</span>
+          </React.Fragment>
+        );
+      } else {
+        return currentTypeAnnotation;
+      }
     }
     return null;
-  }, [type, arrayType, typeDefinition, kind]);
+  }, [typeMetadata]);
 
   // Get diff-specific styling
   const getDiffClassName = React.useCallback(() => {
@@ -113,7 +133,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               beforeValue: child.beforeValue,
               afterValue: child.afterValue,
             }
-          : childChange // handles cases where child is primitive value
+          : childChange // handles cases where child is primitive value (since diffStatus wont exist on the child node itself)
           ? {
               isDiffMode,
               diffStatus:
@@ -174,7 +194,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       case "contains-changes":
       case "contains-nested-changes":
         return expanded ? (
-          ""
+          <span className="diff-indicator"></span>
         ) : (
           <span className="diff-indicator diff-updated-indicator">○</span>
         );
@@ -196,13 +216,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
       switch (diffStatus) {
         case "added":
-          return highlightText(`${nodeKey}: ${displayValue}`);
         case "removed":
-          const beforeDisplayValue =
-            typeof beforeValue === "string"
-              ? `"${beforeValue}"`
-              : String(beforeValue);
-          return highlightText(`${nodeKey}: ${beforeDisplayValue}`);
+          return highlightText(`${nodeKey}: ${displayValue}`);
         case "updated":
           const beforeDisplay =
             typeof beforeValue === "string"
@@ -273,7 +288,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   // Render primitive values
   if (value === null || value === undefined) {
     return (
-      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter} data-testid={"node-" + path}>
         {getRenderedContent(false, renderValueWithDiff("null"), false)}
       </div>
     );
@@ -284,7 +299,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     const displayValue =
       typeof value === "string" ? `"${value}"` : String(value);
     return (
-      <div className={diffClassName} onMouseEnter={handleMouseEnter}>
+      <div className={diffClassName} onMouseEnter={handleMouseEnter} data-testid={"node-" + path}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {getRenderedContent(false, renderValueWithDiff(displayValue), false)}
@@ -296,7 +311,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return (
-        <div className={diffClassName}>
+        <div className={diffClassName} data-testid={"node-" + path}>
           {/* include empty span to ensure indentation aligns with expandable nodes */}
           <span className="tree-arrow"></span>
           {getRenderedContent(false, renderValueWithDiff("[]"), false)}
@@ -305,16 +320,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
 
     // check if node is an array of a Punctuated type (TO-DO: add more robust check than this)
-    const punctuatedType = typeDefinition?.properties?.find(
+    const punctuatedType = typeMetadata.typeDefinition?.properties?.find(
       (item) => item.name === ""
     );
 
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} data-testid={"node-" + path}>
         <div
           style={{ cursor: "pointer" }}
           onClick={onToggle}
           onMouseEnter={handleMouseEnter}
+          data-testid={"nodeHeader-" + path}
         >
           {getRenderedContent(
             true,
@@ -342,6 +358,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 parentInferredType={
                   punctuatedType
                     ? unpackArrayType(punctuatedType.type as string)
+                    : typeMetadata.type
+                    ? unpackArrayType(typeMetadata.type)
                     : undefined
                 }
                 searchTerm={searchTerm}
@@ -369,7 +387,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   if (keys.length === 0) {
     return (
-      <div className={diffClassName}>
+      <div className={diffClassName} data-testid={"node-" + path}>
         {/* include empty span to ensure indentation aligns with expandable nodes */}
         <span className="tree-arrow"></span>
         {indent}
@@ -380,11 +398,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   }
 
   return (
-    <div className={diffClassName}>
+    <div className={diffClassName} data-testid={"node-" + path}>
       <div
         style={{ cursor: "pointer" }}
         onClick={onToggle}
         onMouseEnter={handleMouseEnter}
+        data-testid={"nodeHeader-" + path}
       >
         {getRenderedContent(
           true,
@@ -402,9 +421,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           // Pass through diff props for child nodes if they have diff annotations
           const childValue = value[key];
           const childDiffProps = getChildDiffProps(value, key, childValue);
-          const childPropertyDefinition = typeDefinition?.properties?.find(
-            (prop) => prop.name === key
+          const childPropertyDefinition = getChildPropertyDefinition(
+            typeMetadata,
+            value.childChanges,
+            key
           );
+
           const parentInferredType = childPropertyDefinition?.generic
             ? childPropertyDefinition.generic
             : childPropertyDefinition?.type;
@@ -462,8 +484,39 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     return [undefined, false];
   }, [type]);
 
+  // do the above once each for old and new values on contains-changes nodes
+  const [prevType, prevKind] = React.useMemo(() => {
+    const childChanges = props.value ? props.value.childChanges : undefined;
+    if (childChanges && (childChanges._astType || childChanges.kind)) {
+      const hackVal = {
+        _astType: childChanges._astType ? childChanges._astType.oldValue : type, // might need to handle removed ast types here better; (generally scenarios other than UPDATE _astType)
+        kind: childChanges.kind ? childChanges.kind.oldValue : kind,
+      };
+      return getTypeString(hackVal, props.nodeKey, undefined);
+    }
+    return [type, kind]; // if _astType not in changes, return already computed (prevType is same as currentType)
+  }, [type, kind, props.value, props.nodeKey]);
+  const [prevTypeDefinition, prevArrayType] = React.useMemo(() => {
+    if (prevType) {
+      return getType(prevType);
+    }
+    return [undefined, false];
+  }, [prevType]);
+
+  const typeMetadata = {
+    type: type,
+    typeDefinition: typeDefinition,
+    arrayType: arrayType,
+    kind: kind,
+    prevType: prevType,
+    prevTypeDefinition: prevTypeDefinition,
+    prevArrayType: prevArrayType,
+    prevKind: prevKind,
+  };
+
   const autoCollapse = props.isDiffMode
     ? props.diffStatus === "unchanged" ||
+      props.diffStatus === "removed" ||
       shouldAutoCollapse(type, typeDefinition)
     : shouldAutoCollapse(type, typeDefinition);
 
@@ -483,10 +536,7 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
       {...props}
       expanded={expanded}
       onToggle={handleToggle}
-      type={type}
-      typeDefinition={typeDefinition}
-      kind={kind}
-      arrayType={arrayType}
+      typeMetadata={typeMetadata}
     />
   );
 };

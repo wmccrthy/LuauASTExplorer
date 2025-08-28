@@ -17,6 +17,17 @@ export interface GenericTypeDefinition {
   genericType: string;
 }
 
+export interface TypeMetadata {
+  type: string;
+  typeDefinition: ASTTypeDefinition | undefined;
+  arrayType: boolean;
+  kind: string;
+  prevType: string;
+  prevTypeDefinition: ASTTypeDefinition | undefined;
+  prevArrayType: boolean;
+  prevKind: string;
+}
+
 export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   // === UTILITY TYPES ===
   Position: {
@@ -1017,4 +1028,11 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       "AstTypePackVariadic",
     ],
   },
+
+  _testType: {
+    properties: [
+      { name: "removedName", type: "Token", optional: true },
+      { name: "name", type: "Token", optional: true },
+    ],
+  }
 };

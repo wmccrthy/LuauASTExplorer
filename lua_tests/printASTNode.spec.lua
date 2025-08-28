@@ -5,6 +5,45 @@ local getSortedChildren = require("../lua_helpers/sortByPositionTable")
 local printLocalCases = helpers.testCases.printLocalCases
 local createMockToken, createMockPunctuatedArray = helpers.createMockToken, helpers.createMockPunctuatedArray
 
+-- want to test that invalid node types are removed; and specifically, that nested invalid nodes are removed (i.e a nested "REMOVE" node)
+local function test_filternode()
+	local node = {
+		beforeValue = {
+			nested = {
+				[0] = {
+					a = 1,
+				},
+			},
+		},
+		afterValue = {
+			nested = {},
+		},
+		childChanges = {
+			["nested.0"] = {
+				type = "REMOVE",
+			},
+		},
+		nested = {
+			[0] = {
+				a = 1,
+				diffStatus = "removed",
+			},
+			childChanges = {
+				["nested.0"] = {
+					type = "remove",
+				},
+			},
+		},
+	}
+	local filtered = printer.filterNodeForPrinting(node)
+	assert(filtered.nested ~= nil, "Incorrectly filtered valid prop")
+	assert(filtered.beforeValue == nil, "Failed to filter node")
+	assert(filtered.afterValue == nil, "Failed to filter node")
+	assert(filtered.childChanges == nil, "Failed to filter node")
+	assert(filtered.nested[0] == nil, "Failed to filter nested invalid props from node")
+	assert(filtered.nested.childChanges == nil, "Failed to filter nested invalid props from node")
+end
+
 local function test_printlocal()
 	for expectedOutput, testCase in printLocalCases do
 		local result = printer.printlocal(testCase)
@@ -152,6 +191,7 @@ end
 -- Main test runner
 return function()
 	print("Running printASTNode comprehensive tests...")
+	test_filternode()
 	test_printlocal()
 	test_printfallback()
 	test_position_sorting()
