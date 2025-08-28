@@ -140,7 +140,7 @@ export function highlightLuauCode(code: string): string {
     return result.value;
   } catch (error) {
     try {
-      const result = hljs.highlightAuto(code, ["luau", "lua", "javascript"]);
+      const result = hljs.highlightAuto(code, ["lua", "javascript"]);
       return result.value;
     } catch (fallbackError) {
       return escapeHtml(code);

@@ -1,6 +1,6 @@
 # AST Highlight Helper
 
-A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees (AST) of Luau/Lua code with interactive type exploration, advanced diffing capabilities, and comprehensive AST node documentation.
+A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees (AST) of Luau/Lua code with interactive type exploration, advanced diffing capabilities, and comprehensive AST node inspection.
 
 ## 🚀 Features
 
@@ -10,16 +10,15 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 - **Side-by-side view** of code and corresponding AST
 - **Perfect for learning** how code structures translate to AST nodes
 
-
 ### ⚡ **AST Diff Analyzer**
 - **Visual comparison** between two code snippets
 - **Intelligent change detection** (additions, modifications, removals)
-- **Parent context highlighting** shows which containers changed
+- **Before/after type annotations** show type transformations
 - **Color-coded indicators**: 
   - 🟢 **Green** for additions (`+`)
   - 🔴 **Red** for removals (`-`) 
   - 🔵 **Blue** for modifications (`~`)
-  - 🔵 **Circle** for containers with changes (`○`)
+  - 🟡 **Circle** for containers with changes (`○`)
 
 ### 🎯 **Smart Tree Display**
 - **Expandable/collapsible** tree branches and nodes
@@ -27,10 +26,18 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 - **Clean visual hierarchy** for easy navigation
 - **Type-aware rendering** with enhanced annotation display
 
+### 💡 **Advanced Type System**
+- **Comprehensive type annotations** with tooltip details
+- **Before/after type display** in diff mode
+
+### 🔧 **Code Translation & Tooltips**
+- **Hover over nodes** to show generated/translated code for AST nodes
+- **Node path display** for non-translatable nodes
+
 ## 📦 Installation
 
 ### From VSIX File
-1. Download the `.vsix` file from [Releases](./releases)
+1. Download the `.vsix` file from [Releases](https://github.com/wmccrthy/LuauASTExplorer/releases)
 2. Open VSCode Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
 3. Run `Extensions: Install from VSIX...`
 4. Select the downloaded `.vsix` file
@@ -63,13 +70,15 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 - **Click "Parse AST"** for on-demand parsing
 - **View real-time AST** as your code structure changes
 - **Hover over type annotations** to see detailed property information
+- **Hover over node keys** to see corresponding Luau code
 - **Perfect for experimentation** and learning AST structure
 
 #### Diff Analyzer Mode
 - **Input two code snippets** in separate editors
 - **Click "Analyze Transformation"** to see differences
 - **Visual diff highlighting** shows exactly what changed
-- **Type tooltips work in diff mode** tool for enhanced analysis
+- **Type tooltips and code tooltips** work in diff mode for enhanced analysis
+- **Before/after type annotations** show how types transform
 - **Understand code transformations** for refactoring and codemod work
 
 ## 🛠️ Development
@@ -102,6 +111,15 @@ npm run compile
 vsce package
 ```
 
+### Testing
+```bash
+# Run frontend tests
+npm test
+
+# Run Lua tests
+lute run lua_tests/runner.luau
+```
+
 ### Architecture
 
 ```
@@ -109,16 +127,17 @@ vsce package
 │                    VSCode Extension                         │
 ├─────────────────┬─────────────────┬─────────────────────────┤
 │   Backend       │   Frontend      │   External Tools        │
-│   (Node.js)     │   (React)       │                         │
+│ (Node + Luau)   │   (React)       │                         │
 │                 │                 │                         │
 │ • extension.ts  │ • App.tsx       │ • Lute (Luau parser)    │
 │ • astParser.ts  │ • TreeNode.tsx  │ • json-diff-ts          │
-│ • Luau helpers  │ • TypeTooltip   │ • Foreman (tool mgmt)   │
-│ • Type system   │ • diffUtils.ts  │                         │
+│ • Luau helpers  │ • TypeTooltip   │ • highlight.js          │
+│ • Type system   │ • diffUtils.ts  │ • Foreman (tool mgmt)   │
 └─────────────────┴─────────────────┴─────────────────────────┘
 
-Type Annotation Pipeline:
-Luau Code → Lute Parser → type_annotations.lua → JSON + _astType → React UI
+Data Flow:
+(initial code-> AST translation) Luau Code → Lute Parser → typeAnnotations.lua (adds _astType) → JSON → React UI
+(node hover AST -> code translation) React UI Node → astJsonToCode.luau → lutePrinter.luau → Generated Src Code → Tooltips in React UI
 ```
 
 ### Project Structure
@@ -126,25 +145,85 @@ Luau Code → Lute Parser → type_annotations.lua → JSON + _astType → React
 LuauASTExplorer/
 ├── src/                     # VSCode extension backend
 │   ├── extension.ts         # Main entry point
-│   └── astParser.ts         # Lute integration
+│   └── astParser.ts         # Lute integration & communication
 ├── frontend/                # React frontend
 │   ├── src/
 │   │   ├── App.tsx          # Main React component
-│   │   ├── TreeNode.tsx     # AST tree rendering
-│   │   ├── astTypeDefinitions.ts  # Complete Luau AST type definitions
-│   │   ├── diffUtils.ts     # Diff computation engine
-│   │   └── components/
-│   │       ├── TypeTooltip.tsx    # Interactive type tooltips
-│   │       └── TypeTooltip.css    # VS Code theme styling
+│   │   ├── components/      # UI components
+│   │   │   ├── TreeNode.tsx        # AST tree rendering
+│   │   │   ├── TypeTooltip.tsx     # Interactive type tooltips
+│   │   │   ├── CodeTooltip.tsx     # Code translation tooltips
+│   │   │   ├── LiveEditor.tsx      # Live editing mode
+│   │   │   ├── DiffAnalyzer.tsx    # Diff analysis mode
+│   │   │   └── CodeEditor.tsx      # Code input component
+│   │   ├── utils/           # Core utilities
+│   │   │   ├── astTypeDefinitions.ts  # Complete Luau AST type definitions
+│   │   │   ├── astTypeHelpers.ts      # Type inference & manipulation
+│   │   │   ├── diffUtils.ts           # Diff annotation
+│   │   │   ├── syntaxHighlighting.ts  # Code highlighting & theme detection
+│   │   │   ├── nodeEmphasisHelpers.ts # Auto-collapse logic
+│   │   │   └── parsingMessageHandlers.ts # VSCode communication
+│   │   ├── context/         # React context
+│   │   │   └── codeTranslationContext.ts # Code tooltip state management
+│   │   ├── hooks/           # Custom React hooks
+│   │   │   └── useCodeTranslation.ts     # Code translation logic
+│   │   ├── types/           # TypeScript definitions
+│   │   │   └── typesAndInterfaces.ts     # Shared type definitions
+│   │   └── tests/           # Frontend test suites
+│   │       ├── TreeNode.test.tsx         # Comprehensive component tests
+│   │       ├── astTypeHelpers.test.ts    # Type system tests
+│   │       ├── diffUtils.test.ts         # Diff algorithm tests
+│   │       ├── nodeEmphasisHelpers.test.ts # Auto-collapse tests
+│   │       └── syntaxHighlighting.test.ts  # Syntax highlighting tests
 │   └── build/              # Built React app
 ├── lua_helpers/            # Luau scripts for parsing
-│   ├── ast_to_json.luau    # Main AST serialization script
-│   └── type_annotations.lua # Enhanced type annotation system
-├── .github/workflows/      # GitHub Actions
-│   └── release.yml         # Automated VSIX packaging
-├── package.json            # Extension manifest
-└── README.md              # This file
+│   ├── astToJson.luau      # Main AST serialization script
+│   ├── astJsonToCode.luau  # AST to code conversion
+│   ├── typeAnnotations.lua # Enhanced type annotation system
+│   ├── sortByPositionTable.lua # AST position sorting utilities
+│   └── temp_vendor/
+│       └── lutePrinter.luau    # Luau code generation engine
+├── lua_tests/             # Lua test suites
+│   ├── runner.luau        # Test runner
+│   ├── typeAnnotations.spec.lua   # Type annotation tests
+│   ├── printASTNode.spec.lua      # Code generation tests
+│   ├── astJsonToCode.spec.lua     # AST conversion tests
+│   └── helpers/           # Test utilities
+│       ├── astJsonToCodeHelpers.lua   # Test case definitions
+│       └── typeAnnotationTestHelpers.lua # Type testing utilities
+├── ci_scripts/            # Build automation
+│   └── readChangelog.ts   # Changelog processing
+├── docs/                  # Documentation assets
+│   ├── ASTExplorerDiffGIF.gif
+│   └── ASTExplorerLiveEditorGIF.gif
+├── .github/workflows/     # GitHub Actions
+│   ├── release.yml        # Automated VSIX packaging
+│   └── ci.yml            # Continuous integration
+├── package.json           # Extension manifest
+└── README.md             # This file
 ```
+
+## 🧪 Testing
+
+### Frontend Testing (Jest + React Testing Library)
+- **Component integration tests** for `TreeNode`, `TypeTooltip`, etc.
+- **Type system algorithm tests** for complex inference logic
+- **Diff engine tests** for transformation analysis
+- **Auto-collapse behavior tests** for smart UI logic
+- **Syntax highlighting tests** for theme integration
+
+### Backend Testing (Lua Test Suite)
+- **Type annotation tests** for comprehensive AST type coverage
+- **Code generation tests** for AST-to-code conversion
+- **Edge case tests** for malformed/partial AST nodes
+- **Printer fallback tests** for unsupported node types
+
+### Test Coverage
+- ✅ **Type inference algorithms** (complex business logic)
+- ✅ **Diff computation and annotation** (core feature)
+- ✅ **Auto-collapse logic** (UX-critical behavior)
+- ✅ **Code translation pipeline** (end-to-end functionality)
+- ✅ **Edge cases and error handling** (robustness)
 
 ## 🤝 Contributing
 
@@ -159,22 +238,29 @@ We welcome contributions! Here's how to get started:
 
 ### Development Guidelines
 - **Follow TypeScript best practices**
-- **Add tests** for new functionality
+- **Add tests** for new functionality (both frontend and Lua)
 - **Update documentation** as needed
 - **Test with various Luau code samples**
+- **Use conventional commit messages** for changelog automation
+
+### PR Title Format
+Use these formats for automatic changelog creation:
+- `#feat Add new feature description` → Creates feature changelog entry
+- `#bug Fix issue description` → Creates bug fix changelog entry
+- `#chore Update documentation` → No changelog entry (maintenance)
 
 ## 📋 Requirements
 
-- **VSCode** 1.60.0 or higher
+- **VSCode** 1.74.0 or higher
 - **Lute** (latest version)
-- **Foreman** (See [Foreman](https://github.com/Roblox/foreman) for installation instructions)
+- **Foreman** or **Rokit** (See installation instructions linked above)
 - **Node.js** 16+ (for development)
 
 ## 🐛 Known Issues
 
 - Large AST trees (1000+ nodes) may have performance impact
-- Diffing is not perfect, but it's a work in progress (open to suggestions and improvements)
-  - Removals don't show up because we don't yet inject the removed nodes into the displayed AST
+- Some complex and niche types may not display perfectly in tooltips
+- Code translation works for most AST nodes but may fall back to path display for edge cases (eg, Trivia, Position, Location)
 
 ## 📄 License
 
@@ -185,6 +271,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [**luau-lang**](https://github.com/luau-lang/) for all the luau tooling
 - [**rxi**](https://github.com/rxi/json.lua) for a lua json library
 - [**json-diff-ts**](https://github.com/ltwlf/json-diff-ts) for robust JSON diffing capabilities
+- [**highlight.js**](https://highlightjs.org/) for syntax highlighting
 
 ## 📞 Support
 
@@ -198,4 +285,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue?style=for-the-badge&logo=visual-studio-code)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Luau](https://img.shields.io/badge/Luau-000000?style=for-the-badge&logo=lua&logoColor=white) 
+![Luau](https://img.shields.io/badge/Luau-000000?style=for-the-badge&logo=lua&logoColor=white)
+![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white)
