@@ -91,3 +91,25 @@ export enum WindowMode {
   LiveEditor = "live-editor", // Window 1: Live code editor + AST
   DiffAnalyzer = "diff-analyzer", // Window 2: Code transformation diff
 }
+
+// Container component that manages expand/collapse state for each node
+export interface TreeNodeContainerProps {
+  nodeKey: string;
+  value: any;
+  level: number;
+  path: string;
+  searchTerm?: string;
+  parentInferredType?: string | string[];
+  isDiffMode?: boolean;
+  diffStatus?:
+    | "added"
+    | "nested-add"
+    | "removed"
+    | "updated"
+    | "unchanged"
+    | "contains-changes"
+    | "contains-nested-changes";
+  beforeValue?: any;
+  afterValue?: any;
+  hiddenNodes?: string[];
+};
