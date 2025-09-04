@@ -4,8 +4,11 @@ import TreeNode from "./TreeNode";
 import { shouldAutoCollapse } from "../utils/nodeEmphasisHelpers";
 import { TreeNodeContainerProps } from "../types/typesAndInterfaces";
 
-const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
-  // get all this metadata at tree node level; pass to TypeTooltip
+/**
+ * Custom hook to compute type metadata for tree nodes.
+ * Handles both current and previous type information for diff mode.
+ */
+const useTypeMetadata = (props: TreeNodeContainerProps) => {
   const [type, kind] = React.useMemo(() => {
     return getTypeString(props.value, props.nodeKey, props.parentInferredType);
   }, [props.value, props.nodeKey, props.parentInferredType]);
@@ -17,18 +20,19 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     return [undefined, false];
   }, [type]);
 
-  // do the above once each for old and new values on contains-changes nodes
+  // Compute previous type metadata for diff mode
   const [prevType, prevKind] = React.useMemo(() => {
-    const childChanges = props.value ? props.value.childChanges : undefined;
+    const childChanges = props.value?.childChanges;
     if (childChanges && (childChanges._astType || childChanges.kind)) {
       const hackVal = {
-        _astType: childChanges._astType ? childChanges._astType.oldValue : type, // might need to handle removed ast types here better; (generally scenarios other than UPDATE _astType)
+        _astType: childChanges._astType ? childChanges._astType.oldValue : type,
         kind: childChanges.kind ? childChanges.kind.oldValue : kind,
       };
       return getTypeString(hackVal, props.nodeKey, undefined);
     }
-    return [type, kind]; // if _astType not in changes, return already computed (prevType is same as currentType)
+    return [type, kind];
   }, [type, kind, props.value, props.nodeKey]);
+
   const [prevTypeDefinition, prevArrayType] = React.useMemo(() => {
     if (prevType) {
       return getType(prevType);
@@ -36,22 +40,26 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
     return [undefined, false];
   }, [prevType]);
 
-  const typeMetadata = {
-    type: type,
-    typeDefinition: typeDefinition,
-    arrayType: arrayType,
-    kind: kind,
-    prevType: prevType,
-    prevTypeDefinition: prevTypeDefinition,
-    prevArrayType: prevArrayType,
-    prevKind: prevKind,
+  return {
+    type,
+    typeDefinition,
+    arrayType,
+    kind,
+    prevType,
+    prevTypeDefinition,
+    prevArrayType,
+    prevKind,
   };
+};
+
+const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
+  const typeMetadata = useTypeMetadata(props);
 
   const autoCollapse = props.isDiffMode
     ? props.diffStatus === "unchanged" ||
       props.diffStatus === "removed" ||
-      shouldAutoCollapse(type, typeDefinition)
-    : shouldAutoCollapse(type, typeDefinition);
+      shouldAutoCollapse(typeMetadata.type, typeMetadata.typeDefinition)
+    : shouldAutoCollapse(typeMetadata.type, typeMetadata.typeDefinition);
 
   const [expanded, setExpanded] = React.useState(!autoCollapse);
 

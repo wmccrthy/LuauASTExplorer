@@ -20,7 +20,7 @@ interface TreeNodeProps {
   renderChild: (
     childProps: TreeNodeContainerProps,
     key: string | number
-  ) => React.ReactNode;
+  ) => React.ReactElement;
   typeMetadata: TypeMetadata;
   searchTerm?: string;
   isDiffMode?: boolean;
