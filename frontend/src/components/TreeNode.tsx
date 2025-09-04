@@ -453,20 +453,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             },
             key
           );
-
-          // return (
-          //   <TreeNodeContainer
-          //     key={key}
-          //     nodeKey={key}
-          //     value={childValue}
-          //     level={level + 1}
-          //     parentInferredType={parentInferredType}
-          //     searchTerm={searchTerm}
-          //     hiddenNodes={hiddenNodes}
-          //     path={`${path}.${key}`}
-          //     {...childDiffProps}
-          //   />
-          // );
         })}
     </div>
   );
