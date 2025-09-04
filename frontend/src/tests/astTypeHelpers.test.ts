@@ -103,13 +103,13 @@ describe("astTypeHelpers", () => {
       "",
     ]);
 
-    // leverage getArrayType
+    // leverages getArrayType
     expect(getTypeString([{}], "entries")).toEqual([
       "{ AstExprTableItem }",
       "",
     ]);
 
-    // fallback on parentInferredType
+    // falls back on parentInferredType
     expect(
       getTypeString({ kind: "record" }, "[0]", "AstExprTableItem")
     ).toEqual(["AstExprTableItem", "record"]);
