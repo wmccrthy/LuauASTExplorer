@@ -6,8 +6,7 @@ import {
   getChildPropertyDefinition,
 } from "../utils/astTypeHelpers";
 import { CodeTooltip } from "./CodeTooltip";
-import TreeNodeContainer, { TreeNodeContainerProps } from "./TreeNodeContainer";
-
+import { TreeNodeContainerProps } from "../types/typesAndInterfaces";
 import { TypeMetadata } from "../utils/astTypeDefinitions";
 import { useCodeTranslationContext } from "../context/codeTranslationContext";
 

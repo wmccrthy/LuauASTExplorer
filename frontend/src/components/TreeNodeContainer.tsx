@@ -2,28 +2,7 @@ import { getTypeString, getType } from "../utils/astTypeHelpers";
 import React from "react";
 import TreeNode from "./TreeNode";
 import { shouldAutoCollapse } from "../utils/nodeEmphasisHelpers";
-
-// Container component that manages expand/collapse state for each node
-export interface TreeNodeContainerProps {
-  nodeKey: string;
-  value: any;
-  level: number;
-  path: string;
-  searchTerm?: string;
-  parentInferredType?: string | string[];
-  isDiffMode?: boolean;
-  diffStatus?:
-    | "added"
-    | "nested-add"
-    | "removed"
-    | "updated"
-    | "unchanged"
-    | "contains-changes"
-    | "contains-nested-changes";
-  beforeValue?: any;
-  afterValue?: any;
-  hiddenNodes?: string[];
-}
+import { TreeNodeContainerProps } from "../types/typesAndInterfaces";
 
 const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
   // get all this metadata at tree node level; pass to TypeTooltip
