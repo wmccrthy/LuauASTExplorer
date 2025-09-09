@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import TreeNode from "./TreeNode";
 import { shouldAutoCollapse } from "../utils/nodeEmphasisHelpers";
 import { TreeNodeContainerProps } from "../types/typesAndInterfaces";
@@ -17,17 +17,27 @@ const TreeNodeContainer: React.FC<TreeNodeContainerProps> = (props) => {
 
   const [expanded, setExpanded] = React.useState(!autoCollapse);
 
-  const [collapsedChildren, setCollapsedChildren] = React.useState(!autoCollapse);
+  useEffect(() => {
+    setExpanded(!autoCollapse);
+  }, [autoCollapse]);
 
-  const handleCollapseChildren = () => {
+  const [collapsedChildren, setCollapsedChildren] =
+    React.useState(autoCollapse);
+
+  const handleCollapseChildren = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents parent node click
     setCollapsedChildren(!collapsedChildren);
   };
 
   const collapseChildrenButton = useMemo(() => {
     return (
       // toggle children collapse
-      <button className="btn" onClick={handleCollapseChildren}>
-        {collapsedChildren ? "⬇️ Expand children?" : "➡️ Collapse children?"}
+      <button
+        className="collapse-children-btn"
+        onClick={handleCollapseChildren}
+        title={"Collapse all toggle"}
+      >
+        {collapsedChildren ? "⟲" : "⤴"}
       </button>
     );
   }, [collapsedChildren, handleCollapseChildren]);
