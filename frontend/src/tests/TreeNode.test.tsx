@@ -3,54 +3,16 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import TreeNodeContainer from "../components/TreeNodeContainer";
 import { CodeTranslationContext } from "../context/codeTranslationContext";
-
-// Mock the context to avoid needing the full setup
-const MockProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => (
-  <CodeTranslationContext.Provider
-    value={{
-      codeTooltips: {},
-      requestCodeTooltip: () => {},
-      generateNodeId: () => "",
-    }}
-  >
-    {children}
-  </CodeTranslationContext.Provider>
-);
+import {
+  mockTypelessToken,
+  defaultProps,
+  MockProvider
+} from "./TreeNodeTestUtils";
 
 const getQueryableNode = (nodePath: string, idPrefix: string = "node") => {
   const el = screen.getByTestId(`${idPrefix}-${nodePath}`);
   const queryable = within(el);
   return queryable;
-};
-
-const mockTrivia = () => {
-  return [
-    {
-      tag: "",
-      location: "",
-      text: "",
-    },
-  ];
-};
-
-const mockTypelessToken = (text: string, diffStatus?: string) => {
-  return {
-    leadingTrivia: mockTrivia(),
-    trailingTrivia: mockTrivia(),
-    text: text,
-    position: {},
-    diffStatus: diffStatus,
-  };
-};
-
-const defaultProps = {
-  level: 0,
-  searchTerm: "",
-  hiddenNodes: [],
-  nodeKey: "root",
-  path: "root",
 };
 
 describe("TreeNode", () => {
