@@ -6,18 +6,10 @@ import {
   MockProvider,
 } from "../tests/TreeNodeTestUtils";
 
-
-
 const root = {
-    _astType: "AstStatBlock",
-    statements: [
-        mockTestType(),
-        mockTestType(),
-        mockTestType(),
-        mockTestType(),
-        mockTestType(),
-    ]
-}
+  _astType: "AstStatBlock",
+  statements: [mockTestType(), mockTestType()],
+};
 
 test("TreeNode benchmarks", () => {
   benchmark({
