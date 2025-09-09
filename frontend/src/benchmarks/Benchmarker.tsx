@@ -9,7 +9,8 @@ interface BenchmarkArgs {
 
 interface Benchmarks {
   rawRenderTime: number;
-  memoizationSavings: number;
+  baseDuration: number;
+  actualDuration: number;
 }
 
 type BenchmarksCache = Record<string, Benchmarks>;
@@ -29,7 +30,8 @@ const ProfiledComponent = (props: ProfiledComponentProps) => {
 const resetBenchmarks = (benchmarks: BenchmarksCache) => {
   const template = {
     rawRenderTime: 0,
-    memoizationSavings: 0,
+    baseDuration: 0,
+    actualDuration: 0,
   };
   const phases = ["mount", "update", "nested-update"];
   phases.forEach((phase) => {
@@ -39,22 +41,20 @@ const resetBenchmarks = (benchmarks: BenchmarksCache) => {
 
 const logBenchmarks = (benchmarks: BenchmarksCache) => {
   const phases = ["mount", "update", "nested-update"];
-  console.log("\n==== Benchmark Results ====");
+  let output = "\n==== Benchmark Results ====";
   phases.forEach((phase) => {
     const b = benchmarks[phase];
     if (!b) return;
     const label = phase
       .replace("-", " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
-    console.log(`\n[${label}]`);
-    console.log(
-      `  Avg. Raw Render Time:      ${b.rawRenderTime.toFixed(3)} ms`
-    );
-    console.log(
-      `  Avg. Memoization Savings:  ${b.memoizationSavings.toFixed(3)} ms`
-    );
+    output += `\n[${label}]\n`;
+    output += `    Avg. Raw Render Time: ${b.rawRenderTime.toFixed(3)} ms\n`;
+    output += `    Avg. Base Duration: ${b.baseDuration.toFixed(3)} ms\n`;
+    output += `    Avg. Actual Duration: ${b.actualDuration.toFixed(3)} ms\n`;
   });
-  console.log("==========================\n");
+  output += "==========================\n";
+  console.log(output);
 };
 
 export const benchmark = (args: BenchmarkArgs, silent: boolean = false) => {
@@ -71,9 +71,9 @@ export const benchmark = (args: BenchmarkArgs, silent: boolean = false) => {
     commitTime: any
   ) => {
     const rawRenderTime = commitTime - startTime;
-    const memoizationSavings = baseDuration - actualDuration;
     benchmarks[phase].rawRenderTime += rawRenderTime / RENDERS;
-    benchmarks[phase].memoizationSavings += memoizationSavings / RENDERS;
+    benchmarks[phase].baseDuration += baseDuration / RENDERS;
+    benchmarks[phase].actualDuration += actualDuration / RENDERS;
   };
 
   const { rerender } = render(
