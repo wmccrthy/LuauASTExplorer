@@ -548,7 +548,7 @@ describe("TreeNode", () => {
       expect(nodeQuery.getByText("▶")).toBeInTheDocument();
     });
 
-    test("overrides auto-collapse for changed nodes in diff mode", () => {
+    test("auto-collapse for changed nodes in diff mode", () => {
       const changedPositionNode = {
         _astType: "Position",
         line: 2,
@@ -574,19 +574,20 @@ describe("TreeNode", () => {
       );
 
       const nodeQuery = getQueryableNode("root", "nodeHeader");
-      expect(nodeQuery.getByText("▶")).toBeInTheDocument(); // Position still auto-collapses
+      expect(nodeQuery.getByText("▶")).toBeInTheDocument(); // Position still auto-collapses (expected)
       expect(nodeQuery.getByText("○")).toBeInTheDocument(); // But shows diff indicator (bc in collapsed state)
 
       // unmount first render
       unmount();
-      const changedExpandedNode = mockTypelessToken("test", "contains-changes");
+
+      const changedExpandedNode = mockTypelessToken("test", "contains-changes"); // Node with changes we expect to auto expand
       render(
         <MockProvider>
           <TreeNodeContainer value={changedExpandedNode} {...defaultProps} />
         </MockProvider>
       );
       const expandedNode = getQueryableNode("root", "nodeHeader");
-      expect(expandedNode.getByText("▼")).toBeInTheDocument(); // Node expanded bc of updates
+      expect(expandedNode.getByText("▼")).toBeInTheDocument(); // Node expanded bc does not auto-collapse AND has updates
     });
   });
 
