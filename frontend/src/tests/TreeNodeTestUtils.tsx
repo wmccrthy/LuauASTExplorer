@@ -1,4 +1,5 @@
 import { CodeTranslationContext } from "../context/codeTranslationContext";
+import { screen, within } from "@testing-library/react";
 
 export const mockTrivia = () => {
   return [
@@ -50,3 +51,9 @@ export const MockProvider: React.FC<{ children: React.ReactNode }> = ({
     {children}
   </CodeTranslationContext.Provider>
 );
+
+export const getQueryableNode = (nodePath: string, idPrefix: string = "node") => {
+  const el = screen.getByTestId(`${idPrefix}-${nodePath}`);
+  const queryable = within(el);
+  return queryable;
+};
