@@ -28,14 +28,13 @@ const ProfiledComponent = (props: ProfiledComponentProps) => {
 };
 
 const resetBenchmarks = (benchmarks: BenchmarksCache, unmount: () => void) => {
-  const template = {
-    rawRenderTime: 0,
-    baseDuration: 0,
-    actualDuration: 0,
-  };
   const phases = ["mount", "update", "nested-update"];
   phases.forEach((phase) => {
-    benchmarks[phase] = template;
+    benchmarks[phase] = {
+      rawRenderTime: 0,
+      baseDuration: 0,
+      actualDuration: 0,
+    };
   });
   unmount();
 };
