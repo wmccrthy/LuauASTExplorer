@@ -507,3 +507,39 @@
   color: var(--vscode-foreground);
   font-family: var(--vscode-editor-font-family);
 }
+
+.collapse-children-btn {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 3px;
+  padding: 2px 6px;
+  height: 20px;
+  min-width: 20px;
+  font-size: 11px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 8px;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  vertical-align: middle;
+  font-family: var(--vscode-font-family);
+}
+
+.collapse-children-btn:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground);
+  border-color: var(--vscode-button-border, var(--vscode-contrastActiveBorder));
+  transform: scale(1.05);
+}
+
+.collapse-children-btn:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.collapse-children-btn:active {
+  transform: scale(0.95);
+}

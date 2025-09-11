@@ -98,6 +98,7 @@ export interface TreeNodeContainerProps {
   value: any;
   level: number;
   path: string;
+  forceCollapse?: boolean;
   searchTerm?: string;
   parentInferredType?: string | string[];
   isDiffMode?: boolean;
