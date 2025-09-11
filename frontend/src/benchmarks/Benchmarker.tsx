@@ -8,10 +8,18 @@ interface BenchmarkArgs {
 }
 
 interface Benchmarks {
-  rawRenderTime: number;
-  baseDuration: number;
-  actualDuration: number;
+  rawRenderTime: number[];
+  baseDuration: number[];
+  actualDuration: number[];
 }
+
+const avg = (arr: number[]) => {
+  let avg = 0;
+  arr.forEach((val) => {
+    avg += val / arr.length;
+  });
+  return avg;
+};
 
 type BenchmarksCache = Record<string, Benchmarks>;
 
@@ -28,15 +36,15 @@ const ProfiledComponent = (props: ProfiledComponentProps) => {
 };
 
 const resetBenchmarks = (benchmarks: BenchmarksCache, unmount: () => void) => {
+  unmount();
   const phases = ["mount", "update", "nested-update"];
   phases.forEach((phase) => {
     benchmarks[phase] = {
-      rawRenderTime: 0,
-      baseDuration: 0,
-      actualDuration: 0,
+      rawRenderTime: [],
+      baseDuration: [],
+      actualDuration: [],
     };
   });
-  unmount();
 };
 
 const logBenchmarks = (benchmarks: BenchmarksCache, testing: string = "") => {
@@ -49,9 +57,9 @@ const logBenchmarks = (benchmarks: BenchmarksCache, testing: string = "") => {
       .replace("-", " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
     output += `\n[${label}]\n`;
-    output += `    Avg. Raw Render Time: ${b.rawRenderTime.toFixed(3)} ms\n`;
-    output += `    Avg. Base Duration: ${b.baseDuration.toFixed(3)} ms\n`;
-    output += `    Avg. Actual Duration: ${b.actualDuration.toFixed(3)} ms\n`;
+    output += ` Avg. Raw Render Time: ${avg(b.rawRenderTime).toFixed(3)} ms\n`;
+    output += ` Avg. Base Duration: ${avg(b.baseDuration).toFixed(3)} ms\n`;
+    output += ` Avg. Actual Duration: ${avg(b.actualDuration).toFixed(3)} ms\n`;
   });
   output += "==========================\n";
   console.log(output);
@@ -80,9 +88,9 @@ export const benchmark = (
     commitTime: any
   ) => {
     const rawRenderTime = commitTime - startTime;
-    benchmarks[phase].rawRenderTime += rawRenderTime / RENDERS;
-    benchmarks[phase].baseDuration += baseDuration / RENDERS;
-    benchmarks[phase].actualDuration += actualDuration / RENDERS;
+    benchmarks[phase].rawRenderTime.push(rawRenderTime);
+    benchmarks[phase].baseDuration.push(baseDuration);
+    benchmarks[phase].actualDuration.push(actualDuration);
   };
 
   const { rerender, unmount } = render(
@@ -112,7 +120,7 @@ export const benchmark = (
   resetBenchmarks(benchmarks, unmount);
 
   if (event) {
-    render(
+    const { unmount } = render(
       <ProfiledComponent
         onRenderCallback={onRenderCallback}
         componentName={args.componentName}
