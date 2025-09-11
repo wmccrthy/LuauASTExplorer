@@ -1,19 +1,14 @@
 import React from "react";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import TreeNodeContainer from "../components/TreeNodeContainer";
 import { CodeTranslationContext } from "../context/codeTranslationContext";
 import {
   mockTypelessToken,
   defaultProps,
-  MockProvider
+  MockProvider,
+  getQueryableNode
 } from "./TreeNodeTestUtils";
-
-const getQueryableNode = (nodePath: string, idPrefix: string = "node") => {
-  const el = screen.getByTestId(`${idPrefix}-${nodePath}`);
-  const queryable = within(el);
-  return queryable;
-};
 
 describe("TreeNode", () => {
   test("renders primitive values correctly", () => {
