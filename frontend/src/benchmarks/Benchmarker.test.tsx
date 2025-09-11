@@ -6,6 +6,6 @@ describe("benchmark", () => {
             componentName: "button",
             children: <button></button>
         }
-        benchmark(benchArgs, true);
+        benchmark(benchArgs, () => {return}, true);
     });
 });

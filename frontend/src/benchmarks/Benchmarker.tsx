@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import React, { Profiler } from "react";
 
 // component
@@ -27,7 +27,7 @@ const ProfiledComponent = (props: ProfiledComponentProps) => {
   );
 };
 
-const resetBenchmarks = (benchmarks: BenchmarksCache) => {
+const resetBenchmarks = (benchmarks: BenchmarksCache, unmount: () => void) => {
   const template = {
     rawRenderTime: 0,
     baseDuration: 0,
@@ -37,11 +37,12 @@ const resetBenchmarks = (benchmarks: BenchmarksCache) => {
   phases.forEach((phase) => {
     benchmarks[phase] = template;
   });
+  unmount();
 };
 
-const logBenchmarks = (benchmarks: BenchmarksCache) => {
+const logBenchmarks = (benchmarks: BenchmarksCache, testing: string = "") => {
   const phases = ["mount", "update", "nested-update"];
-  let output = "\n==== Benchmark Results ====";
+  let output = `\n==== ${testing}Benchmark Results ====`;
   phases.forEach((phase) => {
     const b = benchmarks[phase];
     if (!b) return;
@@ -57,10 +58,19 @@ const logBenchmarks = (benchmarks: BenchmarksCache) => {
   console.log(output);
 };
 
-export const benchmark = (args: BenchmarkArgs, silent: boolean = false) => {
+export const benchmark = (
+  args: BenchmarkArgs,
+  event?: {
+    event: (ProfiledComponent: any) => void;
+    eventName: string;
+  },
+  silent: boolean = false
+) => {
   // initialize benchmarks
   const benchmarks: BenchmarksCache = {}; // cache rendering results by the phase
-  resetBenchmarks(benchmarks);
+  resetBenchmarks(benchmarks, () => {
+    return;
+  });
 
   const onRenderCallback = (
     id: string,
@@ -76,7 +86,7 @@ export const benchmark = (args: BenchmarkArgs, silent: boolean = false) => {
     benchmarks[phase].actualDuration += actualDuration / RENDERS;
   };
 
-  const { rerender } = render(
+  const { rerender, unmount } = render(
     <ProfiledComponent
       onRenderCallback={onRenderCallback}
       componentName={args.componentName}
@@ -85,9 +95,8 @@ export const benchmark = (args: BenchmarkArgs, silent: boolean = false) => {
     </ProfiledComponent>
   );
 
-  // render ProfiledComponent 100 times; report benchmarks
-  for (let i = 0; i < RENDERS - 1; i++) {
-    // re-render Profiled component without propchanges
+  // render ProfiledComponent 100 times with same props; report benchmarks
+  for (let i = 0; i < RENDERS; i++) {
     rerender(
       <ProfiledComponent
         onRenderCallback={onRenderCallback}
@@ -99,10 +108,28 @@ export const benchmark = (args: BenchmarkArgs, silent: boolean = false) => {
   }
 
   if (!silent) {
-    logBenchmarks(benchmarks);
+    logBenchmarks(benchmarks, "Renders no prop changes ");
   }
+  resetBenchmarks(benchmarks, unmount);
 
-  resetBenchmarks(benchmarks);
+  if (event) {
+    render(
+      <ProfiledComponent
+        onRenderCallback={onRenderCallback}
+        componentName={args.componentName}
+      >
+        {args.children}
+      </ProfiledComponent>
+    );
 
-  // TODO: add benchmarking stage for click events to better proxy state change and such
+    for (let i = 0; i < RENDERS; i++) {
+      // presumably, events will be things like clicks, etc that prompt state changes
+      event.event(screen);
+    }
+
+    if (!silent) {
+      logBenchmarks(benchmarks, `Renders on ${event.eventName} `);
+    }
+    resetBenchmarks(benchmarks, unmount);
+  }
 };
