@@ -35,6 +35,25 @@ export class ASTParserAndPrinter {
       // Foreman installation paths
       path.join(homeDir, ".foreman", "bin", "lute"),
       path.join(homeDir, ".foreman", "bin", "lute.exe"), // Windows
+      // Rokit installation paths
+      path.join(
+        homeDir,
+        ".rokit",
+        "tool-storage",
+        "luau-lang",
+        "lute",
+        "0.1.0-nightly.20250722",
+        "lute"
+      ), // To-Do: don't hard code version like this
+      path.join(
+        homeDir,
+        ".rokit",
+        "tool-storage",
+        "luau-lang",
+        "lute",
+        "0.1.0-nightly.20250722",
+        "lute.exe"
+      ), // Windows
       // System paths (fallback)
       "lute",
       "/usr/local/bin/lute",
@@ -95,7 +114,7 @@ export class ASTParserAndPrinter {
         const command = `${this.luteExecutable} run ${astPrinterPath} ${tempFilePath}`;
         console.log(`ASTPrinter: Running command: ${command}`);
 
-        // Get the workspace root directory for foreman.toml
+        // Get the workspace root directory
         const workspaceRoot =
           vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
         console.log(`ASTPrinter: Using working directory: ${workspaceRoot}`);
@@ -169,7 +188,7 @@ export class ASTParserAndPrinter {
         // Use the permanent AST parser script from extension directory
 
         // console.log("ASTParser: parsing selected code:", srcCode);
-        
+
         const astParserPath = path.join(
           this.extensionPath,
           "lua_helpers",
