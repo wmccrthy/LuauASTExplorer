@@ -35,6 +35,25 @@ export class ASTParserAndPrinter {
       // Foreman installation paths
       path.join(homeDir, ".foreman", "bin", "lute"),
       path.join(homeDir, ".foreman", "bin", "lute.exe"), // Windows
+      // Rokit installation paths
+      path.join(
+        homeDir,
+        ".rokit",
+        "tool-storage",
+        "luau-lang",
+        "lute",
+        "0.1.0-nightly.20250722",
+        "lute"
+      ), // To-Do: don't hard code version like this
+      path.join(
+        homeDir,
+        ".rokit",
+        "tool-storage",
+        "luau-lang",
+        "lute",
+        "0.1.0-nightly.20250722",
+        "lute.exe"
+      ), // Windows
       // System paths (fallback)
       "lute",
       "/usr/local/bin/lute",
@@ -99,6 +118,7 @@ export class ASTParserAndPrinter {
         const workspaceRoot =
           vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
         console.log(`ASTPrinter: Using working directory: ${workspaceRoot}`);
+        // issue with this is that it doesn't support rokit! fix it
 
         const { stdout, stderr } = await execAsync(command, {
           timeout: 10000, // 10 second timeout
@@ -169,7 +189,7 @@ export class ASTParserAndPrinter {
         // Use the permanent AST parser script from extension directory
 
         // console.log("ASTParser: parsing selected code:", srcCode);
-        
+
         const astParserPath = path.join(
           this.extensionPath,
           "lua_helpers",
