@@ -1,1 +1,1 @@
-auto detect rokit-installed lute
+Support auto-detecting lute executable for rokit
