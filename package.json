@@ -34,6 +34,10 @@
     "transformation",
     "explorer"
   ],
+  "extensionKind": ["ui"],
+  "preview": true,
+  "galleryBanner": { "color": "#1e1e1e", "theme": "dark" },
+  "qna": "https://github.com/wmccrthy/LuauASTExplorer/discussions",
   "activationEvents": [
     "onCommand:luau-ast-explorer.showAST"
   ],
