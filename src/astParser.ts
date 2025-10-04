@@ -114,11 +114,10 @@ export class ASTParserAndPrinter {
         const command = `${this.luteExecutable} run ${astPrinterPath} ${tempFilePath}`;
         console.log(`ASTPrinter: Running command: ${command}`);
 
-        // Get the workspace root directory for foreman.toml
+        // Get the workspace root directory
         const workspaceRoot =
           vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
         console.log(`ASTPrinter: Using working directory: ${workspaceRoot}`);
-        // issue with this is that it doesn't support rokit! fix it
 
         const { stdout, stderr } = await execAsync(command, {
           timeout: 10000, // 10 second timeout
