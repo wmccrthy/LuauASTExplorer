@@ -102,7 +102,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                 fetch-depth: 0
 
@@ -111,7 +111,7 @@ jobs:
                 npm install
                 cd frontend && npm install
                 cd ..
-            
+
             - name: Install VSCE
               run: npm install -g @vscode/vsce
 
@@ -137,6 +137,15 @@ jobs:
             - name: Package
               run: npm run package
 
+            # ✅ Publish to VS Code Marketplace
+            - name: Publish to VS Code Marketplace
+              env:
+                VSCE_TOKEN: ${{ secrets.MARKETPLACE_AUTH }}
+              run: |
+                VSIX="./luau-ast-explorer-${{ steps.get-version.outputs.VERSION }}.vsix"
+                test -f "$VSIX"
+                vsce publish --pat "$VSCE_TOKEN" --packagePath "$VSIX"
+
             - name: Create release
               uses: softprops/action-gh-release@v2
               with:
@@ -147,7 +156,5 @@ jobs:
                 prerelease: true
                 token: ${{ secrets.GITHUB_TOKEN }}
                 generate_release_notes: false
-                body: |                  
+                body: |
                   ${{ steps.get-changelog-diff.outputs.CHANGELOG_DIFF }}
-                  
-                  **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get-version.outputs.VERSION }}...HEAD 

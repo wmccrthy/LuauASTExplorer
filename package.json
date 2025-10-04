@@ -3,7 +3,7 @@
   "displayName": "Luau AST Explorer",
   "description": "Explore Luau/Lua AST structures, analyze code transformations, and assist with codemod development",
   "version": "0.1.5",
-  "publisher": "internal",
+  "publisher": "wmccrthy",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
@@ -34,6 +34,10 @@
     "transformation",
     "explorer"
   ],
+  "extensionKind": ["ui"],
+  "preview": true,
+  "galleryBanner": { "color": "#1e1e1e", "theme": "dark" },
+  "qna": "https://github.com/wmccrthy/LuauASTExplorer/discussions",
   "activationEvents": [
     "onCommand:luau-ast-explorer.showAST"
   ],
