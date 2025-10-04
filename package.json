@@ -3,7 +3,7 @@
   "displayName": "Luau AST Explorer",
   "description": "Explore Luau/Lua AST structures, analyze code transformations, and assist with codemod development",
   "version": "0.1.5",
-  "publisher": "internal",
+  "publisher": "wmccrthy",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
