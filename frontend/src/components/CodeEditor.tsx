@@ -25,9 +25,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         highlight={(code) => highlightLuauCode(code)}
         padding={8}
         preClassName="hljs lua"
+        textareaClassName=""
         placeholder={placeholder}
         // keep styles minimal—no height!
         style={{
+          border: "transparent",
           background: "transparent",
           fontFamily:
             'ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace',
