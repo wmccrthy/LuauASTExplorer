@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [0.1.7] - 2025-10-05
+
+### Fixes
+
+- Remove unintended text area border on code input [#49](https://github.com/wmccrthy/LuauASTExplorer/pull/49)
+
+
 ## [0.1.6] - 2025-10-05
 
 ### Features
