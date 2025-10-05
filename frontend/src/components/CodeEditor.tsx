@@ -32,7 +32,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           fontFamily:
             'ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace',
           fontSize: 13,
-          lineHeight: 1.25,
+          lineHeight: 1.3,
         }}
       />
     </div>
