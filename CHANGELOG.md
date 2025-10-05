@@ -1,6 +1,17 @@
 
 # Changelog
 
+## [0.1.6] - 2025-10-05
+
+### Features
+
+- Better code preview [#48](https://github.com/wmccrthy/LuauASTExplorer/pull/48)
+
+### Fixes
+
+- Support auto-detecting lute executable for rokit [#46](https://github.com/wmccrthy/LuauASTExplorer/pull/46)
+
+
 ## [0.1.5] - 2025-08-27
 
 ### Features
