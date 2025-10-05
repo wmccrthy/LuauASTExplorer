@@ -1,48 +1,39 @@
-import React, { KeyboardEvent } from "react";
+import React from "react";
+import Editor from "react-simple-code-editor";
+import { highlightLuauCode } from "../utils/syntaxHighlighting";
+import "./CodeEditor.css";
 
 interface CodeEditorProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (val: string) => void;
+  height?: string; // height of the scrollable container
   placeholder?: string;
-  height?: string;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   value,
   onChange,
+  height = "320px",
   placeholder = "Enter your Luau code here...",
-  height = "200px",
 }) => {
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle Tab key for indentation
-    if (e.key === "Tab") {
-      e.preventDefault();
-
-      const textarea = e.target as HTMLTextAreaElement;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-
-      // Insert 2 spaces for indentation
-      const newValue = value.substring(0, start) + "  " + value.substring(end);
-      onChange(newValue);
-
-      // Move cursor to after the inserted spaces
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-      }, 0);
-    }
-  };
-
   return (
-    <div className="code-editor-container">
-      <textarea
-        className="code-editor"
+    <div className="code-editor-viewport" style={{ height, overflow: "auto" }}>
+      {/* Editor is natural height; no height style here */}
+      <Editor
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
+        onValueChange={onChange}
+        highlight={(code) => highlightLuauCode(code)}
+        padding={8}
+        preClassName="hljs lua"
         placeholder={placeholder}
-        style={{ height }}
-        spellCheck={false}
+        // keep styles minimal—no height!
+        style={{
+          background: "transparent",
+          fontFamily:
+            'ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace',
+          fontSize: 13,
+          lineHeight: 1.3,
+        }}
       />
     </div>
   );

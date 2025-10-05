@@ -1,0 +1,16 @@
+/* Viewport around the editor — matches .ast-content */
+.code-editor-viewport {
+  background: var(--vscode-textCodeBlock-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  padding: 8px; /* same inner padding as .ast-content */
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+/* Optional: focus ring like VS Code */
+.code-editor-viewport:focus-within {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+  border-color: var(--vscode-focusBorder);
+}
