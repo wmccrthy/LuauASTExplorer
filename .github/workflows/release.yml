@@ -114,6 +114,9 @@ jobs:
 
             - name: Install VSCE
               run: npm install -g @vscode/vsce
+            
+            - name: Install OVSX
+              run: npm install -g ovsx
 
             - name: Get version
               id: get-version
@@ -138,13 +141,16 @@ jobs:
               run: npm run package
 
             # ✅ Publish to VS Code Marketplace
-            - name: Publish to VS Code Marketplace
+            - name: Publish to VSCode + OpenVSX Marketplace
               env:
                 VSCE_TOKEN: ${{ secrets.MARKETPLACE_AUTH }}
+                OVSX_TOKEN: ${{ secrets.OPENVSX_AUTH }}
               run: |
                 VSIX="./luau-ast-explorer-${{ steps.get-version.outputs.VERSION }}.vsix"
                 test -f "$VSIX"
                 vsce publish --pat "$VSCE_TOKEN" --packagePath "$VSIX"
+                ovsx publish "$VSIX" -p "$OVSX_TOKEN"
+                
 
             - name: Create release
               uses: softprops/action-gh-release@v2
