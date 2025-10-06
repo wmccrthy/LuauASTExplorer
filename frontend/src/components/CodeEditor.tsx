@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import Editor from "react-simple-code-editor";
 import { highlightLuauCode } from "../utils/syntaxHighlighting";
 import "./CodeEditor.css";
@@ -16,10 +16,34 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   height = "320px",
   placeholder = "Enter your Luau code here...",
 }) => {
+  const editorRef = useRef<any>(null);
+
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // Only focus if clicking on the container itself, not the editor content
+    if (e.target === e.currentTarget) {
+      // Try multiple ways to access the textarea
+      const container = e.currentTarget as HTMLElement;
+      const textarea = container.querySelector("textarea");
+      if (textarea) {
+        textarea.focus();
+      }
+    }
+  };
+
   return (
-    <div className="code-editor-viewport" style={{ height, overflow: "auto" }}>
-      {/* Editor is natural height; no height style here */}
+    <div
+      className="code-editor-viewport"
+      style={{
+        height,
+        overflow: "auto",
+        resize: "vertical",
+        minHeight: "120px",
+        maxHeight: "80vh",
+      }}
+      onClick={handleContainerClick}
+    >
       <Editor
+        ref={editorRef}
         value={value}
         onValueChange={onChange}
         highlight={(code) => highlightLuauCode(code)}
