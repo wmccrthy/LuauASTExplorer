@@ -149,7 +149,7 @@ jobs:
                 VSIX="./luau-ast-explorer-${{ steps.get-version.outputs.VERSION }}.vsix"
                 test -f "$VSIX"
                 vsce publish --pat "$VSCE_TOKEN" --packagePath "$VSIX"
-                ovsx publish "$VSIX" --pat "$OVSX_TOKEN"
+                ovsx publish "$VSIX" -p "$OVSX_TOKEN"
                 
 
             - name: Create release
