@@ -3,9 +3,10 @@
   background: var(--vscode-textCodeBlock-background);
   border: 1px solid var(--vscode-panel-border);
   border-radius: 4px;
-  padding: 8px; /* same inner padding as .ast-content */
+  padding: 4px;
   overflow: auto;
   box-sizing: border-box;
+  cursor: text;
 }
 
 .code-editor-viewport textarea {
