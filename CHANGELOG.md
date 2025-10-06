@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [0.1.8] - 2025-10-06
+
+### Fixes
+
+- nit styling improvements to code editor [#53](https://github.com/wmccrthy/LuauASTExplorer/pull/53)
+
+
 ## [0.1.7] - 2025-10-05
 
 ### Fixes
