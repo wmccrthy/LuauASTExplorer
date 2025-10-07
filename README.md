@@ -10,15 +10,19 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 - **Side-by-side view** of code and corresponding AST
 - **Perfect for learning** how code structures translate to AST nodes
 
+![Live AST Editor Demo](assets/live_editor_gif.gif)
+
 ### ⚡ **AST Diff Analyzer**
 - **Visual comparison** between two code snippets
 - **Intelligent change detection** (additions, modifications, removals)
 - **Before/after type annotations** show type transformations
-- **Color-coded indicators**: 
-  - 🟢 **Green** for additions (`+`)
-  - 🔴 **Red** for removals (`-`) 
-  - 🔵 **Blue** for modifications (`~`)
-  - 🟡 **Circle** for containers with changes (`○`)
+- **Symbol and color-coded indicators**: 
+  - Additions (`+`)
+  - Removals (`-`) 
+  - Modifications (`~`)
+  - Containers with changes (`○`)
+
+![Diff Analyzer Demo](assets/diff_view_gif.gif)
 
 ### 🎯 **Smart Tree Display**
 - **Expandable/collapsible** tree branches and nodes
@@ -36,9 +40,13 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 
 ## 📦 Installation
 
+### From Editor Marketplaces
+- [VSCode](https://marketplace.visualstudio.com/items?itemName=wmccrthy.luau-ast-explorer)
+- [Cursor](https://marketplace.cursorapi.com/items/?itemName=wmccrthy.luau-ast-explorer)
+
 ### From VSIX File
 1. Download the `.vsix` file from [Releases](https://github.com/wmccrthy/LuauASTExplorer/releases)
-2. Open VSCode Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+2. Open Editor Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
 3. Run `Extensions: Install from VSIX...`
 4. Select the downloaded `.vsix` file
 
@@ -59,9 +67,6 @@ A powerful VSCode extension for visualizing and analyzing Abstract Syntax Trees 
 | Shortcut | Action |
 |----------|--------|
 | `Cmd+Shift+A` / `Ctrl+Shift+A` | Open AST Highlight Helper |
-| `Enter` | Navigate to next search result |
-| `Shift+Enter` | Navigate to previous search result |
-| `Cmd+C` / `Ctrl+C` | Copy AST to clipboard |
 
 ### Advanced Usage
 
@@ -202,28 +207,6 @@ LuauASTExplorer/
 ├── package.json           # Extension manifest
 └── README.md             # This file
 ```
-
-## 🧪 Testing
-
-### Frontend Testing (Jest + React Testing Library)
-- **Component integration tests** for `TreeNode`, `TypeTooltip`, etc.
-- **Type system algorithm tests** for complex inference logic
-- **Diff engine tests** for transformation analysis
-- **Auto-collapse behavior tests** for smart UI logic
-- **Syntax highlighting tests** for theme integration
-
-### Backend Testing (Lua Test Suite)
-- **Type annotation tests** for comprehensive AST type coverage
-- **Code generation tests** for AST-to-code conversion
-- **Edge case tests** for malformed/partial AST nodes
-- **Printer fallback tests** for unsupported node types
-
-### Test Coverage
-- ✅ **Type inference algorithms** (complex business logic)
-- ✅ **Diff computation and annotation** (core feature)
-- ✅ **Auto-collapse logic** (UX-critical behavior)
-- ✅ **Code translation pipeline** (end-to-end functionality)
-- ✅ **Edge cases and error handling** (robustness)
 
 ## 🤝 Contributing
 
