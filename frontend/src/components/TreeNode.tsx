@@ -22,6 +22,10 @@ interface TreeNodeProps {
     key: string | number
   ) => React.ReactElement;
   typeMetadata: TypeMetadata;
+  collapseAll: {
+    collapseAllButton: React.ReactElement,
+    collapsedChildren: boolean,
+  };
   searchTerm?: string;
   isDiffMode?: boolean;
   diffStatus?:
@@ -46,6 +50,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   onToggle,
   renderChild,
   typeMetadata,
+  collapseAll,
   searchTerm = "",
   isDiffMode = false,
   diffStatus = "unchanged",
@@ -271,6 +276,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           {renderDiffIndicator()}
           {renderValue}
           {renderTypeAnnotation ? renderTypeAnnotations() : null}
+          {collapseAll.collapseAllButton}
         </React.Fragment>
       );
     },
@@ -372,6 +378,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 searchTerm: searchTerm,
                 path: `${path}.${index}`,
                 hiddenNodes: hiddenNodes,
+                forceCollapse: collapseAll.collapsedChildren,
                 ...childDiffProps,
               },
               index
@@ -448,6 +455,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               searchTerm: searchTerm,
               path: `${path}.${key}`,
               hiddenNodes: hiddenNodes,
+              forceCollapse: collapseAll.collapsedChildren,
               ...childDiffProps,
             },
             key
