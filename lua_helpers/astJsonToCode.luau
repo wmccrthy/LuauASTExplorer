@@ -17,12 +17,14 @@ local sourceCode = fs.readfiletostring(sourceFilePath)
 
 local astNode = json.decode(sourceCode)
 
-local code, success = printer.printASTNode(astNode)
+local success, code = pcall(printer.printASTNode, astNode)
 
 if success then
 	-- stylua src code for readable output
 	fs.writestringtofile(sourceFilePath, code)
 	process.run({ "stylua", sourceFilePath })
 	code = fs.readfiletostring(sourceFilePath)
+	print(code)
 end
-print(code)
+
+print("")

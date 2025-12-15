@@ -483,35 +483,39 @@ describe("TreeNode", () => {
 
   describe("auto-collapse integration", () => {
     test("respects auto-collapse in normal mode", () => {
-      // Position nodes should auto-collapse
-      const positionNode = {
-        _astType: "Position",
-        line: 1,
-        column: 5,
+      // span nodes should auto-collapse
+      const spanNode = {
+        _astType: "span",
+        beginline: 1,
+        begincolumn: 5,
+        endline: 1,
+        endcolumn: 10,
       };
 
       render(
         <MockProvider>
           <TreeNodeContainer
-            value={positionNode}
+            value={spanNode}
             {...defaultProps}
             isDiffMode={false}
           />
         </MockProvider>
       );
 
-      // Should be collapsed by default (Position auto-collapses)
+      // Should be collapsed by default (span auto-collapses)
       const nodeQuery = getQueryableNode("root", "nodeHeader");
       expect(nodeQuery.getByText("▶")).toBeInTheDocument();
     });
 
     test("auto-collapse for changed nodes in diff mode", () => {
-      const changedPositionNode = {
-        _astType: "Position",
-        line: 2,
-        column: 10,
+      const changedSpanNode = {
+        _astType: "span",
+        beginline: 2,
+        begincolumn: 10,
+        endline: 2,
+        endcolumn: 15,
         childChanges: {
-          line: {
+          beginline: {
             type: "UPDATE",
             oldValue: 1,
             value: 2,
@@ -522,7 +526,7 @@ describe("TreeNode", () => {
       const { unmount } = render(
         <MockProvider>
           <TreeNodeContainer
-            value={changedPositionNode}
+            value={changedSpanNode}
             {...defaultProps}
             isDiffMode={true}
             diffStatus="contains-changes"
@@ -531,7 +535,7 @@ describe("TreeNode", () => {
       );
 
       const nodeQuery = getQueryableNode("root", "nodeHeader");
-      expect(nodeQuery.getByText("▶")).toBeInTheDocument(); // Position still auto-collapses (expected)
+      expect(nodeQuery.getByText("▶")).toBeInTheDocument(); // span still auto-collapses (expected)
       expect(nodeQuery.getByText("○")).toBeInTheDocument(); // But shows diff indicator (bc in collapsed state)
 
       // unmount first render

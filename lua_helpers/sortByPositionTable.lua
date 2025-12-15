@@ -1,14 +1,14 @@
 local function getNodePosition(node)
-	-- Direct position access
-	if node.position then
-		return node.position.line, node.position.column
-	end
-	if node.location then
-		return node.location.begin.line, node.location.begin.column
-	end
-
+	-- Direct location access (new span structure)
 	if typeof(node) ~= "table" then
 		return nil, nil
+	end
+
+	if node.location then
+		-- New span format: { beginline, begincolumn, endline, endcolumn }
+		if node.location.beginline then
+			return node.location.beginline, node.location.begincolumn
+		end
 	end
 
 	-- Recursive search for position in children

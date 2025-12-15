@@ -1,7 +1,7 @@
 local luau = require("@lute/luau")
 local visitor = require("@std/syntax/visitor")
 
-local typeAnnotationVisitor = visitor.createVisitor()
+local typeAnnotationVisitor = visitor.create()
 local e2ecases = require("./astJsonToCodeHelpers").testCases.e2eCases
 
 --[[
@@ -261,13 +261,9 @@ typeAnnotationVisitor.visitStatTypeAlias = function(node: luau.AstStatTypeAlias)
 	return true
 end
 
-typeAnnotationVisitor.visitGenericType = function(node: luau.AstGenericType)
-	verifyOutput(node, "visitGenericType", node._astType == "AstGenericType")
-	return true
-end
 
-typeAnnotationVisitor.visitGenericTypePack = function(node: luau.AstGenericTypePack)
-	verifyOutput(node, "visitGenericTypePack", node._astType == "AstGenericTypePack")
+typeAnnotationVisitor.visitTypePackGeneric = function(node: luau.AstGenericTypePack)
+	verifyOutput(node, "visitTypePackGeneric", node._astType == "AstGenericTypePack")
 	return true
 end
 
@@ -288,21 +284,9 @@ typeAnnotationVisitor.visitTypePackGeneric = function(node: luau.AstTypePackGene
 end
 
 -- Table type property visitors
-typeAnnotationVisitor.visitTableTypeProperty = function(node: luau.AstTableTypeProperty)
-	verifyOutput(node, "visitTableTypeProperty", node._astType == "AstTableTypeProperty")
-	return true
-end
 
-typeAnnotationVisitor.visitTableTypeIndexer = function(node: luau.AstTableTypeIndexer)
-	verifyOutput(node, "visitTableTypeIndexer", node._astType == "AstTableTypeIndexer")
-	return true
-end
 
 -- Function type parameter visitors
-typeAnnotationVisitor.visitTypeFunctionParameter = function(node: luau.AstTypeFunctionParameter)
-	verifyOutput(node, "visitTypeFunctionParameter", node._astType == "AstTypeFunctionParameter")
-	return true
-end
 
 function printTable(indent, tbl)
 	for k, v in pairs(tbl) do
@@ -319,39 +303,41 @@ local testSrc = table.concat(e2ecases, "\n")
 
 local ambiguousTagTestCases = {
 	-- {nodeTable, expectedType, description}
-	{ { tag = "conditional", endKeyword = {} }, "AstStatIf", "if statement" },
-	{ { tag = "conditional" }, "AstExprIfElse", "if expression" },
-	{ { tag = "function", returnArrow = {} }, "AstTypeFunction", "type function" },
-	{ { tag = "function", name = {} }, "AstStatFunction", "function statement" },
-	{ { tag = "function" }, "AstExprAnonymousFunction", "anonymous function" },
-	{ { tag = "group", expression = {} }, "AstExprGroup", "expression group" },
-	{ { tag = "group", type = {} }, "AstTypeGroup", "type group" },
-	{ { tag = "local", token = {}, upvalue = false }, "AstExprLocal", "local expression" },
-	{ { tag = "local", localKeyword = {}, variables = {} }, "AstStatLocal", "local statement" },
-	{ { tag = "generic", ellipsis = {} }, "AstTypePackGeneric", "generic type pack" },
+	{ { tag = "conditional", kind = "stat", endkeyword = {} }, "AstStatIf", "if statement" },
+	{ { tag = "conditional", kind = "expr" }, "AstExprIfElse", "if expression" },
+	{ { tag = "function", kind = "type", returnarrow = {} }, "AstTypeFunction", "type function" },
+	{ { tag = "function", kind = "stat", name = {} }, "AstStatFunction", "function statement" },
+	{ { tag = "function", kind = "expr" }, "AstExprAnonymousFunction", "anonymous function" },
+	{ { tag = "group", kind = "expr", expression = {} }, "AstExprGroup", "expression group" },
+	{ { tag = "group", kind = "type", type = {} }, "AstTypeGroup", "type group" },
+	{ { tag = "local", kind = "expr", token = {}, upvalue = false }, "AstExprLocal", "local expression" },
+	{ { tag = "local", kind = "stat", localkeyword = {}, variables = {} }, "AstStatLocal", "local statement" },
+	{ { tag = "generic", kind = "typepack", ellipsis = {} }, "AstTypePackGeneric", "generic type pack" },
 	{ { tag = "generic" }, "AstGenericType", "generic type" },
 }
 
 local ambiguousKeyTestCases = {
 	-- {key, node, parent, expectedType, description}
-	{ "body", { statements = {}, openParens = {} }, {}, "AstFunctionBody", "function body" },
+	{ "body", { openparens = {} }, {}, "AstFunctionBody", "function body" },
 	{ "body", { statements = {} }, { tag = "if" }, "AstStatBlock", "if body" },
-	{ "operand", { tag = "call" }, { operator = {} }, "AstExpr", "unary operand" },
+	{ "operand", { tag = "call" }, { operator = {}, tag = "unary" }, "AstExpr", "unary operand" },
 	{ "self", {}, {}, "AstLocal", "self parameter" },
-	{ "self", {}, { tag = {} }, "boolean", "no self parameter" },
+	{ "self", {}, { tag = "call" }, "boolean", "no self parameter" },
 	{ "condition", { tag = "binary" }, {}, "AstExpr", "condition expression" },
 	{ "expression", { tag = "call" }, {}, "AstExpr", "expression" },
 	{ "func", { tag = "function" }, {}, "AstExpr", "function expression" },
-	{ "key", {}, { kind = "record" }, "Token", "record key" },
+	{ "key", {}, { kind = "record", istableitem = true }, "Token", "record key" },
 	{ "key", {}, { kind = "indexer" }, "AstType", "indexer key" },
-	{ "key", {}, { kind = "general" }, "AstExpr", "general key" },
+	{ "key", {}, { kind = "general", istableitem = true }, "AstExpr", "general key" },
+	{ "key", {}, { kind = "stringproperty" }, "AstTypeSingletonString", "string property key" },
+	{ "key", {}, { kind = "property" }, "Token", "property key" },
 	-- we should focus on the most ambiguous case
 	{ "value", {}, { colon = {} }, "AstType", "type value" },
-	{ "value", {}, { kind = "general" }, "AstExpr", "expression value" },
+	{ "value", {}, { istableitem = true }, "AstExpr", "expression value" },
 	{ "value", {}, { tag = "boolean" }, "boolean", "boolean value" },
 	{ "value", {}, { tag = "number" }, "number", "number value" },
-	{ "name", { text = "x" }, {}, "Token", "token name" },
-	{ "name", { name = {} }, {}, "AstLocal", "local name" },
+	{ "name", { text = "x", istoken = true }, {}, "Token", "token name" },
+	{ "name", { kind = "local", name = {} }, {}, "AstLocal", "local name" },
 	{ "name", {}, {}, "AstExpr", "expr name" },
 }
 

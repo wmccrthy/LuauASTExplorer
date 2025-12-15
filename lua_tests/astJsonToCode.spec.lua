@@ -1,4 +1,4 @@
-local fs = require("@lute/fs")
+local fs = require("@std/fs")
 local json = require("../lua_helpers/json")
 local parser = require("@std/syntax/parser")
 local process = require("@lute/process")

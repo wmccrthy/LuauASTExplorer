@@ -68,20 +68,13 @@ local function encode_table(val, stack)
   stack[val] = true
 
   if rawget(val, 1) ~= nil or next(val) == nil then
-    -- Treat as array -- check keys are valid and it is not sparse
-    local n = 0
-    for k in pairs(val) do
-      if type(k) ~= "number" then
-        error("invalid table: mixed or invalid key types (non-numeric key for array)")
-      end
-      n = n + 1
-    end
-    if n ~= #val then
-      error("invalid table: sparse array")
-    end
-    -- Encode
+    -- Treat as array -- use ipairs to only get sequential numeric keys
+    -- This handles mixed tables (with both numeric and string keys) by only encoding the array part
     for i, v in ipairs(val) do
-      table.insert(res, encode(v, stack))
+      local encodedVal = encode(v, stack)
+      if encodedVal ~= nil then
+        table.insert(res, encodedVal)
+      end
     end
     stack[val] = nil
     return "[" .. table.concat(res, ",") .. "]"
@@ -89,13 +82,14 @@ local function encode_table(val, stack)
   else
     -- Treat as an object
     for k, v in pairs(val) do
-      if type(k) ~= "string" then
-        error("invalid table: mixed or invalid key types")
+      -- Only encode string keys (skip numeric, boolean, function, userdata keys, etc.)
+      if type(k) == "string" then
+        local encodedVal = encode(v, stack)
+        if encodedVal ~= nil then
+          table.insert(res, encode(k, stack) .. ":" .. encodedVal)
+        end
       end
-      local encodedKey, encodedVal = encode(k, stack), encode(v, stack)
-      if encodedKey ~= nil and encodedVal ~= nil then
-          table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
-      end
+      -- Silently skip non-string keys to handle metatables, mixed tables, etc.
     end
     stack[val] = nil
     return "{" .. table.concat(res, ",") .. "}"
