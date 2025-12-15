@@ -11,7 +11,7 @@ local function annotateWithType_test()
 	local testAST = annotateWithType(parser.parse(typeAnnotationHelpers.testSrc))
 	-- visit annotated tree to check for correct type assignment (using typeAnnotationVisitor)
 	local typeAnnotationChecker = typeAnnotationHelpers.typeAnnotationVisitor
-	visitor.visitBlock(testAST, typeAnnotationChecker)
+	visitor.visitStatBlock(testAST, typeAnnotationChecker)
 end
 
 -- test function on manually created AstNodes that map to expected output

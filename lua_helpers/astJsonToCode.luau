@@ -1,4 +1,4 @@
-local fs = require("@lute/fs")
+local fs = require("@std/fs")
 local printer = require("./temp_vendor/lutePrinter") -- temp vendoring printer until my updates to support printStatement are released
 local json = require("./json")
 local process = require("@lute/process")

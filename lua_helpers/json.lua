@@ -92,7 +92,10 @@ local function encode_table(val, stack)
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+      local encodedKey, encodedVal = encode(k, stack), encode(v, stack)
+      if encodedKey ~= nil and encodedVal ~= nil then
+          table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+      end
     end
     stack[val] = nil
     return "{" .. table.concat(res, ",") .. "}"
@@ -126,6 +129,9 @@ local type_func_map = {
 encode = function(val, stack)
   local t = type(val)
   local f = type_func_map[t]
+  if t == "userdata" then
+    return nil
+  end
   if f then
     return f(val, stack)
   end
