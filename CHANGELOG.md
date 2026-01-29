@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [0.1.9] - 2026-01-29
+
+### Fixes
+
+- Compatability with Lute latest [#58](https://github.com/wmccrthy/LuauASTExplorer/pull/58)
+
+
 ## [0.1.8] - 2025-10-06
 
 ### Fixes
