@@ -1,5 +1,5 @@
 -- AST Parser Script using our custom parser library
-local fs = require("@lute/fs")
+local fs = require("@std/fs")
 local parser = require("@std/syntax/parser")
 
 -- Get the source file path from command line argument
@@ -16,7 +16,7 @@ local sourceCode = fs.readfiletostring(sourceFilePath)
 
 -- Parse the AST using our custom parser
 local success, ast = pcall(function()
-	return parser.parse(sourceCode)
+	return parser.parseblock(sourceCode)
 end)
 
 local result
@@ -42,9 +42,9 @@ local function trimResult(obj)
 end
 
 -- Print AST in a clean, readable format
-local function printAST(obj, indent)
+local function printAST(obj: any, indent: number?)
 	indent = indent or 0
-	local indentStr = string.rep("  ", indent)
+	local indentStr = string.rep("  ", indent :: number)
 
 	if type(obj) == "table" then
 		-- First, output tag field if it exists (priority field)
@@ -58,7 +58,7 @@ local function printAST(obj, indent)
 			if keyStr ~= "tag" then -- Skip tag since we already printed it
 				if type(value) == "table" then
 					print(indentStr .. keyStr .. ":")
-					printAST(value, indent + 1)
+					printAST(value, (indent :: number) + 1)
 				else
 					print(indentStr .. keyStr .. ": " .. tostring(value))
 				end

@@ -1,7 +1,7 @@
 local luau = require("@lute/luau")
 local visitor = require("@std/syntax/visitor")
 
-local typeAnnotationVisitor = visitor.createVisitor()
+local typeAnnotationVisitor = visitor.create()
 local e2ecases = require("./astJsonToCodeHelpers").testCases.e2eCases
 
 --[[
@@ -48,51 +48,51 @@ typeAnnotationVisitor.visitToken = function(token: luau.Token)
 	return true
 end
 
-typeAnnotationVisitor.visitString = function(token: luau.AstExprConstantString)
+typeAnnotationVisitor.visitExprConstantString = function(token: luau.AstExprConstantString)
 	verifyOutput(token, "visitString", token._astType == "AstExprConstantString")
 	return true
 end
 
-typeAnnotationVisitor.visitBoolean = function(token: luau.AstExprConstantBool)
+typeAnnotationVisitor.visitExprConstantBool = function(token: luau.AstExprConstantBool)
 	verifyOutput(token, "visitBoolean", token._astType == "AstExprConstantBool")
 	return true
 end
 
-typeAnnotationVisitor.visitNumber = function(token: luau.AstExprConstantNumber)
+typeAnnotationVisitor.visitExprConstantNumber = function(token: luau.AstExprConstantNumber)
 	verifyOutput(token, "visitNumber", token._astType == "AstExprConstantNumber")
 	return true
 end
 
-typeAnnotationVisitor.visitBlock = function(block: luau.AstStatBlock)
+typeAnnotationVisitor.visitStatBlock = function(block: luau.AstStatBlock)
 	verifyOutput(block, "visitBlock", block._astType == "AstStatBlock")
 	return true
 end
 
-typeAnnotationVisitor.visitAssign = function(node: luau.AstStatAssign)
+typeAnnotationVisitor.visitStatAssign = function(node: luau.AstStatAssign)
 	verifyOutput(node, "visitAssign", node._astType == "AstStatAssign")
 	return true
 end
 
-typeAnnotationVisitor.visitCompoundAssign = function(node: luau.AstStatCompoundAssign)
+typeAnnotationVisitor.visitStatCompoundAssign = function(node: luau.AstStatCompoundAssign)
 	verifyOutput(node, "visitCompoundAssign", node._astType == "AstStatCompoundAssign")
 	return true
 end
 
-typeAnnotationVisitor.visitCall = function(node: luau.AstExprCall)
+typeAnnotationVisitor.visitExprCall = function(node: luau.AstExprCall)
 	verifyOutput(node, "visitCall", node._astType == "AstExprCall")
 	return true
 end
 
-typeAnnotationVisitor.visitLocalFunction = function(node: luau.AstStatLocalFunction)
+typeAnnotationVisitor.visitStatLocalFunction = function(node: luau.AstStatLocalFunction)
 	verifyOutput(node, "visitLocalFunction", node._astType == "AstStatLocalFunction")
 	return true
 end
 
-typeAnnotationVisitor.visitIfExpression = function(node: luau.AstExprIfElse)
+typeAnnotationVisitor.visitExprIfElse = function(node: luau.AstExprIfElse)
 	verifyOutput(node, "visitIfExpression", node._astType == "AstExprIfElse")
 	return true
 end
-typeAnnotationVisitor.visitIf = function(node: luau.AstStatIf)
+typeAnnotationVisitor.visitStatIf = function(node: luau.AstStatIf)
 	verifyOutput(node, "visitIf", node._astType == "AstStatIf")
 	return true
 end
@@ -103,53 +103,53 @@ typeAnnotationVisitor.visitLocal = function(node: luau.AstStatLocal)
 	return true
 end
 
-typeAnnotationVisitor.visitFunction = function(node: luau.AstStatFunction)
+typeAnnotationVisitor.visitStatFunction = function(node: luau.AstStatFunction)
 	verifyOutput(node, "visitFunction", node._astType == "AstStatFunction")
 	return true
 end
 
-typeAnnotationVisitor.visitAnonymousFunction = function(node: luau.AstExprAnonymousFunction)
+typeAnnotationVisitor.visitExprAnonymousFunction = function(node: luau.AstExprAnonymousFunction)
 	verifyOutput(node, "visitAnonymousFunction", node._astType == "AstExprAnonymousFunction")
 	return true
 end
 
-typeAnnotationVisitor.visitReturn = function(node: luau.AstStatReturn)
+typeAnnotationVisitor.visitStatReturn = function(node: luau.AstStatReturn)
 	verifyOutput(node, "visitReturn", node._astType == "AstStatReturn")
 	return true
 end
 
-typeAnnotationVisitor.visitBreak = function(node: luau.AstStatBreak)
+typeAnnotationVisitor.visitStatBreak = function(node: luau.AstStatBreak)
 	verifyOutput(node, "visitBreak", node._astType == "AstStatBreak")
 	return true
 end
 
-typeAnnotationVisitor.visitContinue = function(node: luau.AstStatContinue)
+typeAnnotationVisitor.visitStatContinue = function(node: luau.AstStatContinue)
 	verifyOutput(node, "visitContinue", node._astType == "AstStatContinue")
 	return true
 end
 
-typeAnnotationVisitor.visitWhile = function(node: luau.AstStatWhile)
+typeAnnotationVisitor.visitStatWhile = function(node: luau.AstStatWhile)
 	verifyOutput(node, "visitWhile", node._astType == "AstStatWhile")
 	return true
 end
 
-typeAnnotationVisitor.visitRepeat = function(node: luau.AstStatRepeat)
+typeAnnotationVisitor.visitStatRepeat = function(node: luau.AstStatRepeat)
 	verifyOutput(node, "visitRepeat", node._astType == "AstStatRepeat")
 	return true
 end
 
-typeAnnotationVisitor.visitFor = function(node: luau.AstStatFor)
+typeAnnotationVisitor.visitStatFor = function(node: luau.AstStatFor)
 	verifyOutput(node, "visitFor", node._astType == "AstStatFor")
 	return true
 end
 
-typeAnnotationVisitor.visitForIn = function(node: luau.AstStatForIn)
+typeAnnotationVisitor.visitStatForIn = function(node: luau.AstStatForIn)
 	verifyOutput(node, "visitForIn", node._astType == "AstStatForIn")
 	return true
 end
 
 -- Expression visitors
-typeAnnotationVisitor.visitGroup = function(node: luau.AstExprGroup)
+typeAnnotationVisitor.visitExprGroup = function(node: luau.AstExprGroup)
 	verifyOutput(node, "visitGroup", node._astType == "AstExprGroup")
 	return true
 end
@@ -159,12 +159,12 @@ typeAnnotationVisitor.visitConstantNil = function(node: luau.AstExprConstantNil)
 	return true
 end
 
-typeAnnotationVisitor.visitVarargs = function(node: luau.AstExprVarargs)
+typeAnnotationVisitor.visitExprVarargs = function(node: luau.AstExprVarargs)
 	verifyOutput(node, "visitVarargs", node._astType == "AstExprVarargs")
 	return true
 end
 
-typeAnnotationVisitor.visitGlobal = function(node: luau.AstExprGlobal)
+typeAnnotationVisitor.visitExprGlobal = function(node: luau.AstExprGlobal)
 	verifyOutput(node, "visitGlobal", node._astType == "AstExprGlobal")
 	return true
 end
@@ -174,32 +174,32 @@ typeAnnotationVisitor.visitLocal = function(node: luau.AstLocal)
 	return true
 end
 
-typeAnnotationVisitor.visitIndexName = function(node: luau.AstExprIndexName)
+typeAnnotationVisitor.visitExprIndexName = function(node: luau.AstExprIndexName)
 	verifyOutput(node, "visitIndexName", node._astType == "AstExprIndexName")
 	return true
 end
 
-typeAnnotationVisitor.visitIndexExpr = function(node: luau.AstExprIndexExpr)
+typeAnnotationVisitor.visitExprIndexExpr = function(node: luau.AstExprIndexExpr)
 	verifyOutput(node, "visitIndexExpr", node._astType == "AstExprIndexExpr")
 	return true
 end
 
-typeAnnotationVisitor.visitUnary = function(node: luau.AstExprUnary)
+typeAnnotationVisitor.visitExprUnary = function(node: luau.AstExprUnary)
 	verifyOutput(node, "visitUnary", node._astType == "AstExprUnary")
 	return true
 end
 
-typeAnnotationVisitor.visitBinary = function(node: luau.AstExprBinary)
+typeAnnotationVisitor.visitExprBinary = function(node: luau.AstExprBinary)
 	verifyOutput(node, "visitBinary", node._astType == "AstExprBinary")
 	return true
 end
 
-typeAnnotationVisitor.visitTypeAssertion = function(node: luau.AstExprTypeAssertion)
+typeAnnotationVisitor.visitExprTypeAssertion = function(node: luau.AstExprTypeAssertion)
 	verifyOutput(node, "visitTypeAssertion", node._astType == "AstExprTypeAssertion")
 	return true
 end
 
-typeAnnotationVisitor.visitTable = function(node: luau.AstExprTable)
+typeAnnotationVisitor.visitExprTable = function(node: luau.AstExprTable)
 	verifyOutput(node, "visitTable", node._astType == "AstExprTable")
 	return true
 end
@@ -261,13 +261,8 @@ typeAnnotationVisitor.visitStatTypeAlias = function(node: luau.AstStatTypeAlias)
 	return true
 end
 
-typeAnnotationVisitor.visitGenericType = function(node: luau.AstGenericType)
-	verifyOutput(node, "visitGenericType", node._astType == "AstGenericType")
-	return true
-end
-
-typeAnnotationVisitor.visitGenericTypePack = function(node: luau.AstGenericTypePack)
-	verifyOutput(node, "visitGenericTypePack", node._astType == "AstGenericTypePack")
+typeAnnotationVisitor.visitTypePackGeneric = function(node: luau.AstGenericTypePack)
+	verifyOutput(node, "visitTypePackGeneric", node._astType == "AstGenericTypePack")
 	return true
 end
 
@@ -288,21 +283,8 @@ typeAnnotationVisitor.visitTypePackGeneric = function(node: luau.AstTypePackGene
 end
 
 -- Table type property visitors
-typeAnnotationVisitor.visitTableTypeProperty = function(node: luau.AstTableTypeProperty)
-	verifyOutput(node, "visitTableTypeProperty", node._astType == "AstTableTypeProperty")
-	return true
-end
-
-typeAnnotationVisitor.visitTableTypeIndexer = function(node: luau.AstTableTypeIndexer)
-	verifyOutput(node, "visitTableTypeIndexer", node._astType == "AstTableTypeIndexer")
-	return true
-end
 
 -- Function type parameter visitors
-typeAnnotationVisitor.visitTypeFunctionParameter = function(node: luau.AstTypeFunctionParameter)
-	verifyOutput(node, "visitTypeFunctionParameter", node._astType == "AstTypeFunctionParameter")
-	return true
-end
 
 function printTable(indent, tbl)
 	for k, v in pairs(tbl) do
@@ -319,39 +301,41 @@ local testSrc = table.concat(e2ecases, "\n")
 
 local ambiguousTagTestCases = {
 	-- {nodeTable, expectedType, description}
-	{ { tag = "conditional", endKeyword = {} }, "AstStatIf", "if statement" },
-	{ { tag = "conditional" }, "AstExprIfElse", "if expression" },
-	{ { tag = "function", returnArrow = {} }, "AstTypeFunction", "type function" },
-	{ { tag = "function", name = {} }, "AstStatFunction", "function statement" },
-	{ { tag = "function" }, "AstExprAnonymousFunction", "anonymous function" },
-	{ { tag = "group", expression = {} }, "AstExprGroup", "expression group" },
-	{ { tag = "group", type = {} }, "AstTypeGroup", "type group" },
-	{ { tag = "local", token = {}, upvalue = false }, "AstExprLocal", "local expression" },
-	{ { tag = "local", localKeyword = {}, variables = {} }, "AstStatLocal", "local statement" },
-	{ { tag = "generic", ellipsis = {} }, "AstTypePackGeneric", "generic type pack" },
+	{ { tag = "conditional", kind = "stat", endkeyword = {} }, "AstStatIf", "if statement" },
+	{ { tag = "conditional", kind = "expr" }, "AstExprIfElse", "if expression" },
+	{ { tag = "function", kind = "type", returnarrow = {} }, "AstTypeFunction", "type function" },
+	{ { tag = "function", kind = "stat", name = {} }, "AstStatFunction", "function statement" },
+	{ { tag = "function", kind = "expr" }, "AstExprAnonymousFunction", "anonymous function" },
+	{ { tag = "group", kind = "expr", expression = {} }, "AstExprGroup", "expression group" },
+	{ { tag = "group", kind = "type", type = {} }, "AstTypeGroup", "type group" },
+	{ { tag = "local", kind = "expr", token = {}, upvalue = false }, "AstExprLocal", "local expression" },
+	{ { tag = "local", kind = "stat", localkeyword = {}, variables = {} }, "AstStatLocal", "local statement" },
+	{ { tag = "generic", kind = "typepack", ellipsis = {} }, "AstTypePackGeneric", "generic type pack" },
 	{ { tag = "generic" }, "AstGenericType", "generic type" },
 }
 
 local ambiguousKeyTestCases = {
 	-- {key, node, parent, expectedType, description}
-	{ "body", { statements = {}, openParens = {} }, {}, "AstFunctionBody", "function body" },
+	{ "body", { openparens = {} }, {}, "AstFunctionBody", "function body" },
 	{ "body", { statements = {} }, { tag = "if" }, "AstStatBlock", "if body" },
-	{ "operand", { tag = "call" }, { operator = {} }, "AstExpr", "unary operand" },
+	{ "operand", { tag = "call" }, { operator = {}, tag = "unary" }, "AstExpr", "unary operand" },
 	{ "self", {}, {}, "AstLocal", "self parameter" },
-	{ "self", {}, { tag = {} }, "boolean", "no self parameter" },
+	{ "self", {}, { tag = "call" }, "boolean", "no self parameter" },
 	{ "condition", { tag = "binary" }, {}, "AstExpr", "condition expression" },
 	{ "expression", { tag = "call" }, {}, "AstExpr", "expression" },
 	{ "func", { tag = "function" }, {}, "AstExpr", "function expression" },
-	{ "key", {}, { kind = "record" }, "Token", "record key" },
+	{ "key", {}, { kind = "record", istableitem = true }, "Token", "record key" },
 	{ "key", {}, { kind = "indexer" }, "AstType", "indexer key" },
-	{ "key", {}, { kind = "general" }, "AstExpr", "general key" },
+	{ "key", {}, { kind = "general", istableitem = true }, "AstExpr", "general key" },
+	{ "key", {}, { kind = "stringproperty" }, "AstTypeSingletonString", "string property key" },
+	{ "key", {}, { kind = "property" }, "Token", "property key" },
 	-- we should focus on the most ambiguous case
 	{ "value", {}, { colon = {} }, "AstType", "type value" },
-	{ "value", {}, { kind = "general" }, "AstExpr", "expression value" },
+	{ "value", {}, { istableitem = true }, "AstExpr", "expression value" },
 	{ "value", {}, { tag = "boolean" }, "boolean", "boolean value" },
 	{ "value", {}, { tag = "number" }, "number", "number value" },
-	{ "name", { text = "x" }, {}, "Token", "token name" },
-	{ "name", { name = {} }, {}, "AstLocal", "local name" },
+	{ "name", { text = "x", istoken = true }, {}, "Token", "token name" },
+	{ "name", { kind = "local", name = {} }, {}, "AstLocal", "local name" },
 	{ "name", {}, {}, "AstExpr", "expr name" },
 }
 

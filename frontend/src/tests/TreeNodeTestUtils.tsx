@@ -13,10 +13,11 @@ export const mockTrivia = () => {
 
 export const mockTypelessToken = (text: string, diffStatus?: string) => {
   return {
-    leadingTrivia: mockTrivia(),
-    trailingTrivia: mockTrivia(),
+    leadingtrivia: mockTrivia(),
+    trailingtrivia: mockTrivia(),
     text: text,
-    position: {},
+    location: {},
+    istoken: true,
     diffStatus: diffStatus,
   };
 };

@@ -1,5 +1,5 @@
 -- we can write a separate script for getting the AST in JSON format for simplicity
-local fs = require("@lute/fs")
+local fs = require("@std/fs")
 local parser = require("@std/syntax/parser")
 local json = require("./json")
 local annotateWithType = require("./typeAnnotations").annotateWithType
@@ -19,7 +19,7 @@ local sourceCode = fs.readfiletostring(sourceFilePath)
 -- Parse the AST using our custom parser
 local function parseBlock(src)
 	local success, ast = pcall(function()
-		return annotateWithType(parser.parse(sourceCode), "root")
+		return annotateWithType(parser.parseblock(sourceCode), "root")
 	end)
 	return success, ast
 end

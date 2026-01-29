@@ -58,6 +58,20 @@ local function encode_nil(val)
 end
 
 
+-- Convert span userdata to a plain table that can be JSON encoded
+local function serializeSpan(span)
+  if span.beginline then
+    return {
+      beginline = span.beginline,
+      begincolumn = span.begincolumn,
+      endline = span.endline,
+      endcolumn = span.endcolumn,
+    }
+  end
+  return nil
+end
+
+
 local function encode_table(val, stack)
   local res = {}
   stack = stack or {}
@@ -68,20 +82,13 @@ local function encode_table(val, stack)
   stack[val] = true
 
   if rawget(val, 1) ~= nil or next(val) == nil then
-    -- Treat as array -- check keys are valid and it is not sparse
-    local n = 0
-    for k in pairs(val) do
-      if type(k) ~= "number" then
-        error("invalid table: mixed or invalid key types (non-numeric key for array)")
-      end
-      n = n + 1
-    end
-    if n ~= #val then
-      error("invalid table: sparse array")
-    end
-    -- Encode
+    -- Treat as array -- use ipairs to only get sequential numeric keys
+    -- This handles mixed tables (with both numeric and string keys) by only encoding the array part
     for i, v in ipairs(val) do
-      table.insert(res, encode(v, stack))
+      local encodedVal = encode(v, stack)
+      if encodedVal ~= nil then
+        table.insert(res, encodedVal)
+      end
     end
     stack[val] = nil
     return "[" .. table.concat(res, ",") .. "]"
@@ -89,10 +96,14 @@ local function encode_table(val, stack)
   else
     -- Treat as an object
     for k, v in pairs(val) do
-      if type(k) ~= "string" then
-        error("invalid table: mixed or invalid key types")
+      -- Only encode string keys (skip numeric, boolean, function, userdata keys, etc.)
+      if type(k) == "string" then
+        local encodedVal = encode(v, stack)
+        if encodedVal ~= nil then
+          table.insert(res, encode(k, stack) .. ":" .. encodedVal)
+        end
       end
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+      -- Silently skip non-string keys to handle metatables, mixed tables, etc.
     end
     stack[val] = nil
     return "{" .. table.concat(res, ",") .. "}"
@@ -123,9 +134,17 @@ local type_func_map = {
 }
 
 
-encode = function(val, stack)
+encode = function(val, stack): string?
   local t = type(val)
   local f = type_func_map[t]
+  if t == "userdata" then
+    -- Try to serialize span userdata as a table
+    local spanTable = serializeSpan(val)
+    if spanTable then
+      return encode_table(spanTable, stack)
+    end
+    return nil :: string?
+  end
   if f then
     return f(val, stack)
   end
@@ -133,7 +152,7 @@ encode = function(val, stack)
 end
 
 
-function json.encode(val)
+function json.encode(val): string?
   return ( encode(val) )
 end
 

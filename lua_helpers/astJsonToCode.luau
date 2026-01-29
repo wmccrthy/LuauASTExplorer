@@ -1,4 +1,4 @@
-local fs = require("@lute/fs")
+local fs = require("@std/fs")
 local printer = require("./temp_vendor/lutePrinter") -- temp vendoring printer until my updates to support printStatement are released
 local json = require("./json")
 local process = require("@lute/process")
@@ -17,12 +17,14 @@ local sourceCode = fs.readfiletostring(sourceFilePath)
 
 local astNode = json.decode(sourceCode)
 
-local code, success = printer.printASTNode(astNode)
+local success, code = pcall(printer.printASTNode, astNode)
 
 if success then
 	-- stylua src code for readable output
-	fs.writestringtofile(sourceFilePath, code)
+	fs.writestringtofile(sourceFilePath, code :: string)
 	process.run({ "stylua", sourceFilePath })
 	code = fs.readfiletostring(sourceFilePath)
+	print(code)
 end
-print(code)
+
+print("")

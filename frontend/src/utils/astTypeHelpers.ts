@@ -91,11 +91,12 @@ const resolveEntriesKind = (value: any[]): string => {
 
 const arrayTypeFallbacks: Record<string, string | ((item: any[]) => string)> = {
   statements: "{ AstStat }",
-  leadingTrivia: "{ Trivia }",
-  trailingTrivia: "{ Trivia }",
+  leadingtrivia: "{ Trivia }",
+  trailingtrivia: "{ Trivia }",
   attributes: "{ AstAttribute }",
   expressions: "{ AstExpr }",
-  elseifs: "{ AstExprIfElseIfs }",
+  elseifs: "{ AstElseIfExpr }",
+  strings: "{ Token }",
   entries: resolveEntriesType,
 };
 

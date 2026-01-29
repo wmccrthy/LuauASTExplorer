@@ -46,7 +46,7 @@ end
 
 local function test_printlocal()
 	for expectedOutput, testCase in printLocalCases do
-		local result = printer.printlocal(testCase)
+		local result = printer.printASTNode(testCase)
 		assert(result == expectedOutput, "Failed printlocal on node for src code: " .. expectedOutput)
 	end
 end
@@ -60,7 +60,7 @@ local function test_printfallback()
 		child1 = createMockToken("test", 1, 0),
 		child2 = createMockToken("hmmm", 1, 5),
 	}
-	local result = printer.printfallback(nestedTokenNode)
+	local result = printer.printASTNode(nestedTokenNode)
 	assert(result == "testhmmm", "Failed to print simple token")
 
 	-- Test 2: Array node should trigger fallback behavior
@@ -69,7 +69,7 @@ local function test_printfallback()
 		createMockToken(" ", 1, 6),
 		createMockToken("world", 1, 7),
 	}
-	local arrayResult = printer.printfallback(arrayNode)
+	local arrayResult = printer.printASTNode(arrayNode)
 	assert(arrayResult == "hello world", "Failed to print array node")
 
 	print("✓ printASTNode cascade tests passed")
@@ -110,7 +110,7 @@ local function test_real_ast_integration()
 	local validCases = helpers.testCases.e2eCases
 	for _, code in ipairs(validCases) do
 		local parseSuccess, ast = pcall(function()
-			return parser.parse(code)
+			return parser.parseblock(code)
 		end)
 
 		if parseSuccess and ast then

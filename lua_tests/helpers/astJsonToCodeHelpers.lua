@@ -2,9 +2,15 @@
 local function createMockToken(text, line, column)
 	return {
 		text = text,
-		position = { line = line or 1, column = column or 1 },
-		leadingTrivia = {},
-		trailingTrivia = {},
+		location = {
+			beginline = line or 1,
+			begincolumn = column or 1,
+			endline = line or 1,
+			endcolumn = (column or 1) + #text,
+		},
+		leadingtrivia = {},
+		trailingtrivia = {},
+		istoken = true,
 	}
 end
 
@@ -23,28 +29,36 @@ end
 local cases = {
 	printLocalCases = {
 		["test"] = {
+			kind = "local",
 			name = createMockToken("test", 1, 0),
 			["test2: number"] = {
+				kind = "local",
 				name = createMockToken("test2", 1, 1),
 				colon = {
-					leadingTrivia = {},
-					trailingTrivia = {
+					leadingtrivia = {},
+					trailingtrivia = {
 						{
 							tag = "whitespace",
 							text = " ",
 							location = {
-								line = 1,
-								column = 1,
+								beginline = 1,
+								begincolumn = 1,
+								endline = 1,
+								endcolumn = 2,
 							},
 						},
 					},
-					position = {
-						line = 1,
-						column = 1,
+					location = {
+						beginline = 1,
+						begincolumn = 1,
+						endline = 1,
+						endcolumn = 2,
 					},
 					text = ":",
+					istoken = true,
 				},
 				annotation = {
+					kind = "type",
 					tag = "reference",
 					name = createMockToken("number", 1, 1),
 				},
