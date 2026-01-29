@@ -5,7 +5,7 @@
 
 ### Fixes
 
-- Align with Lute Latest [#58](https://github.com/wmccrthy/LuauASTExplorer/pull/58)
+- Compatability with Lute latest [#58](https://github.com/wmccrthy/LuauASTExplorer/pull/58)
 
 
 ## [0.1.8] - 2025-10-06
