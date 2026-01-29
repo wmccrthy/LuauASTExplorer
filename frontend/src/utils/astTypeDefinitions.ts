@@ -312,6 +312,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
 
   AstExprTableItemList: {
     properties: [
+      { name: "location", type: "span" },
       { name: "kind", type: '"list"' },
       { name: "value", type: "AstExpr" },
       {
@@ -326,6 +327,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
 
   AstExprTableItemRecord: {
     properties: [
+      { name: "location", type: "span" },
       { name: "kind", type: '"record"' },
       { name: "key", type: "Token", generic: "Token<string>" },
       { name: "equals", type: "Token", generic: 'Token<"=">' },
@@ -342,6 +344,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
 
   AstExprTableItemGeneral: {
     properties: [
+      { name: "location", type: "span" },
       { name: "kind", type: '"general"' },
       { name: "indexeropen", type: "Token", generic: 'Token<"[">' },
       { name: "key", type: "AstExpr" },
