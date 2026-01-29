@@ -58,6 +58,20 @@ local function encode_nil(val)
 end
 
 
+-- Convert span userdata to a plain table that can be JSON encoded
+local function serializeSpan(span)
+  if span.beginline then
+    return {
+      beginline = span.beginline,
+      begincolumn = span.begincolumn,
+      endline = span.endline,
+      endcolumn = span.endcolumn,
+    }
+  end
+  return nil
+end
+
+
 local function encode_table(val, stack)
   local res = {}
   stack = stack or {}
@@ -120,11 +134,16 @@ local type_func_map = {
 }
 
 
-encode = function(val, stack)
+encode = function(val, stack): string?
   local t = type(val)
   local f = type_func_map[t]
   if t == "userdata" then
-    return nil
+    -- Try to serialize span userdata as a table
+    local spanTable = serializeSpan(val)
+    if spanTable then
+      return encode_table(spanTable, stack)
+    end
+    return nil :: string?
   end
   if f then
     return f(val, stack)
@@ -133,7 +152,7 @@ encode = function(val, stack)
 end
 
 
-function json.encode(val)
+function json.encode(val): string?
   return ( encode(val) )
 end
 

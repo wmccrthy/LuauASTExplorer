@@ -261,7 +261,6 @@ typeAnnotationVisitor.visitStatTypeAlias = function(node: luau.AstStatTypeAlias)
 	return true
 end
 
-
 typeAnnotationVisitor.visitTypePackGeneric = function(node: luau.AstGenericTypePack)
 	verifyOutput(node, "visitTypePackGeneric", node._astType == "AstGenericTypePack")
 	return true
@@ -284,7 +283,6 @@ typeAnnotationVisitor.visitTypePackGeneric = function(node: luau.AstTypePackGene
 end
 
 -- Table type property visitors
-
 
 -- Function type parameter visitors
 

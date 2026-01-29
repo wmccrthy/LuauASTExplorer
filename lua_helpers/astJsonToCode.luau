@@ -21,7 +21,7 @@ local success, code = pcall(printer.printASTNode, astNode)
 
 if success then
 	-- stylua src code for readable output
-	fs.writestringtofile(sourceFilePath, code)
+	fs.writestringtofile(sourceFilePath, code :: string)
 	process.run({ "stylua", sourceFilePath })
 	code = fs.readfiletostring(sourceFilePath)
 	print(code)

@@ -8,10 +8,10 @@ local typeAnnotationHelpers = require("./helpers/typeAnnotationTestHelpers")
 
 local function annotateWithType_test()
 	-- parse and annotate src code snippet (with large coverage of syntax constructs)
-	local testAST = annotateWithType(parser.parse(typeAnnotationHelpers.testSrc))
+	local testAST = annotateWithType(parser.parseblock(typeAnnotationHelpers.testSrc))
 	-- visit annotated tree to check for correct type assignment (using typeAnnotationVisitor)
 	local typeAnnotationChecker = typeAnnotationHelpers.typeAnnotationVisitor
-	visitor.visitblock(testAST, typeAnnotationChecker)
+	visitor.visit(testAST, typeAnnotationChecker)
 end
 
 -- test function on manually created AstNodes that map to expected output

@@ -2,7 +2,12 @@
 local function createMockToken(text, line, column)
 	return {
 		text = text,
-		location = { beginline = line or 1, begincolumn = column or 1, endline = line or 1, endcolumn = (column or 1) + #text },
+		location = {
+			beginline = line or 1,
+			begincolumn = column or 1,
+			endline = line or 1,
+			endcolumn = (column or 1) + #text,
+		},
 		leadingtrivia = {},
 		trailingtrivia = {},
 		istoken = true,
