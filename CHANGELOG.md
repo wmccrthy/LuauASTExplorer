@@ -1,6 +1,17 @@
 
 # Changelog
 
+## [0.1.10] - 2026-01-30
+
+### Features
+
+- Smarter Lute auto-detection; dynamically checks `foreman` / `rokit` bin and falls back to tool storage. [#63](https://github.com/wmccrthy/LuauASTExplorer/pull/63)
+
+### Fixes
+
+- align w/ breaking changes to AST function nodes [#61](https://github.com/wmccrthy/LuauASTExplorer/pull/61)
+
+
 ## [0.1.9] - 2026-01-29
 
 ### Fixes
