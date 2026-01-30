@@ -75,6 +75,9 @@ export class ASTParserAndPrinter {
     for (const binPath of binPaths) {
       if (await this.isValidExecutable(binPath)) {
         console.log(`Found Lute in toolchain bin: ${binPath}`);
+        vscode.window.showWarningMessage(
+          "Using workspace-configured Lute version. If you experience parsing issues, try bumping to the latest Lute version."
+        );
         return binPath;
       }
     }
