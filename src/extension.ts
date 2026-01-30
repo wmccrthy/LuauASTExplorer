@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
 import { ASTParserAndPrinter } from "./astParser";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   console.log("Luau AST Explorer is now active!");
 
   // Create AST parser instance with extension context
-  const astParser = new ASTParserAndPrinter(context);
+  const astParser = await ASTParserAndPrinter.create(context);
 
   // Register the command to show AST
   let disposable = vscode.commands.registerCommand(
@@ -274,7 +274,7 @@ async function handleParseAST(
     });
 
     // Parse the code using existing ASTParser
-    const astParser = new ASTParserAndPrinter(context);
+    const astParser = await ASTParserAndPrinter.create(context);
     const astResult = await astParser.parseCode(code, "luau");
 
     // Send success result to webview
@@ -307,7 +307,7 @@ async function handleParseDiff(
     });
 
     // Parse both code snippets using existing ASTParser
-    const astParser = new ASTParserAndPrinter(context);
+    const astParser = await ASTParserAndPrinter.create(context);
 
     // Parse before and after code separately
     const beforeAST = await astParser.parseCode(beforeCode, "luau");
@@ -344,7 +344,7 @@ async function handlePrintCode(
       nodeId: nodeId,
     });
 
-    const astPrinter = new ASTParserAndPrinter(context);
+    const astPrinter = await ASTParserAndPrinter.create(context);
     const code = await astPrinter.printCode(nodeJson);
 
     // Send success result to webview

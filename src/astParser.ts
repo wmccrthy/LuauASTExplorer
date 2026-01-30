@@ -7,72 +7,166 @@ import * as os from "os";
 
 const execAsync = promisify(exec);
 
+interface ToolStorageConfig {
+  path: string;
+  nested: boolean; // true = rokit style (<version>/lute), false = foreman style (flat files)
+  pattern?: RegExp; // optional filter for flat storage (e.g., /^luau-lang.*lute/i)
+}
+
 export class ASTParserAndPrinter {
-  private luteExecutable: string;
+  private luteExecutable: string = "lute"; // default fallback
   private extensionPath: string;
 
-  constructor(context: vscode.ExtensionContext) {
-    this.extensionPath = context.extensionPath;
+  private constructor(extensionPath: string) {
+    this.extensionPath = extensionPath;
+  }
+
+  static async create(
+    context: vscode.ExtensionContext
+  ): Promise<ASTParserAndPrinter> {
+    const instance = new ASTParserAndPrinter(context.extensionPath);
 
     // Get the Lute executable path from configuration
     const config = vscode.workspace.getConfiguration("luauAstExplorer");
     const configuredPath = config.get("luteExecutable") as string;
 
     if (configuredPath) {
-      this.luteExecutable = configuredPath;
+      instance.luteExecutable = configuredPath;
     } else {
       // Auto-detect Lute executable
-      this.luteExecutable = this.detectLuteExecutable();
+      instance.luteExecutable = await instance.detectLuteExecutable();
     }
 
-    console.log(`ASTParser: Using Lute executable at: ${this.luteExecutable}`);
-    console.log(`ASTParser: Extension path: ${this.extensionPath}`);
+    console.log(
+      `ASTParser: Using Lute executable at: ${instance.luteExecutable}`
+    );
+    console.log(`ASTParser: Extension path: ${instance.extensionPath}`);
+
+    return instance;
   }
 
-  private detectLuteExecutable(): string {
+  private async isValidExecutable(execPath: string): Promise<boolean> {
+    try {
+      await execAsync(`${execPath} --version`, { timeout: 5000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /*
+  Lute Detection Strategy:
+  1. Check rokit/foreman bin directories first (project-aware via config files)
+  2. Scan rokit tool-storage (nested: ~/.rokit/tool-storage/luau-lang/lute/<version>/lute)
+  3. Scan foreman tools (flat: ~/.foreman/tools/luau-lang__lute-<version>)
+  4. Fall back to system PATH
+  */
+  private async detectLuteExecutable(): Promise<string> {
     const homeDir = os.homedir();
-    const possiblePaths = [
-      // Foreman installation paths
-      path.join(homeDir, ".foreman", "bin", "lute"),
-      path.join(homeDir, ".foreman", "bin", "lute.exe"), // Windows
-      // Rokit installation paths
-      path.join(
-        homeDir,
-        ".rokit",
-        "tool-storage",
-        "luau-lang",
-        "lute",
-        "0.1.0-nightly.20250722",
-        "lute"
-      ), // To-Do: don't hard code version like this
-      path.join(
-        homeDir,
-        ".rokit",
-        "tool-storage",
-        "luau-lang",
-        "lute",
-        "0.1.0-nightly.20250722",
-        "lute.exe"
-      ), // Windows
-      // System paths (fallback)
-      "lute",
-      "/usr/local/bin/lute",
-      "/opt/homebrew/bin/lute",
+    const isWindows = process.platform === "win32";
+    const ext = isWindows ? ".exe" : "";
+
+    // 1. First priority: Use rokit/foreman bin directories (project-aware)
+    const binPaths = [
+      path.join(homeDir, ".rokit", "bin", `lute${ext}`),
+      path.join(homeDir, ".foreman", "bin", `lute${ext}`),
     ];
 
-    for (const lutePath of possiblePaths) {
-      try {
-        if (fs.existsSync(lutePath)) {
-          console.log(`Found Lute executable at: ${lutePath}`);
-          return lutePath;
-        }
-      } catch (error) {
-        // Continue to next path
+    for (const binPath of binPaths) {
+      if (await this.isValidExecutable(binPath)) {
+        console.log(`Found Lute in toolchain bin: ${binPath}`);
+        vscode.window.showWarningMessage(
+          "Using workspace-configured Lute version. If you experience parsing issues, try bumping to the latest Lute version."
+        );
+        return binPath;
       }
     }
 
-    console.log("Using fallback path: lute");
-    return "lute"; // Fallback to PATH
+    // 2. Fallback: Scan tool storage directories
+    const toolStorageConfigs: ToolStorageConfig[] = [
+      {
+        path: path.join(homeDir, ".rokit", "tool-storage", "luau-lang", "lute"),
+        nested: true, // rokit: <version>/lute
+      },
+      {
+        path: path.join(homeDir, ".foreman", "tools"),
+        nested: false, // foreman: luau-lang__lute-<version> (flat)
+        pattern: /^luau-lang.*lute/i,
+      },
+    ];
+
+    for (const config of toolStorageConfigs) {
+      const lutePath = await this.findLuteInToolStorage(config, ext);
+      if (lutePath) {
+        console.log(`Found Lute in tool storage: ${lutePath}`);
+        return lutePath;
+      }
+    }
+
+    // 4. System PATH fallback
+    const systemPaths = ["/usr/local/bin/lute", "/opt/homebrew/bin/lute"];
+    for (const sysPath of systemPaths) {
+      if (fs.existsSync(sysPath)) {
+        console.log(`Found Lute in system path: ${sysPath}`);
+        return sysPath;
+      }
+    }
+
+    console.log("Using fallback: lute (from PATH)");
+    return "lute";
+  }
+
+  /**
+   * Finds the latest lute executable in a tool storage directory.
+   * Supports both nested (rokit) and flat (foreman) storage structures.
+   */
+  private async findLuteInToolStorage(
+    config: ToolStorageConfig,
+    ext: string
+  ): Promise<string | null> {
+    try {
+      if (!fs.existsSync(config.path)) {
+        return null;
+      }
+
+      const entries = fs.readdirSync(config.path);
+      if (entries.length === 0) {
+        return null;
+      }
+
+      // Filter entries if pattern is specified (for flat storage)
+      const candidates = config.pattern
+        ? entries.filter((e) => config.pattern!.test(e))
+        : entries;
+
+      if (candidates.length === 0) {
+        return null;
+      }
+
+      // Sort descending to get latest version first
+      candidates.sort().reverse();
+
+      for (const candidate of candidates) {
+        const candidatePath = path.join(config.path, candidate);
+        const stats = fs.statSync(candidatePath);
+
+        if (config.nested && stats.isDirectory()) {
+          // Nested: look for lute executable inside version directory
+          const lutePath = path.join(candidatePath, `lute${ext}`);
+          if (await this.isValidExecutable(lutePath)) {
+            return lutePath;
+          }
+        } else if (!config.nested && stats.isFile()) {
+          // Flat: the candidate itself is the executable
+          if (await this.isValidExecutable(candidatePath)) {
+            return candidatePath;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`Error scanning tool storage at ${config.path}: ${error}`);
+    }
+    return null;
   }
 
   async parseCode(code: string, languageId: string): Promise<string> {
@@ -141,7 +235,7 @@ export class ASTParserAndPrinter {
           error.message.includes("not recognized")
         ) {
           throw new Error(
-            `Lute executable not found at: ${this.luteExecutable}. Please install Lute using foreman or ensure it's in your PATH.`
+            `Lute executable not found at: ${this.luteExecutable}. Please install Lute using foreman / rokit or ensure it's in your PATH.`
           );
         }
         throw new Error(`Lute execution failed: ${error.message}`);
