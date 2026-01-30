@@ -401,7 +401,7 @@ describe("TreeNode", () => {
   describe("array type inference edge cases", () => {
     test("handles punctuated arrays", () => {
       const punctuatedNode = {
-        _astType: "AstFunctionBody",
+        _astType: "AstExprFunction",
         parameters: [
           // Use proper Punctuated<AstLocal> structures
           {

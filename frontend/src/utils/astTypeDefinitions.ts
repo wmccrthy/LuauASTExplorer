@@ -240,8 +240,13 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstFunctionBody: {
+  AstExprFunction: {
     properties: [
+      { name: "location", type: "span" },
+      { name: "kind", type: '"expr"' },
+      { name: "tag", type: '"function"' },
+      { name: "attributes", type: "{ AstAttribute }" },
+      { name: "functionkeyword", type: "Token", generic: 'Token<"function">' },
       {
         name: "opengenerics",
         type: "Token",
@@ -266,8 +271,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
         generic: 'Token<">">',
         optional: true,
       },
-      { name: "self", type: "AstLocal", optional: true },
       { name: "openparens", type: "Token", generic: 'Token<"(">' },
+      { name: "self", type: "AstLocal", optional: true },
       {
         name: "parameters",
         type: "Punctuated",
@@ -296,17 +301,6 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "returnannotation", type: "AstTypePack", optional: true },
       { name: "body", type: "AstStatBlock" },
       { name: "endkeyword", type: "Token", generic: 'Token<"end">' },
-    ],
-  },
-
-  AstExprAnonymousFunction: {
-    properties: [
-      { name: "location", type: "span" },
-      { name: "kind", type: '"expr"' },
-      { name: "tag", type: '"function"' },
-      { name: "attributes", type: "{ AstAttribute }" },
-      { name: "functionkeyword", type: "Token", generic: 'Token<"function">' },
-      { name: "body", type: "AstFunctionBody" },
     ],
   },
 
@@ -459,7 +453,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       "AstExprCall",
       "AstExprIndexName",
       "AstExprIndexExpr",
-      "AstExprAnonymousFunction",
+      "AstExprFunction",
       "AstExprTable",
       "AstExprUnary",
       "AstExprBinary",
@@ -683,10 +677,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"function"' },
-      { name: "attributes", type: "{ AstAttribute }" },
-      { name: "functionkeyword", type: "Token", generic: 'Token<"function">' },
       { name: "name", type: "AstExpr" },
-      { name: "body", type: "AstFunctionBody" },
+      { name: "func", type: "AstExprFunction" },
     ],
   },
 
@@ -695,11 +687,9 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"localfunction"' },
-      { name: "attributes", type: "{ AstAttribute }" },
       { name: "localkeyword", type: "Token", generic: 'Token<"local">' },
-      { name: "functionkeyword", type: "Token", generic: 'Token<"function">' },
       { name: "name", type: "AstLocal" },
-      { name: "body", type: "AstFunctionBody" },
+      { name: "func", type: "AstExprFunction" },
     ],
   },
 
@@ -757,9 +747,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
         optional: true,
       },
       { name: "type", type: "Token", generic: 'Token<"type">' },
-      { name: "functionkeyword", type: "Token", generic: 'Token<"function">' },
       { name: "name", type: "Token" },
-      { name: "body", type: "AstFunctionBody" },
+      { name: "body", type: "AstExprFunction" },
     ],
   },
 

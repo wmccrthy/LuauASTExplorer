@@ -129,7 +129,7 @@ local typeDefinitions = {
 
 		-- Expression/Statement specific
 		["expression"] = "AstExpr",
-		["func"] = "AstExpr",
+		["func"] = "AstExprFunction",
 		["condition"] = "AstExpr",
 		["from"] = "AstExpr",
 		["to"] = "AstExpr",
@@ -210,11 +210,12 @@ local function resolveAmbiguousTags(node)
 		-- AstTypeFunction has returnarrow and kind="type"
 		if kind == "type" or node.returnarrow then
 			return "AstTypeFunction"
-		-- AstStatFunction has name and kind="stat"
-		elseif kind == "stat" or node.name then
+		-- AstStatFunction has name field and kind="stat" (but not func field directly on it)
+		elseif kind == "stat" then
 			return "AstStatFunction"
 		else
-			return "AstExprAnonymousFunction"
+			-- AstExprFunction (consolidated from old AstExprAnonymousFunction + AstFunctionBody)
+			return "AstExprFunction"
 		end
 	elseif tag == "group" then
 		-- AstExprGroup has expression and kind="expr", AstTypeGroup has type and kind="type"
@@ -286,9 +287,10 @@ local function resolveAmbiguousKeys(nodeKey, node, parentNode, parentKey)
 
 	-- Ambiguous keys that need context-aware resolution:
 	if nodeKey == "body" then
-		-- AstStatBlock vs AstFunctionBody vs { AstStat } for AstStatDo
-		if node.openparens then
-			return "AstFunctionBody"
+		-- AstStatBlock vs AstExprFunction (for AstStatTypeFunction) vs { AstStat } for AstStatDo
+		if node.functionkeyword and node.openparens then
+			-- This is AstExprFunction (used in AstStatTypeFunction.body)
+			return "AstExprFunction"
 		elseif node.statements then
 			return "AstStatBlock"
 		else
