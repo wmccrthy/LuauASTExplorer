@@ -45,25 +45,11 @@ export class ASTParserAndPrinter {
     return instance;
   }
 
-  private async isValidExecutable(path: string): Promise<boolean> {
-
-    if (!fs.existsSync(path)) {
-      return false;
-    }
-
-    const command = `${path} --version`;
+  private async isValidExecutable(execPath: string): Promise<boolean> {
     try {
-      const { stdout, stderr } = await execAsync(command, {
-        timeout: 10000, // 10 second timeout
-        maxBuffer: 1024 * 1024, // 1MB buffer
-      });
-
-      if (stderr && !stdout) {
-        return false;
-      }
-
+      await execAsync(`${execPath} --version`, { timeout: 5000 });
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -246,7 +232,7 @@ export class ASTParserAndPrinter {
           error.message.includes("not recognized")
         ) {
           throw new Error(
-            `Lute executable not found at: ${this.luteExecutable}. Please install Lute using foreman or ensure it's in your PATH.`
+            `Lute executable not found at: ${this.luteExecutable}. Please install Lute using foreman / rokit or ensure it's in your PATH.`
           );
         }
         throw new Error(`Lute execution failed: ${error.message}`);
