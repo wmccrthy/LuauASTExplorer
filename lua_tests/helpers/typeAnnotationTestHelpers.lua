@@ -108,8 +108,8 @@ typeAnnotationVisitor.visitStatFunction = function(node: luau.AstStatFunction)
 	return true
 end
 
-typeAnnotationVisitor.visitExprAnonymousFunction = function(node: luau.AstExprAnonymousFunction)
-	verifyOutput(node, "visitAnonymousFunction", node._astType == "AstExprAnonymousFunction")
+typeAnnotationVisitor.visitExprFunction = function(node: luau.AstExprFunction)
+	verifyOutput(node, "visitExprFunction", node._astType == "AstExprFunction")
 	return true
 end
 
@@ -305,7 +305,7 @@ local ambiguousTagTestCases = {
 	{ { tag = "conditional", kind = "expr" }, "AstExprIfElse", "if expression" },
 	{ { tag = "function", kind = "type", returnarrow = {} }, "AstTypeFunction", "type function" },
 	{ { tag = "function", kind = "stat", name = {} }, "AstStatFunction", "function statement" },
-	{ { tag = "function", kind = "expr" }, "AstExprAnonymousFunction", "anonymous function" },
+	{ { tag = "function", kind = "expr" }, "AstExprFunction", "expression function" },
 	{ { tag = "group", kind = "expr", expression = {} }, "AstExprGroup", "expression group" },
 	{ { tag = "group", kind = "type", type = {} }, "AstTypeGroup", "type group" },
 	{ { tag = "local", kind = "expr", token = {}, upvalue = false }, "AstExprLocal", "local expression" },
@@ -316,14 +316,14 @@ local ambiguousTagTestCases = {
 
 local ambiguousKeyTestCases = {
 	-- {key, node, parent, expectedType, description}
-	{ "body", { openparens = {} }, {}, "AstFunctionBody", "function body" },
+	{ "body", { functionkeyword = {}, openparens = {} }, {}, "AstExprFunction", "function body (AstStatTypeFunction)" },
 	{ "body", { statements = {} }, { tag = "if" }, "AstStatBlock", "if body" },
 	{ "operand", { tag = "call" }, { operator = {}, tag = "unary" }, "AstExpr", "unary operand" },
 	{ "self", {}, {}, "AstLocal", "self parameter" },
 	{ "self", {}, { tag = "call" }, "boolean", "no self parameter" },
 	{ "condition", { tag = "binary" }, {}, "AstExpr", "condition expression" },
 	{ "expression", { tag = "call" }, {}, "AstExpr", "expression" },
-	{ "func", { tag = "function" }, {}, "AstExpr", "function expression" },
+	{ "func", { tag = "function" }, {}, "AstExprFunction", "function expression" },
 	{ "key", {}, { kind = "record", istableitem = true }, "Token", "record key" },
 	{ "key", {}, { kind = "indexer" }, "AstType", "indexer key" },
 	{ "key", {}, { kind = "general", istableitem = true }, "AstExpr", "general key" },
