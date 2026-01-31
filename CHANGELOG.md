@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [0.1.11] - 2026-01-31
+
+### Fixes
+
+- Fix bug with `AstStatDo` type annotations. [#66](https://github.com/wmccrthy/LuauASTExplorer/pull/66)
+
+
 ## [0.1.10] - 2026-01-30
 
 ### Features
