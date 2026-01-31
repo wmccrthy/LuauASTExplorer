@@ -116,6 +116,7 @@ local cases = {
 		"local c = true and false",
 		"local d = not nil",
 		"local e = #{}",
+		"do print(1) end",
 		"return",
 	},
 }

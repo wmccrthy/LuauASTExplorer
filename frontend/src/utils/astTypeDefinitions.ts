@@ -479,7 +479,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"do"' },
       { name: "dokeyword", type: "Token", generic: 'Token<"do">' },
-      { name: "body", type: "{ AstStat }" },
+      { name: "body", type: "AstStatBlock" },
       { name: "endkeyword", type: "Token", generic: 'Token<"end">' },
     ],
   },

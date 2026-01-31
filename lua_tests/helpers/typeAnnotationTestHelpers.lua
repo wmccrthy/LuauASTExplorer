@@ -143,6 +143,14 @@ typeAnnotationVisitor.visitStatFor = function(node: luau.AstStatFor)
 	return true
 end
 
+typeAnnotationVisitor.visitStatDo = function(node: luau.AstStatDo)
+	verifyOutput(node, "visitDo", function(node)
+		print("verifyinf do block")
+		return node._astType == "AstStatDo" and node.body._astType == "AstStatBlock"
+	end)
+	return true
+end
+
 typeAnnotationVisitor.visitStatForIn = function(node: luau.AstStatForIn)
 	verifyOutput(node, "visitForIn", node._astType == "AstStatForIn")
 	return true

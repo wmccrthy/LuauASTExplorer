@@ -25,7 +25,7 @@ end
 
 -- test function on manually created AstNodes that map to expected output
 local function resolveAmbiguousKeys_test()
-	for _, case in ipairs(typeAnnotationHelpers.ambiguousKeyTestCases) do
+	for _, case in typeAnnotationHelpers.ambiguousKeyTestCases do
 		local result = resolveAmbiguousKeys(case[1], case[2], case[3])
 		local expected = case[4]
 		assert(
