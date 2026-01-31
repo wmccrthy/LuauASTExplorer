@@ -1,0 +1,1 @@
+Fix bug with `AstStatDo` type annotations.
