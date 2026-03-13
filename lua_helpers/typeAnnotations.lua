@@ -379,60 +379,67 @@ local function resolveAmbiguousKeys(nodeKey, node, parentNode, parentKey)
 	return typeDefinitions.keys[nodeKey]
 end
 
-local function annotateWithType(node, nodeKey, parent, parentKey)
-	if type(node) ~= "table" then
-		return node
-	end
-
-	local astType = nil
-
-	-- Priority 1: Check for 'kind' field for direct type mapping (local, attribute)
-	if node.kind == "local" and not node.tag then
-		astType = "AstLocal"
-	elseif node.kind == "attribute" then
-		astType = "AstAttribute"
-
-	-- Priority 2: Context-aware tag-based type resolution
-	elseif node.tag then
-		astType = resolveAmbiguousTags(node)
-
-	-- Priority 3: Check for 'kind' field for table items
-	elseif node.kind and node.istableitem then
-		astType = typeDefinitions.kinds[node.kind]
-	elseif node.kind and (node.key or node.indexeropen) then
-		-- Type table items
-		astType = typeDefinitions.kinds[node.kind]
-
-	-- Priority 4: Check for istoken marker
-	elseif node.istoken then
-		astType = "Token"
-
-	-- Priority 5: Key-based type resolution (fallback)
-	elseif nodeKey then
-		astType = resolveAmbiguousKeys(nodeKey, node, parent, parentKey)
-
-	-- Priority 6: Generic token detection
-	elseif nodeKey and nodeKey:match("keyword$") then
-		-- Any property ending in "keyword" is probably a token
-		astType = "Token"
-	elseif nodeKey and (nodeKey:match("^open") or nodeKey:match("^close")) then
-		-- Properties like openparens, closebrace, etc.
-		astType = "Token"
-	end
-
-	-- Add type annotation (skip arrays to avoid JSON encoding issues)
-	if astType and not (#node > 0) then
-		node._astType = astType
-	end
-
-	-- Recursively annotate children, passing key context
-	for key, value in pairs(node) do
-		if key ~= "_astType" then
-			node[key] = annotateWithType(value, if typeof(key) == "string" then key else tostring(key), node, nodeKey)
+	local function annotateWithType(node, nodeKey, parent, parentKey)
+		if type(node) ~= "table" then
+			return node
 		end
+
+		-- Lute AST nodes can be readonly in newer versions; avoid in-place mutation by
+		-- copying before annotating.
+		local out = {}
+		for key, value in pairs(node) do
+			out[key] = value
+		end
+
+		local astType = nil
+
+		-- Priority 1: Check for 'kind' field for direct type mapping (local, attribute)
+		if out.kind == "local" and not out.tag then
+			astType = "AstLocal"
+		elseif out.kind == "attribute" then
+			astType = "AstAttribute"
+
+		-- Priority 2: Context-aware tag-based type resolution
+		elseif out.tag then
+			astType = resolveAmbiguousTags(out)
+
+		-- Priority 3: Check for 'kind' field for table items
+		elseif out.kind and out.istableitem then
+			astType = typeDefinitions.kinds[out.kind]
+		elseif out.kind and (out.key or out.indexeropen) then
+			-- Type table items
+			astType = typeDefinitions.kinds[out.kind]
+
+		-- Priority 4: Check for istoken marker
+		elseif out.istoken then
+			astType = "Token"
+
+		-- Priority 5: Key-based type resolution (fallback)
+		elseif nodeKey then
+			astType = resolveAmbiguousKeys(nodeKey, out, parent, parentKey)
+
+		-- Priority 6: Generic token detection
+		elseif nodeKey and nodeKey:match("keyword$") then
+			-- Any property ending in "keyword" is probably a token
+			astType = "Token"
+		elseif nodeKey and (nodeKey:match("^open") or nodeKey:match("^close")) then
+			-- Properties like openparens, closebrace, etc.
+			astType = "Token"
+		end
+
+		-- Add type annotation (skip arrays to avoid JSON encoding issues)
+		if astType and not (#out > 0) then
+			out._astType = astType
+		end
+
+		-- Recursively annotate children, passing key context
+		for key, value in pairs(out) do
+			if key ~= "_astType" then
+				out[key] = annotateWithType(value, if typeof(key) == "string" then key else tostring(key), out, nodeKey)
+			end
+		end
+		return out
 	end
-	return node
-end
 
 return {
 	annotateWithType = annotateWithType,
