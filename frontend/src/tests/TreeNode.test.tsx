@@ -259,9 +259,9 @@ describe("TreeNode", () => {
     test("fallback chain: _astType -> parentInferred -> array inference", () => {
       // Test actual fallback: parent type defines array property, mixed content with/without _astType
       const tableWithEntries = {
-        _astType: "AstExprTable", // Parent type that has `entries: { AstExprTableItem }` property
+        _astType: "AstExprTable", // Parent type that has `entries: { AstTableExprItem }` property
         entries: [
-          { text: "filler" }, // No _astType - should infer AstExprTableItem from parent definition
+          { text: "filler" }, // No _astType - should infer AstTableExprItem from parent definition
           { _astType: "MySpecialType" }, // Has _astType - should use that directly
         ],
       };
@@ -275,14 +275,12 @@ describe("TreeNode", () => {
       // The entries array should get inferred type from AstExprTable definition
       const entriesQuery = getQueryableNode("root.entries", "nodeHeader");
       expect(
-        entriesQuery.getByText(/type: { AstExprTableItem }/)
+        entriesQuery.getByText(/type: { AstTableExprItem }/)
       ).toBeInTheDocument();
 
       // First item should infer type from parent array definition
       const item0Query = getQueryableNode("root.entries.0", "nodeHeader");
-      expect(
-        item0Query.getByText(/type: AstExprTableItem/)
-      ).toBeInTheDocument();
+      expect(item0Query.getByText(/type: AstTableExprItem/)).toBeInTheDocument();
 
       // Second item should use its explicit _astType
       const item1Query = getQueryableNode("root.entries.1", "nodeHeader");

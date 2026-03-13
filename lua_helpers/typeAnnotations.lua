@@ -21,6 +21,7 @@ local typeDefinitions = {
 		["global"] = "AstExprGlobal",
 		["vararg"] = "AstExprVarargs",
 		["call"] = "AstExprCall",
+		["instantiate"] = "AstExprInstantiate",
 		["indexname"] = "AstExprIndexName",
 		["index"] = "AstExprIndexExpr",
 		["unary"] = "AstExprUnary",
@@ -171,14 +172,14 @@ local typeDefinitions = {
 	-- Kind-based mappings for table items and other kinded structures
 	kinds = {
 		-- Expression table items (istableitem: true)
-		["record"] = "AstExprTableItemRecord",
-		["general"] = "AstExprTableItemGeneral",
-		["list"] = "AstExprTableItemList",
+		["record"] = "AstTableExprRecordItem",
+		["general"] = "AstTableExprGeneralItem",
+		["list"] = "AstTableExprListItem",
 
 		-- Type table items
-		["property"] = "AstTypeTableItemProperty",
-		["indexer"] = "AstTypeTableItemIndexer",
-		["stringproperty"] = "AstTypeTableItemStringProperty",
+		["property"] = "AstTableTypeItemProperty",
+		["indexer"] = "AstTableTypeItemIndexer",
+		["stringproperty"] = "AstTableTypeItemStringProperty",
 
 		-- AstLocal
 		["local"] = "AstLocal",
