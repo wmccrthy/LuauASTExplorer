@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [0.1.12] - 2026-03-15
+
+### Features
+
+- Make compatible w/ lute to 0.1.0-nightly.20260312 [#68](https://github.com/wmccrthy/LuauASTExplorer/pull/68)
+
+
 ## [0.1.11] - 2026-01-31
 
 ### Fixes
