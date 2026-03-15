@@ -190,7 +190,7 @@ local typeDefinitions = {
 }
 
 -- Context-aware type resolution for ambiguous tags
-local function resolveAmbiguousTags(node)
+local function resolveAmbiguousTags(node): string?
 	local tag = node.tag
 	if not tag then
 		return nil
@@ -280,7 +280,7 @@ local function resolveAmbiguousTags(node)
 	return typeDefinitions.tags[tag]
 end
 
-local function resolveAmbiguousKeys(nodeKey, node, parentNode, parentKey)
+local function resolveAmbiguousKeys(nodeKey, node, parentNode): string?
 	-- Handle 'kind' field specially - it's a discriminator, not a type
 	if nodeKey == "kind" then
 		return nil -- Don't annotate the kind field itself
@@ -387,37 +387,34 @@ end
 
 		-- Lute AST nodes can be readonly in newer versions; avoid in-place mutation by
 		-- copying before annotating.
-		local out = {}
-		for key, value in pairs(node) do
-			out[key] = value
-		end
+		local annotatedNode = table.clone(node)
 
-		local astType = nil
+		local astType: string?
 
 		-- Priority 1: Check for 'kind' field for direct type mapping (local, attribute)
-		if out.kind == "local" and not out.tag then
+		if annotatedNode.kind == "local" and not annotatedNode.tag then
 			astType = "AstLocal"
-		elseif out.kind == "attribute" then
+		elseif annotatedNode.kind == "attribute" then
 			astType = "AstAttribute"
 
 		-- Priority 2: Context-aware tag-based type resolution
-		elseif out.tag then
-			astType = resolveAmbiguousTags(out)
+		elseif annotatedNode.tag then
+			astType = resolveAmbiguousTags(annotatedNode)
 
 		-- Priority 3: Check for 'kind' field for table items
-		elseif out.kind and out.istableitem then
-			astType = typeDefinitions.kinds[out.kind]
-		elseif out.kind and (out.key or out.indexeropen) then
+		elseif annotatedNode.kind and annotatedNode.istableitem then
+			astType = typeDefinitions.kinds[annotatedNode.kind]
+		elseif annotatedNode.kind and (annotatedNode.key or annotatedNode.indexeropen) then
 			-- Type table items
-			astType = typeDefinitions.kinds[out.kind]
+			astType = typeDefinitions.kinds[annotatedNode.kind]
 
 		-- Priority 4: Check for istoken marker
-		elseif out.istoken then
+		elseif annotatedNode.istoken then
 			astType = "Token"
 
 		-- Priority 5: Key-based type resolution (fallback)
 		elseif nodeKey then
-			astType = resolveAmbiguousKeys(nodeKey, out, parent, parentKey)
+			astType = resolveAmbiguousKeys(nodeKey, annotatedNode, parent, parentKey)
 
 		-- Priority 6: Generic token detection
 		elseif nodeKey and nodeKey:match("keyword$") then
@@ -429,17 +426,17 @@ end
 		end
 
 		-- Add type annotation (skip arrays to avoid JSON encoding issues)
-		if astType and not (#out > 0) then
-			out._astType = astType
+		if astType and not (#annotatedNode > 0) then
+			annotatedNode._astType = astType
 		end
 
 		-- Recursively annotate children, passing key context
-		for key, value in pairs(out) do
+		for key, value in annotatedNode do
 			if key ~= "_astType" then
-				out[key] = annotateWithType(value, if typeof(key) == "string" then key else tostring(key), out, nodeKey)
+				annotatedNode[key] = annotateWithType(value, if typeof(key) == "string" then key else tostring(key), annotatedNode, nodeKey)
 			end
 		end
-		return out
+		return annotatedNode
 	end
 
 return {
