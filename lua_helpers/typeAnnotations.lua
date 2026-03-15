@@ -380,64 +380,65 @@ local function resolveAmbiguousKeys(nodeKey, node, parentNode): string?
 	return typeDefinitions.keys[nodeKey]
 end
 
-	local function annotateWithType(node, nodeKey, parent, parentKey)
-		if type(node) ~= "table" then
-			return node
-		end
+local function annotateWithType(node, nodeKey, parent, parentKey)
+	if type(node) ~= "table" then
+		return node
+	end
 
-		-- Lute AST nodes can be readonly in newer versions; avoid in-place mutation by
-		-- copying before annotating.
-		local annotatedNode = table.clone(node)
+	-- Lute AST nodes can be readonly in newer versions; avoid in-place mutation by
+	-- copying before annotating.
+	local annotatedNode = table.clone(node)
 
-		local astType: string?
+	local astType: string?
 
-		-- Priority 1: Check for 'kind' field for direct type mapping (local, attribute)
-		if annotatedNode.kind == "local" and not annotatedNode.tag then
-			astType = "AstLocal"
-		elseif annotatedNode.kind == "attribute" then
-			astType = "AstAttribute"
+	-- Priority 1: Check for 'kind' field for direct type mapping (local, attribute)
+	if annotatedNode.kind == "local" and not annotatedNode.tag then
+		astType = "AstLocal"
+	elseif annotatedNode.kind == "attribute" then
+		astType = "AstAttribute"
 
 		-- Priority 2: Context-aware tag-based type resolution
-		elseif annotatedNode.tag then
-			astType = resolveAmbiguousTags(annotatedNode)
+	elseif annotatedNode.tag then
+		astType = resolveAmbiguousTags(annotatedNode)
 
 		-- Priority 3: Check for 'kind' field for table items
-		elseif annotatedNode.kind and annotatedNode.istableitem then
-			astType = typeDefinitions.kinds[annotatedNode.kind]
-		elseif annotatedNode.kind and (annotatedNode.key or annotatedNode.indexeropen) then
-			-- Type table items
-			astType = typeDefinitions.kinds[annotatedNode.kind]
+	elseif annotatedNode.kind and annotatedNode.istableitem then
+		astType = typeDefinitions.kinds[annotatedNode.kind]
+	elseif annotatedNode.kind and (annotatedNode.key or annotatedNode.indexeropen) then
+		-- Type table items
+		astType = typeDefinitions.kinds[annotatedNode.kind]
 
 		-- Priority 4: Check for istoken marker
-		elseif annotatedNode.istoken then
-			astType = "Token"
+	elseif annotatedNode.istoken then
+		astType = "Token"
 
 		-- Priority 5: Key-based type resolution (fallback)
-		elseif nodeKey then
-			astType = resolveAmbiguousKeys(nodeKey, annotatedNode, parent, parentKey)
+	elseif nodeKey then
+		astType = resolveAmbiguousKeys(nodeKey, annotatedNode, parent, parentKey)
 
 		-- Priority 6: Generic token detection
-		elseif nodeKey and nodeKey:match("keyword$") then
-			-- Any property ending in "keyword" is probably a token
-			astType = "Token"
-		elseif nodeKey and (nodeKey:match("^open") or nodeKey:match("^close")) then
-			-- Properties like openparens, closebrace, etc.
-			astType = "Token"
-		end
-
-		-- Add type annotation (skip arrays to avoid JSON encoding issues)
-		if astType and not (#annotatedNode > 0) then
-			annotatedNode._astType = astType
-		end
-
-		-- Recursively annotate children, passing key context
-		for key, value in annotatedNode do
-			if key ~= "_astType" then
-				annotatedNode[key] = annotateWithType(value, if typeof(key) == "string" then key else tostring(key), annotatedNode, nodeKey)
-			end
-		end
-		return annotatedNode
+	elseif nodeKey and nodeKey:match("keyword$") then
+		-- Any property ending in "keyword" is probably a token
+		astType = "Token"
+	elseif nodeKey and (nodeKey:match("^open") or nodeKey:match("^close")) then
+		-- Properties like openparens, closebrace, etc.
+		astType = "Token"
 	end
+
+	-- Add type annotation (skip arrays to avoid JSON encoding issues)
+	if astType and not (#annotatedNode > 0) then
+		annotatedNode._astType = astType
+	end
+
+	-- Recursively annotate children, passing key context
+	for key, value in annotatedNode do
+		if key ~= "_astType" then
+			annotatedNode[key] =
+				annotateWithType(value, if typeof(key) == "string" then key else tostring(key), annotatedNode, nodeKey)
+		end
+	end
+	return annotatedNode
+end
 
 return {
 	annotateWithType = annotateWithType,

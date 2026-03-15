@@ -212,6 +212,11 @@ typeAnnotationVisitor.visitExprTable = function(node: luau.AstExprTable)
 	return true
 end
 
+typeAnnotationVisitor.visitExprInstantiate = function(node: luau.AstExprInstantiate)
+	verifyOutput(node, "visitTable", node._astType == "AstExprInstantiate")
+	return true
+end
+
 -- Type visitors
 typeAnnotationVisitor.visitTypeReference = function(node: luau.AstTypeReference)
 	verifyOutput(node, "visitTypeReference", node._astType == "AstTypeReference")
