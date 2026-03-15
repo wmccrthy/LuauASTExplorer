@@ -216,6 +216,24 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
+  AstExprInstantiate: {
+    properties: [
+      { name: "location", type: "span" },
+      { name: "kind", type: '"expr"' },
+      { name: "tag", type: '"instantiate"' },
+      { name: "expr", type: "AstExpr" },
+      { name: "leftarrow1", type: "Token", generic: 'Token<"<">' },
+      { name: "leftarrow2", type: "Token", generic: 'Token<"<">' },
+      {
+        name: "typearguments",
+        type: "Punctuated",
+        generic: "Punctuated<AstType | AstTypePack>",
+      },
+      { name: "rightarrow1", type: "Token", generic: 'Token<">">' },
+      { name: "rightarrow2", type: "Token", generic: 'Token<">">' },
+    ],
+  },
+
   AstExprIndexName: {
     properties: [
       { name: "location", type: "span" },
@@ -304,7 +322,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstExprTableItemList: {
+  AstTableExprListItem: {
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"list"' },
@@ -319,7 +337,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstExprTableItemRecord: {
+  AstTableExprRecordItem: {
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"record"' },
@@ -336,7 +354,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstExprTableItemGeneral: {
+  AstTableExprGeneralItem: {
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"general"' },
@@ -355,11 +373,11 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstExprTableItem: {
+  AstTableExprItem: {
     unionMembers: [
-      "AstExprTableItemList",
-      "AstExprTableItemRecord",
-      "AstExprTableItemGeneral",
+      "AstTableExprListItem",
+      "AstTableExprRecordItem",
+      "AstTableExprGeneralItem",
     ],
   },
 
@@ -369,7 +387,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"table"' },
       { name: "openbrace", type: "Token", generic: 'Token<"{">' },
-      { name: "entries", type: "{ AstExprTableItem }" },
+      { name: "entries", type: "{ AstTableExprItem }" },
       { name: "closebrace", type: "Token", generic: 'Token<"}">' },
     ],
   },
@@ -451,6 +469,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       "AstExprGlobal",
       "AstExprVarargs",
       "AstExprCall",
+      "AstExprInstantiate",
       "AstExprIndexName",
       "AstExprIndexExpr",
       "AstExprFunction",
@@ -935,7 +954,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstTypeTableItemIndexer: {
+  AstTableTypeItemIndexer: {
     properties: [
       { name: "kind", type: '"indexer"' },
       {
@@ -958,7 +977,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstTypeTableItemStringProperty: {
+  AstTableTypeItemStringProperty: {
     properties: [
       { name: "kind", type: '"stringproperty"' },
       {
@@ -981,7 +1000,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstTypeTableItemProperty: {
+  AstTableTypeItemProperty: {
     properties: [
       { name: "kind", type: '"property"' },
       {
@@ -1002,11 +1021,11 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  AstTypeTableItem: {
+  AstTableTypeItem: {
     unionMembers: [
-      "AstTypeTableItemIndexer",
-      "AstTypeTableItemStringProperty",
-      "AstTypeTableItemProperty",
+      "AstTableTypeItemIndexer",
+      "AstTableTypeItemStringProperty",
+      "AstTableTypeItemProperty",
     ],
   },
 
@@ -1016,12 +1035,12 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"table"' },
       { name: "openbrace", type: "Token", generic: 'Token<"{">' },
-      { name: "entries", type: "{ AstTypeTableItem }" },
+      { name: "entries", type: "{ AstTableTypeItem }" },
       { name: "closebrace", type: "Token", generic: 'Token<"}">' },
     ],
   },
 
-  AstTypeFunctionParameter: {
+  AstFunctionTypeParameter: {
     properties: [
       { name: "location", type: "span" },
       { name: "name", type: "Token", optional: true },
@@ -1063,7 +1082,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       {
         name: "parameters",
         type: "Punctuated",
-        generic: "Punctuated<AstTypeFunctionParameter>",
+        generic: "Punctuated<AstFunctionTypeParameter>",
       },
       { name: "vararg", type: "AstTypePack", optional: true },
       { name: "closeparens", type: "Token", generic: 'Token<")">' },

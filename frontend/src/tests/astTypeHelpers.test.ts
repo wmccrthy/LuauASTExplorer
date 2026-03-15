@@ -24,12 +24,12 @@ describe("astTypeHelpers", () => {
     expect(getArrayType("statements")).toEqual(["{ AstStat }", ""]);
 
     expect(getArrayType("entries", [{ colon: ":", kind: "record" }])).toEqual([
-      "{ AstTypeTableItem }",
+      "{ AstTableTypeItem }",
       "record",
     ]);
 
     expect(getArrayType("entries", [{ kind: "general" }])).toEqual([
-      "{ AstExprTableItem }",
+      "{ AstTableExprItem }",
       "general",
     ]);
 
@@ -105,14 +105,14 @@ describe("astTypeHelpers", () => {
 
     // leverages getArrayType
     expect(getTypeString([{}], "entries")).toEqual([
-      "{ AstExprTableItem }",
+      "{ AstTableExprItem }",
       "",
     ]);
 
     // falls back on parentInferredType
     expect(
-      getTypeString({ kind: "record" }, "[0]", "AstExprTableItem")
-    ).toEqual(["AstExprTableItem", "record"]);
+      getTypeString({ kind: "record" }, "[0]", "AstTableExprItem")
+    ).toEqual(["AstTableExprItem", "record"]);
   });
 
   test("getType", () => {

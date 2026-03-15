@@ -79,10 +79,10 @@ export function getAllNodeKeys(): string[] {
 
 const resolveEntriesType = (value: any[]): string => {
   if (value[0] && value[0].colon) {
-    return "{ AstTypeTableItem }";
+    return "{ AstTableTypeItem }";
   }
 
-  return "{ AstExprTableItem }";
+  return "{ AstTableExprItem }";
 };
 
 const resolveEntriesKind = (value: any[]): string => {

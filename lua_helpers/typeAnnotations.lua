@@ -21,6 +21,7 @@ local typeDefinitions = {
 		["global"] = "AstExprGlobal",
 		["vararg"] = "AstExprVarargs",
 		["call"] = "AstExprCall",
+		["instantiate"] = "AstExprInstantiate",
 		["indexname"] = "AstExprIndexName",
 		["index"] = "AstExprIndexExpr",
 		["unary"] = "AstExprUnary",
@@ -171,14 +172,14 @@ local typeDefinitions = {
 	-- Kind-based mappings for table items and other kinded structures
 	kinds = {
 		-- Expression table items (istableitem: true)
-		["record"] = "AstExprTableItemRecord",
-		["general"] = "AstExprTableItemGeneral",
-		["list"] = "AstExprTableItemList",
+		["record"] = "AstTableExprRecordItem",
+		["general"] = "AstTableExprGeneralItem",
+		["list"] = "AstTableExprListItem",
 
 		-- Type table items
-		["property"] = "AstTypeTableItemProperty",
-		["indexer"] = "AstTypeTableItemIndexer",
-		["stringproperty"] = "AstTypeTableItemStringProperty",
+		["property"] = "AstTableTypeItemProperty",
+		["indexer"] = "AstTableTypeItemIndexer",
+		["stringproperty"] = "AstTableTypeItemStringProperty",
 
 		-- AstLocal
 		["local"] = "AstLocal",
@@ -189,7 +190,7 @@ local typeDefinitions = {
 }
 
 -- Context-aware type resolution for ambiguous tags
-local function resolveAmbiguousTags(node)
+local function resolveAmbiguousTags(node): string?
 	local tag = node.tag
 	if not tag then
 		return nil
@@ -279,7 +280,7 @@ local function resolveAmbiguousTags(node)
 	return typeDefinitions.tags[tag]
 end
 
-local function resolveAmbiguousKeys(nodeKey, node, parentNode, parentKey)
+local function resolveAmbiguousKeys(nodeKey, node, parentNode: any?): string?
 	-- Handle 'kind' field specially - it's a discriminator, not a type
 	if nodeKey == "kind" then
 		return nil -- Don't annotate the kind field itself
@@ -379,39 +380,43 @@ local function resolveAmbiguousKeys(nodeKey, node, parentNode, parentKey)
 	return typeDefinitions.keys[nodeKey]
 end
 
-local function annotateWithType(node, nodeKey, parent, parentKey)
+local function annotateWithType(node, nodeKey: (string | number)?, parent: any?, parentKey: (string | number)?)
 	if type(node) ~= "table" then
 		return node
 	end
 
-	local astType = nil
+	-- Lute AST nodes can be readonly in newer versions; avoid in-place mutation by
+	-- copying before annotating.
+	local annotatedNode = table.clone(node)
+
+	local astType: string?
 
 	-- Priority 1: Check for 'kind' field for direct type mapping (local, attribute)
-	if node.kind == "local" and not node.tag then
+	if annotatedNode.kind == "local" and not annotatedNode.tag then
 		astType = "AstLocal"
-	elseif node.kind == "attribute" then
+	elseif annotatedNode.kind == "attribute" then
 		astType = "AstAttribute"
 
-	-- Priority 2: Context-aware tag-based type resolution
-	elseif node.tag then
-		astType = resolveAmbiguousTags(node)
+		-- Priority 2: Context-aware tag-based type resolution
+	elseif annotatedNode.tag then
+		astType = resolveAmbiguousTags(annotatedNode)
 
-	-- Priority 3: Check for 'kind' field for table items
-	elseif node.kind and node.istableitem then
-		astType = typeDefinitions.kinds[node.kind]
-	elseif node.kind and (node.key or node.indexeropen) then
+		-- Priority 3: Check for 'kind' field for table items
+	elseif annotatedNode.kind and annotatedNode.istableitem then
+		astType = typeDefinitions.kinds[annotatedNode.kind]
+	elseif annotatedNode.kind and (annotatedNode.key or annotatedNode.indexeropen) then
 		-- Type table items
-		astType = typeDefinitions.kinds[node.kind]
+		astType = typeDefinitions.kinds[annotatedNode.kind]
 
-	-- Priority 4: Check for istoken marker
-	elseif node.istoken then
+		-- Priority 4: Check for istoken marker
+	elseif annotatedNode.istoken then
 		astType = "Token"
 
-	-- Priority 5: Key-based type resolution (fallback)
+		-- Priority 5: Key-based type resolution (fallback)
 	elseif nodeKey then
-		astType = resolveAmbiguousKeys(nodeKey, node, parent, parentKey)
+		astType = resolveAmbiguousKeys(nodeKey, annotatedNode, parent)
 
-	-- Priority 6: Generic token detection
+		-- Priority 6: Generic token detection
 	elseif nodeKey and nodeKey:match("keyword$") then
 		-- Any property ending in "keyword" is probably a token
 		astType = "Token"
@@ -421,17 +426,18 @@ local function annotateWithType(node, nodeKey, parent, parentKey)
 	end
 
 	-- Add type annotation (skip arrays to avoid JSON encoding issues)
-	if astType and not (#node > 0) then
-		node._astType = astType
+	if astType and not (#annotatedNode > 0) then
+		annotatedNode._astType = astType
 	end
 
 	-- Recursively annotate children, passing key context
-	for key, value in pairs(node) do
+	for key, value in annotatedNode do
 		if key ~= "_astType" then
-			node[key] = annotateWithType(value, if typeof(key) == "string" then key else tostring(key), node, nodeKey)
+			annotatedNode[key] =
+				annotateWithType(value, if typeof(key) == "string" then key else tostring(key), annotatedNode, nodeKey)
 		end
 	end
-	return node
+	return annotatedNode
 end
 
 return {
