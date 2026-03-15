@@ -280,7 +280,7 @@ local function resolveAmbiguousTags(node): string?
 	return typeDefinitions.tags[tag]
 end
 
-local function resolveAmbiguousKeys(nodeKey, node, parentNode): string?
+local function resolveAmbiguousKeys(nodeKey, node, parentNode: any?): string?
 	-- Handle 'kind' field specially - it's a discriminator, not a type
 	if nodeKey == "kind" then
 		return nil -- Don't annotate the kind field itself
@@ -380,7 +380,7 @@ local function resolveAmbiguousKeys(nodeKey, node, parentNode): string?
 	return typeDefinitions.keys[nodeKey]
 end
 
-local function annotateWithType(node, nodeKey, parent, parentKey)
+local function annotateWithType(node, nodeKey: (string | number)?, parent: any?, parentKey: (string | number)?)
 	if type(node) ~= "table" then
 		return node
 	end
@@ -414,7 +414,7 @@ local function annotateWithType(node, nodeKey, parent, parentKey)
 
 		-- Priority 5: Key-based type resolution (fallback)
 	elseif nodeKey then
-		astType = resolveAmbiguousKeys(nodeKey, annotatedNode, parent, parentKey)
+		astType = resolveAmbiguousKeys(nodeKey, annotatedNode, parent)
 
 		-- Priority 6: Generic token detection
 	elseif nodeKey and nodeKey:match("keyword$") then
