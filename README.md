@@ -235,7 +235,7 @@ Use these formats for automatic changelog creation:
 ## 📋 Requirements
 
 - **VSCode** 1.74.0 or higher
-- **Lute** (>= [0.1.0-nightly.20260312](https://github.com/luau-lang/lute/releases/tag/0.1.0-nightly.20260312))
+- **Lute** (>= [0.1.0-nightly.20260320](https://github.com/luau-lang/lute/releases/tag/0.1.0-nightly.20260320))
 - **Foreman** or **Rokit** (See installation instructions linked above)
 - **Node.js** 16+ (for development)
 

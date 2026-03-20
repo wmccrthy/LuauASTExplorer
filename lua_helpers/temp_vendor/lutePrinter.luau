@@ -1,6 +1,35 @@
 local lp = require("@std/syntax/printer")
 local getSortedChildren = require("../sortByPositionTable")
 
+local function isTokenLike(node: any): boolean
+	return typeof(node) == "table" and (node.kind == "token" or node.istoken == true) and type(node.text) == "string"
+end
+
+local function printTokenLike(node: any): string
+	local src = ""
+	local leading = node.leadingtrivia
+	if typeof(leading) == "table" then
+		for _, triv in leading do
+			if typeof(triv) == "table" and type(triv.text) == "string" then
+				src ..= triv.text
+			end
+		end
+	end
+
+	src ..= node.text
+
+	local trailing = node.trailingtrivia
+	if typeof(trailing) == "table" then
+		for _, triv in trailing do
+			if typeof(triv) == "table" and type(triv.text) == "string" then
+				src ..= triv.text
+			end
+		end
+	end
+
+	return src
+end
+
 local function printFallback(node: any): string
 	--[[
 		Function to serve as fallback when nodes are not printable with printstatement, printexpr, printtype, printlocal, printtoken
@@ -9,6 +38,10 @@ local function printFallback(node: any): string
 		if non-array node: sort children by position, iteratively try to print children (same way as above)
 	]]
 	local nodeSrcStr = ""
+	if typeof(node) == "table" and node.token ~= nil then
+		-- Newer Lute defs wrap some constants / varargs in a `{ token = Token }` shape.
+		return printASTNode(node.token) or ""
+	end
 	if node[1] then -- handle arrays
 		for i = 1, #node do
 			nodeSrcStr ..= printASTNode(node[i]) or ""
@@ -49,6 +82,10 @@ end
 function printASTNode(astNode: any): string | nil
 	-- filter nodes lefover from diff annotations that we DONT want to print
 	astNode = filterNodeForPrinting(astNode)
+
+	if isTokenLike(astNode) then
+		return printTokenLike(astNode)
+	end
 
 	local success, defaultPrint = pcall(lp.printnode, astNode)
 	if success then
