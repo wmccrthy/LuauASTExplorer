@@ -63,6 +63,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     return generateNodeId ? generateNodeId(value, nodeKey) : "";
   }, [value, nodeKey, generateNodeId]);
 
+  // demonstrating lint failure
+  React.useEffect(() => {
+    console.log(nodeKey, value);
+  }, []);
+
+  if (value) {
+    React.useEffect(() => {
+      console.log("oops conditional hook");
+    });
+  }
+
   const renderTypeAnnotations = React.useCallback(() => {
     if (typeMetadata.type) {
       const changedType = typeMetadata.type !== typeMetadata.prevType;
