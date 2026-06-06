@@ -1,1 +1,1 @@
-Demonstrate Lint Violations
+Arbitrary demonstration of lint violations
