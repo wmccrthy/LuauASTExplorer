@@ -9,17 +9,17 @@ function trim(s)
 	return s:gsub("^%s*(.-)%s*$", "%1")
 end
 
-local lutePath = process.execpath()
+local lutePath = process.execPath()
 
 local function ast_json_to_code_test()
 	local tmpFilePath = "tmpastJsonPath.lua"
 	for _, code in pairs(e2eCases) do
-		fs.writestringtofile(tmpFilePath, code)
+		fs.writeStringToFile(tmpFilePath, code)
 		process.run({ "stylua", tmpFilePath })
-		local formattedCode = trim(fs.readfiletostring(tmpFilePath))
-		local ast = parser.parseblock(fs.readfiletostring(tmpFilePath))
+		local formattedCode = trim(fs.readFileToString(tmpFilePath))
+		local ast = parser.parseBlock(fs.readFileToString(tmpFilePath))
 		local astJson = json.encode(ast)
-		fs.writestringtofile(tmpFilePath, astJson or "nil")
+		fs.writeStringToFile(tmpFilePath, astJson or "nil")
 		local cmd = process.run({ lutePath, `lua_helpers/astJsonToCode.luau`, tmpFilePath })
 		local formattedResult = trim(cmd.stdout)
 		process.run({ "rm", tmpFilePath })

@@ -109,9 +109,7 @@ local function test_real_ast_integration()
 	-- Test with valid Luau code that produces various AST structures
 	local validCases = helpers.testCases.e2eCases
 	for _, code in ipairs(validCases) do
-		local parseSuccess, ast = pcall(function()
-			return parser.parseblock(code)
-		end)
+		local parseSuccess, ast = pcall(parser.parseBlock, code)
 
 		if parseSuccess and ast then
 			-- Only test printing if parsing succeeded
