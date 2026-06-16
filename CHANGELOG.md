@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [0.1.13] - 2026-06-16
+
+### Fixes
+
+- Align w/ latest lute [#72](https://github.com/wmccrthy/LuauASTExplorer/pull/72)
+
+
 ## [0.1.12] - 2026-03-15
 
 ### Features
