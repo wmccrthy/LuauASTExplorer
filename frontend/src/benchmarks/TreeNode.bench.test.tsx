@@ -5,10 +5,10 @@ import {
   defaultProps,
   MockProvider,
 } from "../tests/TreeNodeTestUtils";
-import { fireEvent } from "@testing-library/dom";
+import { fireEvent } from "@testing-library/react";
 
 const root = {
-  _astType: "AstStatBlock",
+  _astType: "CstStatBlock",
   statements: [mockTestType(), mockTestType()],
 };
 
@@ -28,6 +28,6 @@ test("TreeNode benchmarks", () => {
         fireEvent.click(rootNode);
       },
       eventName: "Toggle Collapse/Expand",
-    }
+    },
   );
 });

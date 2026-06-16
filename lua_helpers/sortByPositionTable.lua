@@ -1,13 +1,11 @@
 local function getNodePosition(node)
-	-- Direct location access (new span structure)
 	if typeof(node) ~= "table" then
-		return nil, nil
+		return nil, nil, nil, nil
 	end
 
 	if node.location then
-		-- New span format: { beginline, begincolumn, endline, endcolumn }
-		if node.location.beginline then
-			return node.location.beginline, node.location.begincolumn
+		if node.location.beginLine then
+			return node.location.beginLine, node.location.beginColumn, node.location.endLine, node.location.endColumn
 		end
 	end
 
@@ -23,19 +21,33 @@ local function getNodePosition(node)
 			end
 		end
 	end
-	return minLine, minCol
+	return minLine, minCol, nil, nil
 end
 
 local function sortByPosition(node1, node2)
-	local line1, col1 = getNodePosition(node1)
-	local line2, col2 = getNodePosition(node2)
-	return line1 < line2 or (line1 == line2 and col1 < col2)
+	local line1, col1, endLine1, endCol1 = getNodePosition(node1)
+	local line2, col2, endLine2, endCol2 = getNodePosition(node2)
+	if line1 ~= line2 then
+		return line1 < line2
+	end
+	if col1 ~= col2 then
+		return col1 < col2
+	end
+	-- Tiebreaker: smaller span (earlier end) comes first
+	if endLine1 and endLine2 then
+		if endLine1 ~= endLine2 then
+			return endLine1 < endLine2
+		end
+		if endCol1 and endCol2 then
+			return endCol1 < endCol2
+		end
+	end
+	return false
 end
 
 local function getSortedChildren(node: any)
 	local sorted = {}
 	for key, child in node do
-		-- Filter out diff metadata and nodes without position
 		local line, col = getNodePosition(child)
 		if line and col then
 			table.insert(sorted, child)

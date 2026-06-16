@@ -14,18 +14,18 @@ end
 local sourceFilePath = args[2]
 
 -- Read the source code from file
-local sourceCode = fs.readfiletostring(sourceFilePath)
+local sourceCode = fs.readFileToString(sourceFilePath)
 
 -- Parse the AST using our custom parser
 local function parseBlock(src)
 	local success, ast = pcall(function()
-		return annotateWithType(parser.parseblock(sourceCode), "root")
+		return annotateWithType(parser.parseBlock(sourceCode), "root")
 	end)
 	return success, ast
 end
 local function parseExpr(src)
 	local success, exprAST = pcall(function()
-		return annotateWithType(parser.parseexpr(sourceCode), "root")
+		return annotateWithType(parser.parseExpr(sourceCode), "root")
 	end)
 	return success, exprAST
 end

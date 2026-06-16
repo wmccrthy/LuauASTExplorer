@@ -150,7 +150,7 @@ describe("TreeNode", () => {
   describe("type annotations", () => {
     test("displays type information for AST nodes", () => {
       const astNode = {
-        _astType: "AstExpr",
+        _astType: "CstExpr",
         kind: "expression",
         value: "test",
       };
@@ -162,21 +162,21 @@ describe("TreeNode", () => {
       );
 
       const nodeQuery = getQueryableNode("root");
-      expect(nodeQuery.getByText(/type: AstExpr/)).toBeInTheDocument();
-      expect(() => nodeQuery.getByText('_astType: "AstExpr"')).toThrow(); // should filter out _astType
+      expect(nodeQuery.getByText(/type: CstExpr/)).toBeInTheDocument();
+      expect(() => nodeQuery.getByText('_astType: "CstExpr"')).toThrow(); // should filter out _astType
     });
 
     test("extracts old types from childChanges", () => {
       // redundant test case, we already similar test above in "renders updated status with before/after"
       // this test is slightly diffe
       const nodeWithTypeChange = {
-        _astType: "AstLocal",
+        _astType: "CstLocal",
         name: "newName",
         childChanges: {
           _astType: {
             type: "UPDATE",
-            oldValue: "AstExpr",
-            value: "AstLocal",
+            oldValue: "CstExpr",
+            value: "CstLocal",
           },
         },
       };
@@ -194,8 +194,8 @@ describe("TreeNode", () => {
 
       // Should show both old and new type annotations
       const nodeQuery = getQueryableNode("root", "nodeHeader");
-      expect(nodeQuery.getByText(/type: AstExpr/)).toBeInTheDocument(); // Previous type
-      expect(nodeQuery.getByText(/type: AstLocal/)).toBeInTheDocument(); // Current type
+      expect(nodeQuery.getByText(/type: CstExpr/)).toBeInTheDocument(); // Previous type
+      expect(nodeQuery.getByText(/type: CstLocal/)).toBeInTheDocument(); // Current type
       expect(nodeQuery.getByText("→")).toBeInTheDocument(); // Arrow between them
     });
   });
@@ -233,13 +233,13 @@ describe("TreeNode", () => {
       const nodeQuery = getQueryableNode("root.name", "nodeHeader");
       expect(nodeQuery).toBeDefined();
       // Should infer from _testType that name property is of Token type
-      expect(nodeQuery.getByText(/type: Token/)).toBeInTheDocument();
+      expect(nodeQuery.getByText(/type: CstToken/)).toBeInTheDocument();
     });
 
     test("infers types for array items from parent property definition", () => {
       // Test actual inference: parent has AST type with array property, children have no _astType
       const blockWithStatements = {
-        _astType: "AstStatBlock", // Parent type that has `statements: { AstStat }` property
+        _astType: "CstStatBlock", // Parent type that has `statements: { CstStat }` property
         statements: [{}, {}],
       };
 
@@ -249,19 +249,19 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      // The statements array should get inferred type from AstStatBlock definition
+      // The statements array should get inferred type from CstStatBlock definition
       const statementsQuery = getQueryableNode("root.statements", "nodeHeader");
       expect(
-        statementsQuery.getByText(/type: { AstStat }/)
+        statementsQuery.getByText(/type: { CstStat }/)
       ).toBeInTheDocument();
     });
 
     test("fallback chain: _astType -> parentInferred -> array inference", () => {
       // Test actual fallback: parent type defines array property, mixed content with/without _astType
       const tableWithEntries = {
-        _astType: "AstExprTable", // Parent type that has `entries: { AstTableExprItem }` property
+        _astType: "CstExprTable", // Parent type that has `entries: { CstTableExprItem }` property
         entries: [
-          { text: "filler" }, // No _astType - should infer AstTableExprItem from parent definition
+          { text: "filler" }, // No _astType - should infer CstTableExprItem from parent definition
           { _astType: "MySpecialType" }, // Has _astType - should use that directly
         ],
       };
@@ -272,15 +272,15 @@ describe("TreeNode", () => {
         </MockProvider>
       );
 
-      // The entries array should get inferred type from AstExprTable definition
+      // The entries array should get inferred type from CstExprTable definition
       const entriesQuery = getQueryableNode("root.entries", "nodeHeader");
       expect(
-        entriesQuery.getByText(/type: { AstTableExprItem }/)
+        entriesQuery.getByText(/type: { CstTableExprItem }/)
       ).toBeInTheDocument();
 
       // First item should infer type from parent array definition
       const item0Query = getQueryableNode("root.entries.0", "nodeHeader");
-      expect(item0Query.getByText(/type: AstTableExprItem/)).toBeInTheDocument();
+      expect(item0Query.getByText(/type: CstTableExprItem/)).toBeInTheDocument();
 
       // Second item should use its explicit _astType
       const item1Query = getQueryableNode("root.entries.1", "nodeHeader");
@@ -291,7 +291,7 @@ describe("TreeNode", () => {
   describe("removed node handling", () => {
     test("correctly resolves types for removed keys", () => {
       const functionWithRemovedName = {
-        _astType: "Token",
+        _astType: "CstToken",
         ...mockTypelessToken("test"),
         removedName: mockTypelessToken("oldGlobalName", "removed"), // This was removed
         childChanges: {
@@ -302,7 +302,7 @@ describe("TreeNode", () => {
           _astType: {
             type: "UPDATE",
             oldValue: "_testType",
-            value: "Token",
+            value: "CstToken",
           },
         },
       };
@@ -323,19 +323,19 @@ describe("TreeNode", () => {
       expect(removedNode.getByText("-")).toBeInTheDocument();
       // The removed property should still be rendered and get proper type tooltip (inferred from parent of _testType)
       expect(removedNode.getByText(/removedName/)).toBeInTheDocument();
-      expect(removedNode.getByText(/type: Token/)).toBeInTheDocument;
+      expect(removedNode.getByText(/type: CstToken/)).toBeInTheDocument;
       // also want to verify that root has before->after type annotation display
       const rootNodeHeader = getQueryableNode("root", "nodeHeader");
       expect(rootNodeHeader.getByText(/type: _testType/)).toBeInTheDocument();
       expect(rootNodeHeader.getByText("→")).toBeInTheDocument();
-      expect(rootNodeHeader.getByText(/type: Token/)).toBeInTheDocument();
+      expect(rootNodeHeader.getByText(/type: CstToken/)).toBeInTheDocument();
     });
   });
 
   describe("getChildDiffProps logic", () => {
     test("propagates diff props for primitive child changes", () => {
       const nodeWithPrimitiveChanges = {
-        _astType: "AstLocal", // Need a valid AST type
+        _astType: "CstLocal", // Need a valid AST type
         name: "newValue",
         childChanges: {
           name: {
@@ -366,15 +366,15 @@ describe("TreeNode", () => {
 
     test("propagates diff props for object child changes", () => {
       const nodeWithObjectChanges = {
-        _astType: "AstStatFunction", // Valid parent type
+        _astType: "CstStatFunction", // Valid parent type
         expr: {
-          _astType: "AstExpr",
+          _astType: "CstExpr",
           name: "newExpr",
         },
         childChanges: {
           expr: {
             type: "ADD",
-            value: { _astType: "AstExpr", name: "newExpr" },
+            value: { _astType: "CstExpr", name: "newExpr" },
           },
         },
       };
@@ -397,34 +397,27 @@ describe("TreeNode", () => {
   });
 
   describe("array type inference edge cases", () => {
-    test("handles punctuated arrays", () => {
-      const punctuatedNode = {
-        _astType: "AstExprFunction",
-        parameters: [
-          // Use proper Punctuated<AstLocal> structures
-          {
-            node: { name: mockTypelessToken("param1") },
-            separator: mockTypelessToken(","),
-          },
-          {
-            node: { name: mockTypelessToken("param2") },
-          },
-        ],
+    test("handles punctuated parameters", () => {
+      const functionNode = {
+        _astType: "CstExprFunction",
+        parameters: {
+          "1": { name: mockTypelessToken("param1") },
+          "2": { name: mockTypelessToken("param2") },
+          separators: [mockTypelessToken(",")],
+        },
       };
 
       render(
         <MockProvider>
-          <TreeNodeContainer value={punctuatedNode} {...defaultProps} />
+          <TreeNodeContainer value={functionNode} {...defaultProps} />
         </MockProvider>
       );
 
-      // Should handle punctuated structure correctly
+      // Parameters should be inferred as CstPunctuated<CstLocal>
       const parametersNode = getQueryableNode("root.parameters", "nodeHeader");
       expect(
-        parametersNode.getByText(/type: Punctuated<AstLocal>/)
+        parametersNode.getByText(/type: CstPunctuated<CstLocal>/)
       ).toBeInTheDocument();
-      const param1Node = getQueryableNode("root.parameters.0", "nodeHeader");
-      expect(param1Node.getByText(/type: Pair<AstLocal>/)).toBeInTheDocument();
     });
   });
 
@@ -453,7 +446,7 @@ describe("TreeNode", () => {
       // not sure if I see point in this case? will never happen in our use case
       const mixedArray = [
         "string item",
-        { _astType: "AstExpr", name: "expr" },
+        { _astType: "CstExpr", name: "expr" },
         123,
         undefined,
       ];
@@ -553,7 +546,7 @@ describe("TreeNode", () => {
   // Test that "unchanged" forces collapse even for normally expanded types
   test("forces collapse for unchanged nodes in diff mode", () => {
     const normallyExpandedNode = {
-      _astType: "AstExprTable", // Normally expands
+      _astType: "CstExprTable", // Normally expands
       entries: [{ item: "test" }],
     };
 
@@ -575,7 +568,7 @@ describe("TreeNode", () => {
   // Test that "removed" forces collapse
   test("forces collapse for removed nodes in diff mode", () => {
     const normallyExpandedNode = {
-      _astType: "AstExprTable",
+      _astType: "CstExprTable",
       entries: [{ item: "test" }],
     };
 

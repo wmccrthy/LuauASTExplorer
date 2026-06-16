@@ -12,11 +12,11 @@ end
 local sourceFilePath = args[2]
 
 -- Read the source code from file
-local sourceCode = fs.readfiletostring(sourceFilePath)
+local sourceCode = fs.readFileToString(sourceFilePath)
 
 -- Parse the AST using our custom parser
 local success, ast = pcall(function()
-	return parser.parseblock(sourceCode)
+	return parser.parseBlock(sourceCode)
 end)
 
 local result

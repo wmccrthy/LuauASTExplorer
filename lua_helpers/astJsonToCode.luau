@@ -13,7 +13,7 @@ end
 local sourceFilePath = args[2]
 
 -- Read the source code from file
-local sourceCode = fs.readfiletostring(sourceFilePath)
+local sourceCode = fs.readFileToString(sourceFilePath)
 
 local astNode = json.decode(sourceCode)
 
@@ -21,9 +21,9 @@ local success, code = pcall(printer.printASTNode, astNode)
 
 if success then
 	-- stylua src code for readable output
-	fs.writestringtofile(sourceFilePath, code :: string)
+	fs.writeStringToFile(sourceFilePath, code :: string)
 	process.run({ "stylua", sourceFilePath })
-	code = fs.readfiletostring(sourceFilePath)
+	code = fs.readFileToString(sourceFilePath)
 	print(code)
 end
 

@@ -20,30 +20,16 @@ export function getTypeDefinition(
 export function getGenericASTTypeDefinition(
   genericType: GenericTypeDefinition
 ): ASTTypeDefinition {
-  switch (genericType.baseType) {
-    case "Pair":
-      const splitGenericType = genericType.genericType.split(",");
-      return {
-        properties: [
-          { name: "node", type: splitGenericType[0] },
-          {
-            name: "separator",
-            type: `Token${
-              splitGenericType[1] ? `<${splitGenericType[1].trim()}>` : ""
-            }`,
-            optional: true,
-          },
-        ],
-      };
-    case "Punctuated":
-      return {
-        properties: [
-          { name: "", type: `{ Pair<${genericType.genericType}> }` },
-        ],
-      };
-    default:
-      return { properties: [] };
+  if (genericType.baseType === "CstPunctuated") {
+    const itemType = genericType.genericType.split(",")[0].trim();
+    return {
+      properties: [
+        { name: "", type: `{ ${itemType} }` },
+        { name: "separators", type: "{ CstToken }" },
+      ],
+    };
   }
+  return { properties: [] };
 }
 
 export function getAllTypes(): string[] {
@@ -79,10 +65,10 @@ export function getAllNodeKeys(): string[] {
 
 const resolveEntriesType = (value: any[]): string => {
   if (value[0] && value[0].colon) {
-    return "{ AstTableTypeItem }";
+    return "{ CstTableTypeItem }";
   }
 
-  return "{ AstTableExprItem }";
+  return "{ CstTableExprItem }";
 };
 
 const resolveEntriesKind = (value: any[]): string => {
@@ -90,14 +76,15 @@ const resolveEntriesKind = (value: any[]): string => {
 };
 
 const arrayTypeFallbacks: Record<string, string | ((item: any[]) => string)> = {
-  statements: "{ AstStat }",
-  leadingtrivia: "{ Trivia }",
-  trailingtrivia: "{ Trivia }",
-  attributes: "{ AstAttribute }",
-  expressions: "{ AstExpr }",
-  elseifs: "{ AstElseIfExpr }",
-  strings: "{ Token }",
+  statements: "{ CstStat }",
+  leadingTrivia: "{ Trivia }",
+  trailingTrivia: "{ Trivia }",
+  attributes: "{ CstAttribute }",
+  expressions: "{ CstExpr }",
+  elseifs: "{ CstElseIfExpr }",
+  strings: "{ CstToken }",
   entries: resolveEntriesType,
+  separators: "{ CstToken }",
 };
 
 export const getArrayType = (
@@ -124,7 +111,7 @@ export const unpackArrayType = (type: string): string => {
   return matchAny ? matchAny[1] : type;
 };
 
-// Parse generic types like "Pair<AstExpr>" -> { baseType: "Pair", genericType: "AstExpr" }
+// Parse generic types like "Pair<CstExpr>" -> { baseType: "Pair", genericType: "CstExpr" }
 export const parseGenericType = (
   type: string
 ): GenericTypeDefinition | undefined => {
