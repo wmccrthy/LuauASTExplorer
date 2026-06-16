@@ -20,7 +20,7 @@ describe("shouldAutoCollapse", () => {
 
   test("should return true for unions of auto-collapsable types", () => {
     const triviaTypeDefinition = astTypeDefinitions["Trivia"]; // example of type that is union of types that should auto-collapse
-    const falseUnionType = astTypeDefinitions["AstExpr"]
+    const falseUnionType = astTypeDefinitions["CstExpr"]
     expect(shouldAutoCollapse("", triviaTypeDefinition)).toBe(true);
     expect(shouldAutoCollapse("", falseUnionType)).toBe(false);
   });

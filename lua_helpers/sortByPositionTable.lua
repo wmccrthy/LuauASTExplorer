@@ -5,9 +5,8 @@ local function getNodePosition(node)
 	end
 
 	if node.location then
-		-- New span format: { beginline, begincolumn, endline, endcolumn }
-		if node.location.beginline then
-			return node.location.beginline, node.location.begincolumn
+		if node.location.beginLine then
+			return node.location.beginLine, node.location.beginColumn
 		end
 	end
 

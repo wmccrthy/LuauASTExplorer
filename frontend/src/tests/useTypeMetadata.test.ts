@@ -44,7 +44,7 @@ describe("useTypeMetadata test", () => {
     expect(result.current).toBeDefined();
     const renderOneResult = result.current
     expect(renderOneResult).toEqual(result.current);
-    rerender({ value: { _astType: "AstLocal" }, ...defaultProps });
+    rerender({ value: { _astType: "CstLocal" }, ...defaultProps });
     expect(result.current).toBeDefined();
     expect(result.current).not.toEqual(renderOneResult);
   })
@@ -75,7 +75,7 @@ describe("useTypeMetadata test", () => {
         childChanges: {
           _astType: {
             type: "UPDATE",
-            oldValue: "AstLocal",
+            oldValue: "CstLocal",
             value: "_testType",
           },
         },

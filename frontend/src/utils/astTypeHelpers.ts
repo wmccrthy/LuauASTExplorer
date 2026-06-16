@@ -79,10 +79,10 @@ export function getAllNodeKeys(): string[] {
 
 const resolveEntriesType = (value: any[]): string => {
   if (value[0] && value[0].colon) {
-    return "{ AstTableTypeItem }";
+    return "{ CstTableTypeItem }";
   }
 
-  return "{ AstTableExprItem }";
+  return "{ CstTableExprItem }";
 };
 
 const resolveEntriesKind = (value: any[]): string => {
@@ -90,12 +90,12 @@ const resolveEntriesKind = (value: any[]): string => {
 };
 
 const arrayTypeFallbacks: Record<string, string | ((item: any[]) => string)> = {
-  statements: "{ AstStat }",
-  leadingtrivia: "{ Trivia }",
-  trailingtrivia: "{ Trivia }",
-  attributes: "{ AstAttribute }",
-  expressions: "{ AstExpr }",
-  elseifs: "{ AstElseIfExpr }",
+  statements: "{ CstStat }",
+  leadingTrivia: "{ Trivia }",
+  trailingTrivia: "{ Trivia }",
+  attributes: "{ CstAttribute }",
+  expressions: "{ CstExpr }",
+  elseifs: "{ CstElseIfExpr }",
   strings: "{ Token }",
   entries: resolveEntriesType,
 };
@@ -124,7 +124,7 @@ export const unpackArrayType = (type: string): string => {
   return matchAny ? matchAny[1] : type;
 };
 
-// Parse generic types like "Pair<AstExpr>" -> { baseType: "Pair", genericType: "AstExpr" }
+// Parse generic types like "Pair<CstExpr>" -> { baseType: "Pair", genericType: "CstExpr" }
 export const parseGenericType = (
   type: string
 ): GenericTypeDefinition | undefined => {

@@ -21,15 +21,15 @@ describe("astTypeHelpers", () => {
 
     expect(unpackArrayType(testArrayType)).toBe("testType");
 
-    expect(getArrayType("statements")).toEqual(["{ AstStat }", ""]);
+    expect(getArrayType("statements")).toEqual(["{ CstStat }", ""]);
 
     expect(getArrayType("entries", [{ colon: ":", kind: "record" }])).toEqual([
-      "{ AstTableTypeItem }",
+      "{ CstTableTypeItem }",
       "record",
     ]);
 
     expect(getArrayType("entries", [{ kind: "general" }])).toEqual([
-      "{ AstTableExprItem }",
+      "{ CstTableExprItem }",
       "general",
     ]);
 
@@ -37,34 +37,34 @@ describe("astTypeHelpers", () => {
   });
 
   test("parseGenericType", () => {
-    expect(parseGenericType("Pair<AstExpr>")).toEqual({
+    expect(parseGenericType("Pair<CstExpr>")).toEqual({
       baseType: "Pair",
-      genericType: "AstExpr",
+      genericType: "CstExpr",
     });
 
-    expect(parseGenericType("Punctuated<AstExpr>")).toEqual({
+    expect(parseGenericType("Punctuated<CstExpr>")).toEqual({
       baseType: "Punctuated",
-      genericType: "AstExpr",
+      genericType: "CstExpr",
     });
 
-    expect(parseGenericType('Pair<AstExpr, "&">')).toEqual({
+    expect(parseGenericType('Pair<CstExpr, "&">')).toEqual({
       baseType: "Pair",
-      genericType: 'AstExpr, "&"',
+      genericType: 'CstExpr, "&"',
     });
 
-    expect(parseGenericType("AstLocal")).toEqual(undefined);
+    expect(parseGenericType("CstLocal")).toEqual(undefined);
 
     expect(parseGenericType("randomType")).toEqual(undefined);
   });
 
   test("getGenericASTTypeDefinition e2e", () => {
     const punctuatedType = parseGenericType(
-      "Punctuated<AstExpr, '&'>"
+      "Punctuated<CstExpr, '&'>"
     ) as GenericTypeDefinition;
     const punctuatedDefinition = getGenericASTTypeDefinition(punctuatedType);
 
     expect(punctuatedDefinition).toEqual({
-      properties: [{ name: "", type: "{ Pair<AstExpr, '&'> }" }],
+      properties: [{ name: "", type: "{ Pair<CstExpr, '&'> }" }],
     });
 
     const pairType = (
@@ -84,7 +84,7 @@ describe("astTypeHelpers", () => {
 
     expect(pairTypeDefinition).toEqual({
       properties: [
-        { name: "node", type: "AstExpr" },
+        { name: "node", type: "CstExpr" },
         {
           name: "separator",
           type: "Token<'&'>",
@@ -98,41 +98,41 @@ describe("astTypeHelpers", () => {
     // test 3 cases:
 
     // respect existing _astType value
-    expect(getTypeString({ _astType: "AstStatBlock" }, "block")).toEqual([
-      "AstStatBlock",
+    expect(getTypeString({ _astType: "CstStatBlock" }, "block")).toEqual([
+      "CstStatBlock",
       "",
     ]);
 
     // leverages getArrayType
     expect(getTypeString([{}], "entries")).toEqual([
-      "{ AstTableExprItem }",
+      "{ CstTableExprItem }",
       "",
     ]);
 
     // falls back on parentInferredType
     expect(
-      getTypeString({ kind: "record" }, "[0]", "AstTableExprItem")
-    ).toEqual(["AstTableExprItem", "record"]);
+      getTypeString({ kind: "record" }, "[0]", "CstTableExprItem")
+    ).toEqual(["CstTableExprItem", "record"]);
   });
 
   test("getType", () => {
     // test standard case
-    expect(getType("AstLocal")).toEqual([
-      astTypeDefinitions["AstLocal"],
+    expect(getType("CstLocal")).toEqual([
+      astTypeDefinitions["CstLocal"],
       false,
     ]);
     
     // test array/table type
-    expect(getType("{ AstLocal }")).toEqual([
-      astTypeDefinitions["AstLocal"],
+    expect(getType("{ CstLocal }")).toEqual([
+      astTypeDefinitions["CstLocal"],
       true,
     ]);
 
     // test generic type
-    expect(getType("Pair<AstExpr, '&'>")).toEqual([
+    expect(getType("Pair<CstExpr, '&'>")).toEqual([
       {
         properties: [
-          { name: "node", type: "AstExpr" },
+          { name: "node", type: "CstExpr" },
           {
             name: "separator",
             type: "Token<'&'>",

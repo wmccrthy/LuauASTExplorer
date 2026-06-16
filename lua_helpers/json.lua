@@ -60,12 +60,12 @@ end
 
 -- Convert span userdata to a plain table that can be JSON encoded
 local function serializeSpan(span)
-  if span.beginline then
+  if span.beginLine then
     return {
-      beginline = span.beginline,
-      begincolumn = span.begincolumn,
-      endline = span.endline,
-      endcolumn = span.endcolumn,
+      beginLine = span.beginLine,
+      beginColumn = span.beginColumn,
+      endLine = span.endLine,
+      endColumn = span.endColumn,
     }
   end
   return nil
