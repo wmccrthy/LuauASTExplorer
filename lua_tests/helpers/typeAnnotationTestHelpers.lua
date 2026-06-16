@@ -307,7 +307,7 @@ local ambiguousTagTestCases = {
 	-- {nodeTable, expectedType, description}
 	{ { tag = "conditional", kind = "stat", endKeyword = {} }, "CstStatIf", "if statement" },
 	{ { tag = "conditional", kind = "expr" }, "CstExprIfElse", "if expression" },
-	{ { tag = "function", kind = "type", returnSpecifier = {} }, "CstTypeFunction", "type function" },
+	{ { tag = "function", kind = "type", returnArrow = {} }, "CstTypeFunction", "type function" },
 	{ { tag = "function", kind = "stat", name = {} }, "CstStatFunction", "function statement" },
 	{ { tag = "function", kind = "expr" }, "CstExprFunction", "expression function" },
 	{ { tag = "group", kind = "expr", expression = {} }, "CstExprGroup", "expression group" },

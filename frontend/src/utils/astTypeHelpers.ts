@@ -20,30 +20,16 @@ export function getTypeDefinition(
 export function getGenericASTTypeDefinition(
   genericType: GenericTypeDefinition
 ): ASTTypeDefinition {
-  switch (genericType.baseType) {
-    case "Pair":
-      const splitGenericType = genericType.genericType.split(",");
-      return {
-        properties: [
-          { name: "node", type: splitGenericType[0] },
-          {
-            name: "separator",
-            type: `Token${
-              splitGenericType[1] ? `<${splitGenericType[1].trim()}>` : ""
-            }`,
-            optional: true,
-          },
-        ],
-      };
-    case "Punctuated":
-      return {
-        properties: [
-          { name: "", type: `{ Pair<${genericType.genericType}> }` },
-        ],
-      };
-    default:
-      return { properties: [] };
+  if (genericType.baseType === "CstPunctuated") {
+    const itemType = genericType.genericType.split(",")[0].trim();
+    return {
+      properties: [
+        { name: "", type: `{ ${itemType} }` },
+        { name: "separators", type: "{ CstToken }" },
+      ],
+    };
   }
+  return { properties: [] };
 }
 
 export function getAllTypes(): string[] {
@@ -96,8 +82,9 @@ const arrayTypeFallbacks: Record<string, string | ((item: any[]) => string)> = {
   attributes: "{ CstAttribute }",
   expressions: "{ CstExpr }",
   elseifs: "{ CstElseIfExpr }",
-  strings: "{ Token }",
+  strings: "{ CstToken }",
   entries: resolveEntriesType,
+  separators: "{ CstToken }",
 };
 
 export const getArrayType = (

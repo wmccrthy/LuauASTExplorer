@@ -1,15 +1,15 @@
 export interface PropertyDefinition {
   name: string;
-  type: string | string[]; // string[] for unions like "true" | "false"
+  type: string | string[];
   optional?: boolean;
-  generic?: string; // for Token<"specific"> types
+  generic?: string;
 }
 
 export interface ASTTypeDefinition {
   properties?: PropertyDefinition[];
   kinds?: Record<string, ASTTypeDefinition>;
-  baseType?: string; // for intersections like "Token &"
-  unionMembers?: string[]; // for "CstExpr = A | B | C"
+  baseType?: string;
+  unionMembers?: string[];
 }
 
 export interface GenericTypeDefinition {
@@ -28,6 +28,7 @@ export interface TypeMetadata {
   prevKind: string;
 }
 
+// Aligned with ~/.lute/typedefs/1.0.1/lute/syntax/cst.luau
 export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   // === UTILITY TYPES ===
   span: {
@@ -67,7 +68,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     unionMembers: ["Whitespace", "SingleLineComment", "MultiLineComment"],
   },
 
-  Token: {
+  CstToken: {
     properties: [
       { name: "leadingTrivia", type: "{ Trivia }" },
       { name: "location", type: "span" },
@@ -77,31 +78,24 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     ],
   },
 
-  Eof: {
-    baseType: "Token",
-    properties: [
-      { name: "tag", type: '"eof"' },
-      { name: "text", type: '""' },
-    ],
+  CstEof: {
+    baseType: "CstToken",
+    properties: [{ name: "tag", type: '"eof"' }],
   },
 
-  Pair: {
+  CstPunctuated: {
     properties: [
-      { name: "node", type: "any" },
-      { name: "separator", type: "Token", optional: true },
+      { name: "", type: "{ T }" },
+      { name: "separators", type: "{ CstToken }" },
     ],
-  },
-
-  Punctuated: {
-    properties: [{ name: "pairs", type: "{ Pair }" }],
   },
 
   CstLocal: {
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"local"' },
-      { name: "name", type: "Token", generic: "Token<string>" },
-      { name: "colon", type: "Token", generic: 'Token<":">', optional: true },
+      { name: "name", type: "CstToken" },
+      { name: "colon", type: "CstToken", optional: true },
       { name: "annotation", type: "CstType", optional: true },
       { name: "shadows", type: "CstLocal", optional: true },
     ],
@@ -111,54 +105,61 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   CstExprGroup: {
     properties: [
       { name: "location", type: "span" },
+      { name: "kind", type: '"expr"' },
       { name: "tag", type: '"group"' },
-      { name: "openParens", type: "Token", generic: 'Token<"(">' },
+      { name: "openParens", type: "CstToken" },
       { name: "expression", type: "CstExpr" },
-      { name: "closeParens", type: "Token", generic: 'Token<")">' },
+      { name: "closeParens", type: "CstToken" },
     ],
   },
 
   CstExprConstantNil: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"nil"' },
-      { name: "text", type: '"nil"' },
+      { name: "token", type: "CstToken" },
     ],
   },
 
   CstExprConstantBool: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"boolean"' },
-      { name: "text", type: ["true", "false"] },
       { name: "value", type: "boolean" },
+      { name: "token", type: "CstToken" },
     ],
   },
 
   CstExprConstantNumber: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"number"' },
-      { name: "text", type: "string" },
       { name: "value", type: "number" },
+      { name: "token", type: "CstToken" },
+    ],
+  },
+
+  CstExprConstantInteger: {
+    properties: [
+      { name: "location", type: "span" },
+      { name: "kind", type: '"expr"' },
+      { name: "tag", type: '"integer"' },
+      { name: "value", type: "number" },
+      { name: "token", type: "CstToken" },
     ],
   },
 
   CstExprConstantString: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"string"' },
-      { name: "text", type: "string" },
       { name: "quoteStyle", type: ["single", "double", "block", "interp"] },
       { name: "blockDepth", type: "number" },
+      { name: "value", type: "CstToken" },
     ],
   },
 
@@ -167,7 +168,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"local"' },
-      { name: "token", type: "Token", generic: "Token<string>" },
+      { name: "token", type: "CstToken" },
       { name: "local", type: "CstLocal" },
       { name: "upvalue", type: "boolean" },
     ],
@@ -178,17 +179,16 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"global"' },
-      { name: "name", type: "Token" },
+      { name: "name", type: "CstToken" },
     ],
   },
 
   CstExprVarargs: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"vararg"' },
-      { name: "text", type: '"..."' },
+      { name: "token", type: "CstToken" },
     ],
   },
 
@@ -198,19 +198,9 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"call"' },
       { name: "func", type: "CstExpr" },
-      {
-        name: "openParens",
-        type: "Token",
-        generic: 'Token<"(">',
-        optional: true,
-      },
-      { name: "arguments", type: "Punctuated", generic: "Punctuated<CstExpr>" },
-      {
-        name: "closeParens",
-        type: "Token",
-        generic: 'Token<")">',
-        optional: true,
-      },
+      { name: "openParens", type: "CstToken", optional: true },
+      { name: "arguments", type: "CstPunctuated<CstExpr>" },
+      { name: "closeParens", type: "CstToken", optional: true },
       { name: "self", type: "boolean" },
       { name: "argLocation", type: "span" },
     ],
@@ -222,15 +212,11 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"instantiate"' },
       { name: "expr", type: "CstExpr" },
-      { name: "leftArrow1", type: "Token", generic: 'Token<"<">' },
-      { name: "leftArrow2", type: "Token", generic: 'Token<"<">' },
-      {
-        name: "typeArguments",
-        type: "Punctuated",
-        generic: "Punctuated<CstType | CstTypePack>",
-      },
-      { name: "rightArrow1", type: "Token", generic: 'Token<">">' },
-      { name: "rightArrow2", type: "Token", generic: 'Token<">">' },
+      { name: "leftArrow1", type: "CstToken" },
+      { name: "leftArrow2", type: "CstToken" },
+      { name: "typeArguments", type: "CstPunctuated<CstType | CstTypePack>" },
+      { name: "rightArrow1", type: "CstToken" },
+      { name: "rightArrow2", type: "CstToken" },
     ],
   },
 
@@ -240,8 +226,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"indexname"' },
       { name: "expression", type: "CstExpr" },
-      { name: "accessor", type: "Token", generic: 'Token<"." | ":">' },
-      { name: "index", type: "Token", generic: "Token<string>" },
+      { name: "accessor", type: "CstToken" },
+      { name: "index", type: "CstToken" },
       { name: "indexLocation", type: "span" },
     ],
   },
@@ -252,9 +238,9 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"index"' },
       { name: "expression", type: "CstExpr" },
-      { name: "openBrackets", type: "Token", generic: 'Token<"[">' },
+      { name: "openBrackets", type: "CstToken" },
       { name: "index", type: "CstExpr" },
-      { name: "closeBrackets", type: "Token", generic: 'Token<"]">' },
+      { name: "closeBrackets", type: "CstToken" },
     ],
   },
 
@@ -264,61 +250,22 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"function"' },
       { name: "attributes", type: "{ CstAttribute }" },
-      { name: "functionKeyword", type: "Token", generic: 'Token<"function">' },
-      {
-        name: "openGenerics",
-        type: "Token",
-        generic: 'Token<"<">',
-        optional: true,
-      },
-      {
-        name: "generics",
-        type: "Punctuated",
-        generic: "Punctuated<CstGenericType>",
-        optional: true,
-      },
-      {
-        name: "genericPacks",
-        type: "Punctuated",
-        generic: "Punctuated<CstGenericTypePack>",
-        optional: true,
-      },
-      {
-        name: "closeGenerics",
-        type: "Token",
-        generic: 'Token<">">',
-        optional: true,
-      },
-      { name: "openParens", type: "Token", generic: 'Token<"(">' },
+      { name: "functionKeyword", type: "CstToken" },
+      { name: "openGenerics", type: "CstToken", optional: true },
+      { name: "generics", type: "CstPunctuated<CstGenericType>", optional: true },
+      { name: "genericPacks", type: "CstPunctuated<CstGenericTypePack>", optional: true },
+      { name: "closeGenerics", type: "CstToken", optional: true },
+      { name: "openParens", type: "CstToken" },
       { name: "self", type: "CstLocal", optional: true },
-      {
-        name: "parameters",
-        type: "Punctuated",
-        generic: "Punctuated<CstLocal>",
-      },
-      {
-        name: "vararg",
-        type: "Token",
-        generic: 'Token<"...">',
-        optional: true,
-      },
-      {
-        name: "varargColon",
-        type: "Token",
-        generic: 'Token<":">',
-        optional: true,
-      },
+      { name: "parameters", type: "CstPunctuated<CstLocal>" },
+      { name: "vararg", type: "CstToken", optional: true },
+      { name: "varargColon", type: "CstToken", optional: true },
       { name: "varargAnnotation", type: "CstTypePack", optional: true },
-      { name: "closeParens", type: "Token", generic: 'Token<")">' },
-      {
-        name: "returnSpecifier",
-        type: "Token",
-        generic: 'Token<":">',
-        optional: true,
-      },
+      { name: "closeParens", type: "CstToken" },
+      { name: "returnSpecifier", type: "CstToken", optional: true },
       { name: "returnAnnotation", type: "CstTypePack", optional: true },
       { name: "body", type: "CstStatBlock" },
-      { name: "endKeyword", type: "Token", generic: 'Token<"end">' },
+      { name: "endKeyword", type: "CstToken" },
     ],
   },
 
@@ -327,12 +274,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"list"' },
       { name: "value", type: "CstExpr" },
-      {
-        name: "separator",
-        type: "Token",
-        generic: 'Token<"," | ";">',
-        optional: true,
-      },
+      { name: "separator", type: "CstToken", optional: true },
       { name: "isTableItem", type: "true" },
     ],
   },
@@ -341,15 +283,10 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"record"' },
-      { name: "key", type: "Token", generic: "Token<string>" },
-      { name: "equals", type: "Token", generic: 'Token<"=">' },
+      { name: "key", type: "CstToken" },
+      { name: "equals", type: "CstToken" },
       { name: "value", type: "CstExpr" },
-      {
-        name: "separator",
-        type: "Token",
-        generic: 'Token<"," | ";">',
-        optional: true,
-      },
+      { name: "separator", type: "CstToken", optional: true },
       { name: "isTableItem", type: "true" },
     ],
   },
@@ -358,17 +295,12 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"general"' },
-      { name: "indexerOpen", type: "Token", generic: 'Token<"[">' },
+      { name: "indexerOpen", type: "CstToken" },
       { name: "key", type: "CstExpr" },
-      { name: "indexerClose", type: "Token", generic: 'Token<"]">' },
-      { name: "equals", type: "Token", generic: 'Token<"=">' },
+      { name: "indexerClose", type: "CstToken" },
+      { name: "equals", type: "CstToken" },
       { name: "value", type: "CstExpr" },
-      {
-        name: "separator",
-        type: "Token",
-        generic: 'Token<"," | ";">',
-        optional: true,
-      },
+      { name: "separator", type: "CstToken", optional: true },
       { name: "isTableItem", type: "true" },
     ],
   },
@@ -386,9 +318,9 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"table"' },
-      { name: "openBrace", type: "Token", generic: 'Token<"{">' },
+      { name: "openBrace", type: "CstToken" },
       { name: "entries", type: "{ CstTableExprItem }" },
-      { name: "closeBrace", type: "Token", generic: 'Token<"}">' },
+      { name: "closeBrace", type: "CstToken" },
     ],
   },
 
@@ -397,7 +329,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"unary"' },
-      { name: "operator", type: "Token", generic: 'Token<"not" | "-" | "#">' },
+      { name: "operator", type: "CstToken" },
       { name: "operand", type: "CstExpr" },
     ],
   },
@@ -408,7 +340,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"binary"' },
       { name: "lhsOperand", type: "CstExpr" },
-      { name: "operator", type: "Token" },
+      { name: "operator", type: "CstToken" },
       { name: "rhsOperand", type: "CstExpr" },
     ],
   },
@@ -418,7 +350,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"interpolatedstring"' },
-      { name: "strings", type: "{ Token }", generic: "{ Token<string> }" },
+      { name: "strings", type: "{ CstToken }" },
       { name: "expressions", type: "{ CstExpr }" },
     ],
   },
@@ -429,16 +361,16 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"cast"' },
       { name: "operand", type: "CstExpr" },
-      { name: "operator", type: "Token", generic: 'Token<"::">' },
+      { name: "operator", type: "CstToken" },
       { name: "annotation", type: "CstType" },
     ],
   },
 
   CstElseIfExpr: {
     properties: [
-      { name: "elseIfKeyword", type: "Token", generic: 'Token<"elseif">' },
+      { name: "elseIfKeyword", type: "CstToken" },
       { name: "condition", type: "CstExpr" },
-      { name: "thenKeyword", type: "Token", generic: 'Token<"then">' },
+      { name: "thenKeyword", type: "CstToken" },
       { name: "thenExpr", type: "CstExpr" },
     ],
   },
@@ -448,12 +380,12 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"expr"' },
       { name: "tag", type: '"conditional"' },
-      { name: "ifKeyword", type: "Token", generic: 'Token<"if">' },
+      { name: "ifKeyword", type: "CstToken" },
       { name: "condition", type: "CstExpr" },
-      { name: "thenKeyword", type: "Token", generic: 'Token<"then">' },
+      { name: "thenKeyword", type: "CstToken" },
       { name: "thenExpr", type: "CstExpr" },
       { name: "elseifs", type: "{ CstElseIfExpr }" },
-      { name: "elseKeyword", type: "Token", generic: 'Token<"else">' },
+      { name: "elseKeyword", type: "CstToken" },
       { name: "elseExpr", type: "CstExpr" },
     ],
   },
@@ -464,6 +396,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       "CstExprConstantNil",
       "CstExprConstantBool",
       "CstExprConstantNumber",
+      "CstExprConstantInteger",
       "CstExprConstantString",
       "CstExprLocal",
       "CstExprGlobal",
@@ -497,17 +430,17 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"do"' },
-      { name: "doKeyword", type: "Token", generic: 'Token<"do">' },
+      { name: "doKeyword", type: "CstToken" },
       { name: "body", type: "CstStatBlock" },
-      { name: "endKeyword", type: "Token", generic: 'Token<"end">' },
+      { name: "endKeyword", type: "CstToken" },
     ],
   },
 
   CstElseIfStat: {
     properties: [
-      { name: "elseIfKeyword", type: "Token", generic: 'Token<"elseif">' },
+      { name: "elseIfKeyword", type: "CstToken" },
       { name: "condition", type: "CstExpr" },
-      { name: "thenKeyword", type: "Token", generic: 'Token<"then">' },
+      { name: "thenKeyword", type: "CstToken" },
       { name: "thenBlock", type: "CstStatBlock" },
     ],
   },
@@ -517,19 +450,14 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"conditional"' },
-      { name: "ifKeyword", type: "Token", generic: 'Token<"if">' },
+      { name: "ifKeyword", type: "CstToken" },
       { name: "condition", type: "CstExpr" },
-      { name: "thenKeyword", type: "Token", generic: 'Token<"then">' },
+      { name: "thenKeyword", type: "CstToken" },
       { name: "thenBlock", type: "CstStatBlock" },
       { name: "elseifs", type: "{ CstElseIfStat }" },
-      {
-        name: "elseKeyword",
-        type: "Token",
-        generic: 'Token<"else">',
-        optional: true,
-      },
+      { name: "elseKeyword", type: "CstToken", optional: true },
       { name: "elseBlock", type: "CstStatBlock", optional: true },
-      { name: "endKeyword", type: "Token", generic: 'Token<"end">' },
+      { name: "endKeyword", type: "CstToken" },
     ],
   },
 
@@ -538,11 +466,11 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"while"' },
-      { name: "whileKeyword", type: "Token", generic: 'Token<"while">' },
+      { name: "whileKeyword", type: "CstToken" },
       { name: "condition", type: "CstExpr" },
-      { name: "doKeyword", type: "Token", generic: 'Token<"do">' },
+      { name: "doKeyword", type: "CstToken" },
       { name: "body", type: "CstStatBlock" },
-      { name: "endKeyword", type: "Token", generic: 'Token<"end">' },
+      { name: "endKeyword", type: "CstToken" },
     ],
   },
 
@@ -551,30 +479,28 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"repeat"' },
-      { name: "repeatKeyword", type: "Token", generic: 'Token<"repeat">' },
+      { name: "repeatKeyword", type: "CstToken" },
       { name: "body", type: "CstStatBlock" },
-      { name: "untilKeyword", type: "Token", generic: 'Token<"until">' },
+      { name: "untilKeyword", type: "CstToken" },
       { name: "condition", type: "CstExpr" },
     ],
   },
 
   CstStatBreak: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"break"' },
-      { name: "text", type: '"break"' },
+      { name: "token", type: "CstToken" },
     ],
   },
 
   CstStatContinue: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"continue"' },
-      { name: "text", type: '"continue"' },
+      { name: "token", type: "CstToken" },
     ],
   },
 
@@ -583,12 +509,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"return"' },
-      { name: "returnKeyword", type: "Token", generic: 'Token<"return">' },
-      {
-        name: "expressions",
-        type: "Punctuated",
-        generic: "Punctuated<CstExpr>",
-      },
+      { name: "returnKeyword", type: "CstToken" },
+      { name: "expressions", type: "CstPunctuated<CstExpr>" },
     ],
   },
 
@@ -606,14 +528,10 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"local"' },
-      { name: "localKeyword", type: "Token", generic: 'Token<"local">' },
-      {
-        name: "variables",
-        type: "Punctuated",
-        generic: "Punctuated<CstLocal>",
-      },
-      { name: "equals", type: "Token", generic: 'Token<"=">', optional: true },
-      { name: "values", type: "Punctuated", generic: "Punctuated<CstExpr>" },
+      { name: "localKeyword", type: "CstToken" },
+      { name: "variables", type: "CstPunctuated<CstLocal>" },
+      { name: "equals", type: "CstToken", optional: true },
+      { name: "values", type: "CstPunctuated<CstExpr>" },
     ],
   },
 
@@ -622,14 +540,10 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"const"' },
-      { name: "constKeyword", type: "Token", generic: 'Token<"const">' },
-      {
-        name: "variables",
-        type: "Punctuated",
-        generic: "Punctuated<CstLocal>",
-      },
-      { name: "equals", type: "Token", generic: 'Token<"=">', optional: true },
-      { name: "values", type: "Punctuated", generic: "Punctuated<CstExpr>" },
+      { name: "constKeyword", type: "CstToken" },
+      { name: "variables", type: "CstPunctuated<CstLocal>" },
+      { name: "equals", type: "CstToken", optional: true },
+      { name: "values", type: "CstPunctuated<CstExpr>" },
     ],
   },
 
@@ -638,22 +552,17 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"for"' },
-      { name: "forKeyword", type: "Token", generic: 'Token<"for">' },
+      { name: "forKeyword", type: "CstToken" },
       { name: "variable", type: "CstLocal" },
-      { name: "equals", type: "Token", generic: 'Token<"=">' },
+      { name: "equals", type: "CstToken" },
       { name: "from", type: "CstExpr" },
-      { name: "toComma", type: "Token", generic: 'Token<",">' },
+      { name: "toComma", type: "CstToken" },
       { name: "to", type: "CstExpr" },
-      {
-        name: "stepComma",
-        type: "Token",
-        generic: 'Token<",">',
-        optional: true,
-      },
+      { name: "stepComma", type: "CstToken", optional: true },
       { name: "step", type: "CstExpr", optional: true },
-      { name: "doKeyword", type: "Token", generic: 'Token<"do">' },
+      { name: "doKeyword", type: "CstToken" },
       { name: "body", type: "CstStatBlock" },
-      { name: "endKeyword", type: "Token", generic: 'Token<"end">' },
+      { name: "endKeyword", type: "CstToken" },
     ],
   },
 
@@ -662,17 +571,13 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"forin"' },
-      { name: "forKeyword", type: "Token", generic: 'Token<"for">' },
-      {
-        name: "variables",
-        type: "Punctuated",
-        generic: "Punctuated<CstLocal>",
-      },
-      { name: "inKeyword", type: "Token", generic: 'Token<"in">' },
-      { name: "values", type: "Punctuated", generic: "Punctuated<CstExpr>" },
-      { name: "doKeyword", type: "Token", generic: 'Token<"do">' },
+      { name: "forKeyword", type: "CstToken" },
+      { name: "variables", type: "CstPunctuated<CstLocal>" },
+      { name: "inKeyword", type: "CstToken" },
+      { name: "values", type: "CstPunctuated<CstExpr>" },
+      { name: "doKeyword", type: "CstToken" },
       { name: "body", type: "CstStatBlock" },
-      { name: "endKeyword", type: "Token", generic: 'Token<"end">' },
+      { name: "endKeyword", type: "CstToken" },
     ],
   },
 
@@ -681,9 +586,9 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"assign"' },
-      { name: "variables", type: "Punctuated", generic: "Punctuated<CstExpr>" },
-      { name: "equals", type: "Token", generic: 'Token<"=">' },
-      { name: "values", type: "Punctuated", generic: "Punctuated<CstExpr>" },
+      { name: "variables", type: "CstPunctuated<CstExpr>" },
+      { name: "equals", type: "CstToken" },
+      { name: "values", type: "CstPunctuated<CstExpr>" },
     ],
   },
 
@@ -693,17 +598,16 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"compoundassign"' },
       { name: "variable", type: "CstExpr" },
-      { name: "operand", type: "Token" },
+      { name: "operand", type: "CstToken" },
       { name: "value", type: "CstExpr" },
     ],
   },
 
   CstAttribute: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"attribute"' },
-      { name: "text", type: ["@checked", "@native", "@deprecated"] },
+      { name: "name", type: "CstToken" },
     ],
   },
 
@@ -722,7 +626,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"localfunction"' },
-      { name: "localKeyword", type: "Token", generic: 'Token<"local">' },
+      { name: "localKeyword", type: "CstToken" },
       { name: "name", type: "CstLocal" },
       { name: "func", type: "CstExprFunction" },
     ],
@@ -733,39 +637,14 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"typealias"' },
-      {
-        name: "export",
-        type: "Token",
-        generic: 'Token<"export">',
-        optional: true,
-      },
-      { name: "typeToken", type: "Token", generic: 'Token<"type">' },
-      { name: "name", type: "Token" },
-      {
-        name: "openGenerics",
-        type: "Token",
-        generic: 'Token<"<">',
-        optional: true,
-      },
-      {
-        name: "generics",
-        type: "Punctuated",
-        generic: "Punctuated<CstGenericType>",
-        optional: true,
-      },
-      {
-        name: "genericPacks",
-        type: "Punctuated",
-        generic: "Punctuated<CstGenericTypePack>",
-        optional: true,
-      },
-      {
-        name: "closeGenerics",
-        type: "Token",
-        generic: 'Token<">">',
-        optional: true,
-      },
-      { name: "equals", type: "Token", generic: 'Token<"=">' },
+      { name: "export", type: "CstToken", optional: true },
+      { name: "typeToken", type: "CstToken" },
+      { name: "name", type: "CstToken" },
+      { name: "openGenerics", type: "CstToken", optional: true },
+      { name: "generics", type: "CstPunctuated<CstGenericType>", optional: true },
+      { name: "genericPacks", type: "CstPunctuated<CstGenericTypePack>", optional: true },
+      { name: "closeGenerics", type: "CstToken", optional: true },
+      { name: "equals", type: "CstToken" },
       { name: "type", type: "CstType" },
     ],
   },
@@ -775,14 +654,9 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"stat"' },
       { name: "tag", type: '"typefunction"' },
-      {
-        name: "export",
-        type: "Token",
-        generic: 'Token<"export">',
-        optional: true,
-      },
-      { name: "type", type: "Token", generic: 'Token<"type">' },
-      { name: "name", type: "Token" },
+      { name: "export", type: "CstToken", optional: true },
+      { name: "type", type: "CstToken" },
+      { name: "name", type: "CstToken" },
       { name: "body", type: "CstExprFunction" },
     ],
   },
@@ -815,8 +689,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   CstGenericType: {
     properties: [
       { name: "tag", type: '"generic"' },
-      { name: "name", type: "Token", generic: "Token<string>" },
-      { name: "equals", type: "Token", generic: 'Token<"=">', optional: true },
+      { name: "name", type: "CstToken" },
+      { name: "equals", type: "CstToken", optional: true },
       { name: "default", type: "CstType", optional: true },
     ],
   },
@@ -824,9 +698,9 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
   CstGenericTypePack: {
     properties: [
       { name: "tag", type: '"genericpack"' },
-      { name: "name", type: "Token", generic: "Token<string>" },
-      { name: "ellipsis", type: "Token", generic: 'Token<"...">' },
-      { name: "equals", type: "Token", generic: 'Token<"=">', optional: true },
+      { name: "name", type: "CstToken" },
+      { name: "ellipsis", type: "CstToken" },
+      { name: "equals", type: "CstToken", optional: true },
       { name: "default", type: "CstTypePack", optional: true },
     ],
   },
@@ -837,59 +711,32 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"reference"' },
-      {
-        name: "prefix",
-        type: "Token",
-        generic: "Token<string>",
-        optional: true,
-      },
-      {
-        name: "prefixPoint",
-        type: "Token",
-        generic: 'Token<".">',
-        optional: true,
-      },
-      { name: "name", type: "Token", generic: "Token<string>" },
-      {
-        name: "openParameters",
-        type: "Token",
-        generic: 'Token<"<">',
-        optional: true,
-      },
-      {
-        name: "parameters",
-        type: "Punctuated",
-        generic: "Punctuated<CstType | CstTypePack>",
-        optional: true,
-      },
-      {
-        name: "closeParameters",
-        type: "Token",
-        generic: 'Token<">">',
-        optional: true,
-      },
+      { name: "prefix", type: "CstToken", optional: true },
+      { name: "prefixPoint", type: "CstToken", optional: true },
+      { name: "name", type: "CstToken" },
+      { name: "openParameters", type: "CstToken", optional: true },
+      { name: "parameters", type: "CstPunctuated<CstType | CstTypePack>", optional: true },
+      { name: "closeParameters", type: "CstToken", optional: true },
     ],
   },
 
   CstTypeSingletonBool: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"boolean"' },
-      { name: "text", type: ["true", "false"] },
       { name: "value", type: "boolean" },
+      { name: "token", type: "CstToken" },
     ],
   },
 
   CstTypeSingletonString: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"string"' },
-      { name: "text", type: "string" },
       { name: "quoteStyle", type: ["single", "double"] },
+      { name: "value", type: "CstToken" },
     ],
   },
 
@@ -898,10 +745,10 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"typeof"' },
-      { name: "typeof", type: "Token", generic: 'Token<"typeof">' },
-      { name: "openParens", type: "Token", generic: 'Token<"(">' },
+      { name: "typeof", type: "CstToken" },
+      { name: "openParens", type: "CstToken" },
       { name: "expression", type: "CstExpr" },
-      { name: "closeParens", type: "Token", generic: 'Token<")">' },
+      { name: "closeParens", type: "CstToken" },
     ],
   },
 
@@ -910,19 +757,18 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"group"' },
-      { name: "openParens", type: "Token", generic: 'Token<"(">' },
+      { name: "openParens", type: "CstToken" },
       { name: "type", type: "CstType" },
-      { name: "closeParens", type: "Token", generic: 'Token<")">' },
+      { name: "closeParens", type: "CstToken" },
     ],
   },
 
   CstTypeOptional: {
-    baseType: "Token",
     properties: [
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"optional"' },
-      { name: "text", type: '"?"' },
+      { name: "token", type: "CstToken" },
     ],
   },
 
@@ -931,12 +777,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"union"' },
-      { name: "leading", type: "Token", generic: 'Token<"|">', optional: true },
-      {
-        name: "types",
-        type: "Punctuated",
-        generic: 'Punctuated<CstType, "|">',
-      },
+      { name: "leading", type: "CstToken", optional: true },
+      { name: "types", type: 'CstPunctuated<CstType, "|">' },
     ],
   },
 
@@ -945,12 +787,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"intersection"' },
-      { name: "leading", type: "Token", generic: 'Token<"&">', optional: true },
-      {
-        name: "types",
-        type: "Punctuated",
-        generic: 'Punctuated<CstType, "&">',
-      },
+      { name: "leading", type: "CstToken", optional: true },
+      { name: "types", type: 'CstPunctuated<CstType, "&">' },
     ],
   },
 
@@ -959,82 +797,47 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"array"' },
-      { name: "openBrace", type: "Token", generic: 'Token<"{">' },
-      {
-        name: "access",
-        type: "Token",
-        generic: 'Token<"read" | "write">',
-        optional: true,
-      },
+      { name: "openBrace", type: "CstToken" },
+      { name: "access", type: "CstToken", optional: true },
       { name: "type", type: "CstType" },
-      { name: "closeBrace", type: "Token", generic: 'Token<"}">' },
+      { name: "closeBrace", type: "CstToken" },
     ],
   },
 
   CstTableTypeItemIndexer: {
     properties: [
       { name: "kind", type: '"indexer"' },
-      {
-        name: "access",
-        type: "Token",
-        generic: 'Token<"read" | "write">',
-        optional: true,
-      },
-      { name: "indexerOpen", type: "Token", generic: 'Token<"[">' },
+      { name: "access", type: "CstToken", optional: true },
+      { name: "indexerOpen", type: "CstToken" },
       { name: "key", type: "CstType" },
-      { name: "indexerClose", type: "Token", generic: 'Token<"]">' },
-      { name: "colon", type: "Token", generic: 'Token<":">' },
+      { name: "indexerClose", type: "CstToken" },
+      { name: "colon", type: "CstToken" },
       { name: "value", type: "CstType" },
-      {
-        name: "separator",
-        type: "Token",
-        generic: 'Token<"," | ";">',
-        optional: true,
-      },
+      { name: "separator", type: "CstToken", optional: true },
     ],
   },
 
   CstTableTypeItemStringProperty: {
     properties: [
       { name: "kind", type: '"stringproperty"' },
-      {
-        name: "access",
-        type: "Token",
-        generic: 'Token<"read" | "write">',
-        optional: true,
-      },
-      { name: "indexerOpen", type: "Token", generic: 'Token<"[">' },
+      { name: "access", type: "CstToken", optional: true },
+      { name: "indexerOpen", type: "CstToken" },
       { name: "key", type: "CstTypeSingletonString" },
-      { name: "indexerClose", type: "Token", generic: 'Token<"]">' },
-      { name: "colon", type: "Token", generic: 'Token<":">' },
+      { name: "indexerClose", type: "CstToken" },
+      { name: "colon", type: "CstToken" },
       { name: "value", type: "CstType" },
-      {
-        name: "separator",
-        type: "Token",
-        generic: 'Token<"," | ";">',
-        optional: true,
-      },
+      { name: "separator", type: "CstToken", optional: true },
     ],
   },
 
   CstTableTypeItemProperty: {
     properties: [
       { name: "kind", type: '"property"' },
-      {
-        name: "access",
-        type: "Token",
-        generic: 'Token<"read" | "write">',
-        optional: true,
-      },
-      { name: "key", type: "Token" },
-      { name: "colon", type: "Token", generic: 'Token<":">' },
+      { name: "access", type: "CstToken", optional: true },
+      { name: "key", type: "CstToken" },
+      { name: "colon", type: "CstToken" },
       { name: "value", type: "CstType" },
-      {
-        name: "separator",
-        type: "Token",
-        generic: 'Token<"," | ";">',
-        optional: true,
-      },
+      { name: "separator", type: "CstToken", optional: true },
     ],
   },
 
@@ -1051,17 +854,16 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"table"' },
-      { name: "openBrace", type: "Token", generic: 'Token<"{">' },
+      { name: "openBrace", type: "CstToken" },
       { name: "entries", type: "{ CstTableTypeItem }" },
-      { name: "closeBrace", type: "Token", generic: 'Token<"}">' },
+      { name: "closeBrace", type: "CstToken" },
     ],
   },
 
   CstFunctionTypeParameter: {
     properties: [
-      { name: "location", type: "span" },
-      { name: "name", type: "Token", optional: true },
-      { name: "colon", type: "Token", generic: 'Token<":">', optional: true },
+      { name: "name", type: "CstToken", optional: true },
+      { name: "colon", type: "CstToken", optional: true },
       { name: "type", type: "CstType" },
     ],
   },
@@ -1071,39 +873,15 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"type"' },
       { name: "tag", type: '"function"' },
-      {
-        name: "openGenerics",
-        type: "Token",
-        generic: 'Token<"<">',
-        optional: true,
-      },
-      {
-        name: "generics",
-        type: "Punctuated",
-        generic: "Punctuated<CstGenericType>",
-        optional: true,
-      },
-      {
-        name: "genericPacks",
-        type: "Punctuated",
-        generic: "Punctuated<CstGenericTypePack>",
-        optional: true,
-      },
-      {
-        name: "closeGenerics",
-        type: "Token",
-        generic: 'Token<">">',
-        optional: true,
-      },
-      { name: "openParens", type: "Token", generic: 'Token<"(">' },
-      {
-        name: "parameters",
-        type: "Punctuated",
-        generic: "Punctuated<CstFunctionTypeParameter>",
-      },
+      { name: "openGenerics", type: "CstToken", optional: true },
+      { name: "generics", type: "CstPunctuated<CstGenericType>", optional: true },
+      { name: "genericPacks", type: "CstPunctuated<CstGenericTypePack>", optional: true },
+      { name: "closeGenerics", type: "CstToken", optional: true },
+      { name: "openParens", type: "CstToken" },
+      { name: "parameters", type: "CstPunctuated<CstFunctionTypeParameter>" },
       { name: "vararg", type: "CstTypePack", optional: true },
-      { name: "closeParens", type: "Token", generic: 'Token<")">' },
-      { name: "returnSpecifier", type: "Token", generic: 'Token<"->">' },
+      { name: "closeParens", type: "CstToken" },
+      { name: "returnArrow", type: "CstToken" },
       { name: "returnTypes", type: "CstTypePack" },
     ],
   },
@@ -1130,20 +908,10 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"typepack"' },
       { name: "tag", type: '"explicit"' },
-      {
-        name: "openParens",
-        type: "Token",
-        generic: 'Token<"(">',
-        optional: true,
-      },
-      { name: "types", type: "Punctuated", generic: "Punctuated<CstType>" },
+      { name: "openParens", type: "CstToken", optional: true },
+      { name: "types", type: "CstPunctuated<CstType>" },
       { name: "tailType", type: "CstTypePack", optional: true },
-      {
-        name: "closeParens",
-        type: "Token",
-        generic: 'Token<")">',
-        optional: true,
-      },
+      { name: "closeParens", type: "CstToken", optional: true },
     ],
   },
 
@@ -1152,8 +920,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"typepack"' },
       { name: "tag", type: '"generic"' },
-      { name: "name", type: "Token" },
-      { name: "ellipsis", type: "Token", generic: 'Token<"...">' },
+      { name: "name", type: "CstToken" },
+      { name: "ellipsis", type: "CstToken" },
     ],
   },
 
@@ -1162,12 +930,7 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
       { name: "location", type: "span" },
       { name: "kind", type: '"typepack"' },
       { name: "tag", type: '"variadic"' },
-      {
-        name: "ellipsis",
-        type: "Token",
-        generic: 'Token<"...">',
-        optional: true,
-      },
+      { name: "ellipsis", type: "CstToken", optional: true },
       { name: "type", type: "CstType" },
     ],
   },
@@ -1182,8 +945,8 @@ export const astTypeDefinitions: Record<string, ASTTypeDefinition> = {
 
   _testType: {
     properties: [
-      { name: "removedName", type: "Token", optional: true },
-      { name: "name", type: "Token", optional: true },
+      { name: "removedName", type: "CstToken", optional: true },
+      { name: "name", type: "CstToken", optional: true },
     ],
   },
 };

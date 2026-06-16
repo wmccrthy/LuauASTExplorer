@@ -9,7 +9,6 @@ import {
 } from "../utils/astTypeHelpers";
 import {
   GenericTypeDefinition,
-  PropertyDefinition,
   astTypeDefinitions,
 } from "../utils/astTypeDefinitions";
 
@@ -33,23 +32,20 @@ describe("astTypeHelpers", () => {
       "general",
     ]);
 
+    expect(getArrayType("separators")).toEqual(["{ CstToken }", ""]);
+
     expect(getArrayType("invalidType")).toEqual([undefined, ""]);
   });
 
   test("parseGenericType", () => {
-    expect(parseGenericType("Pair<CstExpr>")).toEqual({
-      baseType: "Pair",
+    expect(parseGenericType("CstPunctuated<CstExpr>")).toEqual({
+      baseType: "CstPunctuated",
       genericType: "CstExpr",
     });
 
-    expect(parseGenericType("Punctuated<CstExpr>")).toEqual({
-      baseType: "Punctuated",
-      genericType: "CstExpr",
-    });
-
-    expect(parseGenericType('Pair<CstExpr, "&">')).toEqual({
-      baseType: "Pair",
-      genericType: 'CstExpr, "&"',
+    expect(parseGenericType('CstPunctuated<CstType, "|">')).toEqual({
+      baseType: "CstPunctuated",
+      genericType: 'CstType, "|"',
     });
 
     expect(parseGenericType("CstLocal")).toEqual(undefined);
@@ -57,46 +53,34 @@ describe("astTypeHelpers", () => {
     expect(parseGenericType("randomType")).toEqual(undefined);
   });
 
-  test("getGenericASTTypeDefinition e2e", () => {
+  test("getGenericASTTypeDefinition for CstPunctuated", () => {
     const punctuatedType = parseGenericType(
-      "Punctuated<CstExpr, '&'>"
+      "CstPunctuated<CstExpr>"
     ) as GenericTypeDefinition;
-    const punctuatedDefinition = getGenericASTTypeDefinition(punctuatedType);
+    const definition = getGenericASTTypeDefinition(punctuatedType);
 
-    expect(punctuatedDefinition).toEqual({
-      properties: [{ name: "", type: "{ Pair<CstExpr, '&'> }" }],
+    expect(definition).toEqual({
+      properties: [
+        { name: "", type: "{ CstExpr }" },
+        { name: "separators", type: "{ CstToken }" },
+      ],
     });
 
-    const pairType = (
-      punctuatedDefinition.properties as PropertyDefinition[]
-    )[0].type;
+    // With separator type specified
+    const unionPunctuated = parseGenericType(
+      'CstPunctuated<CstType, "|">'
+    ) as GenericTypeDefinition;
+    const unionDef = getGenericASTTypeDefinition(unionPunctuated);
 
-    expect(typeof pairType).toBe("string");
-
-    const pairTypeGenericDefinition = parseGenericType(
-      unpackArrayType(pairType as string)
-    );
-
-    expect(pairTypeGenericDefinition).toBeDefined();
-    const pairTypeDefinition = getGenericASTTypeDefinition(
-      pairTypeGenericDefinition as GenericTypeDefinition
-    );
-
-    expect(pairTypeDefinition).toEqual({
+    expect(unionDef).toEqual({
       properties: [
-        { name: "node", type: "CstExpr" },
-        {
-          name: "separator",
-          type: "Token<'&'>",
-          optional: true,
-        },
+        { name: "", type: "{ CstType }" },
+        { name: "separators", type: "{ CstToken }" },
       ],
     });
   });
 
   test("getTypeString", () => {
-    // test 3 cases:
-
     // respect existing _astType value
     expect(getTypeString({ _astType: "CstStatBlock" }, "block")).toEqual([
       "CstStatBlock",
@@ -121,23 +105,19 @@ describe("astTypeHelpers", () => {
       astTypeDefinitions["CstLocal"],
       false,
     ]);
-    
+
     // test array/table type
     expect(getType("{ CstLocal }")).toEqual([
       astTypeDefinitions["CstLocal"],
       true,
     ]);
 
-    // test generic type
-    expect(getType("Pair<CstExpr, '&'>")).toEqual([
+    // test CstPunctuated generic type
+    expect(getType("CstPunctuated<CstExpr>")).toEqual([
       {
         properties: [
-          { name: "node", type: "CstExpr" },
-          {
-            name: "separator",
-            type: "Token<'&'>",
-            optional: true,
-          },
+          { name: "", type: "{ CstExpr }" },
+          { name: "separators", type: "{ CstToken }" },
         ],
       },
       false,

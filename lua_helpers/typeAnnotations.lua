@@ -18,6 +18,7 @@ local typeDefinitions = {
 		["nil"] = "CstExprConstantNil",
 		["boolean"] = "CstExprConstantBool", -- also CstTypeSingletonBool - disambiguated by kind
 		["number"] = "CstExprConstantNumber",
+		["integer"] = "CstExprConstantInteger",
 		["global"] = "CstExprGlobal",
 		["vararg"] = "CstExprVarargs",
 		["call"] = "CstExprCall",
@@ -109,6 +110,7 @@ local typeDefinitions = {
 		["indexerOpen"] = "Token",
 		["indexerClose"] = "Token",
 		["returnSpecifier"] = "Token",
+		["returnArrow"] = "Token",
 
 		-- Operators and symbols
 		["equals"] = "Token",
@@ -208,8 +210,8 @@ local function resolveAmbiguousTags(node): string?
 			return "CstExprIfElse"
 		end
 	elseif tag == "function" then
-		-- CstTypeFunction has returnSpecifier and kind="type"
-		if kind == "type" or node.returnSpecifier then
+		-- CstTypeFunction has returnArrow and kind="type"
+		if kind == "type" or node.returnArrow then
 			return "CstTypeFunction"
 		-- CstStatFunction has name field and kind="stat" (but not func field directly on it)
 		elseif kind == "stat" then

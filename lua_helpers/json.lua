@@ -1,57 +1,66 @@
 local stdJson = require("@std/json")
 
--- Transforms lute's new Punctuated format (array + .separators field)
--- into the frontend-compatible [{node, separator?}] Pair format before encoding.
-local function transformPunctuated(node)
+-- Lute represents punctuated lists as arrays with a .separators sibling field.
+-- JSON arrays can't have named properties, so we serialize these as objects
+-- with numeric string keys for items and a "separators" key — matching lute's
+-- actual data shape as closely as JSON allows.
+local function prepareForJson(node)
 	if type(node) ~= "table" then
 		return node
 	end
 
 	local separators = rawget(node, "separators")
 	if separators and rawget(node, 1) ~= nil then
-		local pairs = {}
+		local result = {}
 		for i, item in ipairs(node) do
-			local pair = { node = transformPunctuated(item) }
-			if separators[i] then
-				pair.separator = transformPunctuated(separators[i])
-			end
-			table.insert(pairs, pair)
+			result[tostring(i)] = prepareForJson(item)
 		end
-		return pairs
+		local preparedSeparators = {}
+		for i, sep in ipairs(separators) do
+			preparedSeparators[i] = prepareForJson(sep)
+		end
+		result.separators = preparedSeparators
+		return result
+	end
+
+	if rawget(node, 1) ~= nil then
+		local result = {}
+		for i, v in ipairs(node) do
+			result[i] = prepareForJson(v)
+		end
+		return result
 	end
 
 	local result = {}
 	for k, v in pairs(node) do
-		result[k] = transformPunctuated(v)
-	end
-	for i = 1, #node do
-		result[i] = transformPunctuated(node[i])
+		if type(k) == "string" then
+			result[k] = prepareForJson(v)
+		end
 	end
 	return result
 end
 
-local function encode(value)
-	return stdJson.serialize(transformPunctuated(value))
-end
-
-local function stripNulls(node)
+local function stripMarkers(node)
 	if type(node) ~= "table" then
 		return node
 	end
 	local result = {}
 	for k, v in pairs(node) do
 		if type(k) == "string" and v ~= stdJson.null then
-			result[k] = stripNulls(v)
+			result[k] = stripMarkers(v)
 		elseif type(k) == "number" and v ~= stdJson.null then
-			result[k] = stripNulls(v)
+			result[k] = stripMarkers(v)
 		end
-		-- Skip userdata keys (object/array markers from @std/json)
 	end
 	return result
 end
 
+local function encode(value)
+	return stdJson.serialize(prepareForJson(value))
+end
+
 local function decode(str)
-	return stripNulls(stdJson.deserialize(str))
+	return stripMarkers(stdJson.deserialize(str))
 end
 
 return {

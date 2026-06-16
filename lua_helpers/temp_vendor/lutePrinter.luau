@@ -25,11 +25,31 @@ local function isToken(node: any): boolean
 end
 
 -- Tags where the 'func' child's contents should be merged into the parent
--- for correct position-based printing
 local flattenFuncTags = {
 	localfunction = true,
 	["function"] = true,
 }
+
+-- Checks if a table represents a punctuated list (has numeric string keys + separators)
+local function isPunctuated(node: any): boolean
+	return type(node) == "table" and node.separators ~= nil and node["1"] ~= nil
+end
+
+-- Flattens a punctuated object into a list of items and separators for sorting
+local function flattenPunctuated(node: any): any
+	local flat = {}
+	local i = 1
+	while node[tostring(i)] do
+		flat["item_" .. i] = node[tostring(i)]
+		i += 1
+	end
+	if node.separators then
+		for j, sep in ipairs(node.separators) do
+			flat["sep_" .. j] = sep
+		end
+	end
+	return flat
+end
 
 local function printFallback(node: any): string
 	local nodeSrcStr = ""
@@ -37,18 +57,23 @@ local function printFallback(node: any): string
 		for i = 1, #node do
 			nodeSrcStr ..= printASTNode(node[i]) or ""
 		end
+	elseif isPunctuated(node) then
+		-- Flatten items and separators, sort by position
+		local flat = flattenPunctuated(node)
+		local sortedChildren = getSortedChildren(flat)
+		for _, child in sortedChildren do
+			nodeSrcStr ..= printASTNode(child) or ""
+		end
 	else
 		-- For nodes where 'func' should be flattened into parent
 		local nodeToSort = node
 		if node.tag and flattenFuncTags[node.tag] and node.func then
-			-- Merge func's children into a virtual node alongside parent's other children
 			nodeToSort = {}
 			for k, v in node do
 				if k ~= "func" then
 					nodeToSort[k] = v
 				end
 			end
-			-- Merge func's children (except location/tag/kind which are metadata)
 			for k, v in node.func do
 				if k ~= "location" and k ~= "tag" and k ~= "kind" and k ~= "_astType" then
 					nodeToSort["func_" .. k] = v
@@ -57,7 +82,7 @@ local function printFallback(node: any): string
 		end
 
 		local sortedChildren = getSortedChildren(nodeToSort)
-		for key, child in sortedChildren do
+		for _, child in sortedChildren do
 			nodeSrcStr ..= printASTNode(child) or ""
 		end
 	end
